@@ -21,7 +21,11 @@ func getDataDirectory(nonDefaultDir string) (string, error) {
 					"automatically created. please manually configure the data directory",
 			)
 		}
-		nonDefaultDir = path.Join(homeDir, ".deppy")
+		nonDefaultDir = path.Join(
+			// hopefully this replaceAll doesn't have weird consequences -
+			// everything still seems to work here on windows
+			strings.ReplaceAll(homeDir, "\\", "/"), ".deppy",
+		)
 	}
 
 	if _, err := os.Lstat(nonDefaultDir); err != nil {
@@ -59,7 +63,7 @@ func getLongestCommonPrefix(strings []string) string {
 }
 
 // from https://stackoverflow.com/a/57640231/3962267
-func extractTarGz(gzipStream io.Reader, baseOutDir string) error {
+func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs bool) error {
 	os.MkdirAll(baseOutDir, 0750)
 
 	uncompressedStream, err := gzip.NewReader(gzipStream)
@@ -69,29 +73,35 @@ func extractTarGz(gzipStream io.Reader, baseOutDir string) error {
 
 	tarReader := tar.NewReader(uncompressedStream)
 
-	var filePaths []string
+	longestCommonPrefix := ""
 
-	for {
-		header, err := tarReader.Next()
+	if trimLeadingDirs {
 
-		if err == io.EOF {
-			break
+		var filePaths []string
+
+		for {
+			header, err := tarReader.Next()
+
+			if err == io.EOF {
+				break
+			}
+
+			filePaths = append(filePaths, header.Name)
 		}
 
-		filePaths = append(filePaths, header.Name)
+		fmt.Printf("file paths: %v\n", filePaths)
+
+		longestCommonPrefix = getLongestCommonPrefix(filePaths)
+
+		lastSlash := strings.LastIndex(longestCommonPrefix, "/")
+		if lastSlash != -1 {
+			longestCommonPrefix = longestCommonPrefix[0 : lastSlash+1]
+		}
+
+		gzipStream.Seek(0, 0)
+		uncompressedStream.Reset(gzipStream)
+		tarReader = tar.NewReader(uncompressedStream)
 	}
-
-	fmt.Printf("file paths: %v\n", filePaths)
-
-	longestCommonPrefix := getLongestCommonPrefix(filePaths)
-	fmt.Printf("longest common prefix: %v\n", longestCommonPrefix)
-
-	lastSlash := strings.LastIndex(longestCommonPrefix, "/")
-	if lastSlash != -1 {
-		longestCommonPrefix = longestCommonPrefix[0:lastSlash]
-	}
-
-	tarReader = tar.NewReader(uncompressedStream)
 
 	for {
 		header, err := tarReader.Next()
@@ -104,21 +114,23 @@ func extractTarGz(gzipStream io.Reader, baseOutDir string) error {
 			return fmt.Errorf("ExtractTarGz: Next() failed: %s", err.Error())
 		}
 
-		// TODO: if there is only one folder at the root of the tar file, get
-		// rid of it and treat it as an ignored prefix in all the other paths
+		if len(longestCommonPrefix) >= len(header.Name) {
+			fmt.Printf("skipping %s\n", header.Name)
+			continue
+		}
 
-		fmt.Printf("file name: %s\n", header.Name)
+		itemName := strings.TrimPrefix(header.Name, longestCommonPrefix)
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if err := os.Mkdir(path.Join(baseOutDir, header.Name), 0755); err != nil {
-				return fmt.Errorf("ExtractTarGz: Mkdir() failed: %s", err.Error())
+			if err := os.MkdirAll(path.Join(baseOutDir, itemName), 0755); err != nil {
+				return fmt.Errorf("ExtractTarGz: MkdirAll() failed: %s", err.Error())
 			}
 		case tar.TypeReg:
 			if !filepath.IsLocal(header.Name) {
 				return fmt.Errorf("ExtractTarGz: File rejected: %s is not a local file path", header.Name)
 			}
-			outFile, err := os.Create(path.Join(baseOutDir, header.Name))
+			outFile, err := os.Create(path.Join(baseOutDir, itemName))
 			if err != nil {
 				return fmt.Errorf("ExtractTarGz: Create() failed: %s", err.Error())
 			}

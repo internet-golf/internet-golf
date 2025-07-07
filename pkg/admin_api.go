@@ -25,16 +25,17 @@ type ContainerDeploymentInput struct {
 
 type ContainerDeploymentOutput struct {
 	Body struct {
+		// no real idea what to return from the api call for any of these
 		Thing string `json:"thing"`
 	}
 }
 
 type StaticDeploymentInput struct {
 	RawBody huma.MultipartFormFiles[struct {
-		Id       string        `form:"id"`
-		Matcher  string        `form:"matcher"`
-		Contents huma.FormFile `form:"contents" contentType:"application/gzip"`
-		// ...settings
+		Id                     string        `form:"id"`
+		Matcher                string        `form:"matcher"`
+		Contents               huma.FormFile `form:"contents" contentType:"application/gzip"`
+		KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
 	}]
 }
 
@@ -93,8 +94,17 @@ func (a AdminApi) Start() {
 
 			formData := input.RawBody.Data()
 
+			fmt.Printf("received form data: %+v\n", formData)
+
+			// weirdly, formData.Contents is a seekable stream, which i'm pretty
+			// sure means its entire contents have to be kept in memory so that
+			// they can be sought back to (unless it falls back to saving them
+			// to disk for large files?) this seems like an annoying limitation
 			outDir := path.Join(a.Settings.DataDirectory, formData.Id)
-			if tarGzError := extractTarGz(formData.Contents, outDir); tarGzError != nil {
+
+			if tarGzError := extractTarGz(
+				formData.Contents, outDir, !formData.KeepLeadingDirectories,
+			); tarGzError != nil {
 				return nil, tarGzError
 			}
 
