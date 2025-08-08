@@ -25,6 +25,8 @@ type DeploymentSettings struct {
 	// defaults to AllButHtml since that's the 0 value for the enum
 	CacheControlMode CacheControlSetting `json:"cacheControlMode"`
 	// 404 page address for static sites?
+	// TODO: ensure config exists for SPAs that serves the same file for all paths
+	// also: basic auth config
 }
 
 type Deployment struct {

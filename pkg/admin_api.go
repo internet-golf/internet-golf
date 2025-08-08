@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strconv"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
+	"github.com/gosimple/slug"
 )
 
 func checkHMAC(ctx huma.Context, next func(huma.Context)) {
@@ -19,7 +21,10 @@ func checkHMAC(ctx huma.Context, next func(huma.Context)) {
 
 type ContainerDeploymentInput struct {
 	Body struct {
-		ContainerUrl string `json:"containerUrl"`
+		// should this be json even though the static deployment input is form data??
+		ContainerUrl    string `json:"containerUrl"`
+		InternalAppPort int    `json:"internalAppPort"`
+		PublicUrl       string `json:"publicUrl"`
 	}
 }
 
@@ -32,10 +37,10 @@ type ContainerDeploymentOutput struct {
 
 type StaticDeploymentInput struct {
 	RawBody huma.MultipartFormFiles[struct {
-		Id                     string        `form:"id"`
-		Matcher                string        `form:"matcher"`
-		Contents               huma.FormFile `form:"contents" contentType:"application/gzip"`
+		PublicUrl              string        `form:"publicUrl"`
+		Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
 		KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
+		// TODO: PreserveExistingFiles
 	}]
 }
 
@@ -77,7 +82,7 @@ func (a AdminApi) Start() {
 			Deployment{
 				Id:          "identifier",
 				Matcher:     "mitch.website/thing",
-				ResourceUri: "file://whatever",
+				ResourceUri: "docker://thing:" + strconv.Itoa((input.Body.InternalAppPort)),
 			})
 		resp := &ContainerDeploymentOutput{}
 		resp.Body.Thing = "hi"
@@ -94,27 +99,41 @@ func (a AdminApi) Start() {
 
 			formData := input.RawBody.Data()
 
+			if len(formData.PublicUrl) < 1 {
+				panic("public URL for deployment is required")
+			}
+
 			fmt.Printf("received form data: %+v\n", formData)
 
+			outDir := path.Join(
+				a.Settings.DataDirectory, slug.Make(formData.PublicUrl),
+				// TODO: hash of formData.Contents
+			)
+
 			// weirdly, formData.Contents is a seekable stream, which i'm pretty
-			// sure means its entire contents have to be kept in memory so that
+			// sure means its entire contents must be being kept in memory so that
 			// they can be sought back to (unless it falls back to saving them
 			// to disk for large files?) this seems like an annoying limitation
-			outDir := path.Join(a.Settings.DataDirectory, formData.Id)
-
 			if tarGzError := extractTarGz(
 				formData.Contents, outDir, !formData.KeepLeadingDirectories,
 			); tarGzError != nil {
 				return nil, tarGzError
 			}
 
+			// TODO: if PreserveExistingFiles, find the existing deployment for
+			// this url and copy its files into the new directory (if they're
+			// not the same directory (i.e. the hashes are unequal))
+
 			a.Web.PutDeployment(Deployment{
-				Id:          formData.Id,
-				Matcher:     formData.Matcher,
+				Id:          formData.PublicUrl,
+				Matcher:     formData.PublicUrl,
 				ResourceUri: "file://" + outDir,
 			})
 
-			output.Body.Id = formData.Id
+			// delete the old directory after PutDeployment is finished?
+			// presumably that'll be safe
+
+			output.Body.Id = "whatever"
 
 			return &output, nil
 		})
