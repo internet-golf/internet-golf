@@ -1,4 +1,4 @@
-module github.com/toBeOfUse/deployment-agent
+module github.com/toBeOfUse/internet-golf
 
 go 1.24
 

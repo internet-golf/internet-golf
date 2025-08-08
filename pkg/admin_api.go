@@ -1,4 +1,4 @@
-package deppy
+package internetgolf
 
 import (
 	"context"
@@ -53,7 +53,7 @@ type StaticDeploymentOutput struct {
 type AdminApi struct {
 	Web      DeploymentBus
 	Settings struct {
-		// will be automatically set to $HOME/.deppy if not set
+		// will be automatically set to $HOME/.internetgolf if not set
 		DataDirectory string
 	}
 }

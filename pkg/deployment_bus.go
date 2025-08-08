@@ -1,4 +1,4 @@
-package deppy
+package internetgolf
 
 import (
 	"fmt"

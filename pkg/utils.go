@@ -1,4 +1,4 @@
-package deppy
+package internetgolf
 
 import (
 	"archive/tar"
@@ -24,7 +24,7 @@ func getDataDirectory(nonDefaultDir string) (string, error) {
 		nonDefaultDir = path.Join(
 			// hopefully this replaceAll doesn't have weird consequences -
 			// everything still seems to work here on windows
-			strings.ReplaceAll(homeDir, "\\", "/"), ".deppy",
+			strings.ReplaceAll(homeDir, "\\", "/"), ".internetgolf", // TODO: extract to constant
 		)
 	}
 
