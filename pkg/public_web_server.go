@@ -2,10 +2,18 @@ package deppy
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"net/http"
 	"strings"
+
+	"github.com/caddyserver/caddy/v2"
+	// ??? these modules appear to register themselves with the main caddy
+	// module as side effects of being imported. is there a better way to do
+	// this?
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/encode"
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/encode/gzip"
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/encode/zstd"
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/fileserver"
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/headers"
 )
 
 type PublicWebServer interface {
@@ -86,21 +94,11 @@ func (c CaddyServer) Deploy(deployments []Deployment) error {
 
 	fmt.Print(config + "\n")
 
-	resp, err := http.Post("http://localhost:2019/config/", "application/json", strings.NewReader(config))
+	// TODO: call .Run with Config struct instead of calling .Load with JSON soup?
+	err := caddy.Load([]byte(config), false)
 	if err != nil {
 		panic(err)
 	}
-
-	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	sb := string(body)
-	log.Print(sb)
 
 	return nil
 }
