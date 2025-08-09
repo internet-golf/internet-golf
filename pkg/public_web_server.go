@@ -24,55 +24,40 @@ type PublicWebServer interface {
 
 type CaddyServer struct{}
 
-// TODO: receive the whole deployment object for to take into account its settings
-func getCaddyStaticRouteBoilerplate(publicUrl string, filePath string) caddyhttp.Route {
+func jsonOrPanic(v any) []byte {
+	result, err := json.Marshal(v)
+	if err != nil {
+		panic(fmt.Sprintf("Could not JSON-serialize value: %v", v))
+	}
+	return result
+}
+
+func getCaddyStaticRoute(d Deployment) caddyhttp.Route {
+	// decompose matcher into host and path
+	matcherComps := strings.Split(d.Matcher, "/")
+	host := matcherComps[0]
+	if len(host) == 0 || !strings.Contains(host, ".") {
+		panic(fmt.Sprintf("%v is not a valid matcher: does not start with valid host", d.Matcher))
+	}
+	var path string
+	if len(matcherComps) == 1 || len(matcherComps[1]) == 0 {
+		path = "/*"
+	} else {
+		path = "/" + strings.Join(matcherComps[1:], "/")
+	}
+
 	route := caddyhttp.Route{
 		MatcherSetsRaw: caddyhttp.RawMatcherSets{
-			caddy.ModuleMap{"host": ([]byte)(`["` + publicUrl + `"]`)},
+			caddy.ModuleMap{"host": jsonOrPanic([]string{host})},
+			caddy.ModuleMap{"path": jsonOrPanic([]string{path})},
 		},
-		// TODO: handlers
+		HandlersRaw: []json.RawMessage{
+			[]byte(fmt.Sprintf(`{"handler": "vars", "root": "%s"}`, d.LocalResourceLocator)),
+			[]byte(`{"handler": "file_server"}`),
+		},
 	}
 
 	return route
-
-	// return fmt.Sprintf(`{
-	// 	"match": [{ "host": ["%s"] }],
-	// 	"handle": [
-	// 	{
-	// 		"handler": "subroute",
-	// 		"routes": [
-	// 		{
-	// 			"handle": [
-	// 			{
-	// 				"handler": "vars",
-	// 				"root": "%s"
-	// 			}
-	// 			]
-	// 		},
-	// 		{
-	// 			"handle": [
-	// 			{
-	// 				"handler": "headers",
-	// 				"response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
-	// 			}
-	// 			],
-	// 			"match": [{ "path": ["*/"] }]
-	// 		},
-	// 		{
-	// 			"handle": [
-	// 			{
-	// 				"handler": "encode",
-	// 				"encodings": { "gzip": {}, "zstd": {} },
-	// 				"prefer": ["zstd", "gzip"]
-	// 			},
-	// 			{"browse": {"file_limit": 1000}, "handler": "file_server" }
-	// 			]
-	// 		}
-	// 		]
-	// 	}
-	// 	],
-	// 	"terminal": true
-	// }`, publicUrl, filePath)
 }
 
 func (c CaddyServer) Deploy(deployments []Deployment) error {
@@ -92,11 +77,11 @@ func (c CaddyServer) Deploy(deployments []Deployment) error {
 		},
 	}
 	for _, deployment := range deployments {
-		uriParts := strings.Split(deployment.ResourceUri, "://")
-		if uriParts[0] == "file" {
+		// TODO: recover from panics and ignore the deployment with a warning
+		if deployment.LocalResourceType == Files {
 			httpApp.Servers["internetgolf"].Routes = append(
 				httpApp.Servers["internetgolf"].Routes,
-				getCaddyStaticRouteBoilerplate(deployment.Matcher, uriParts[1]),
+				getCaddyStaticRoute(deployment),
 			)
 		}
 		// TODO: docker cases
@@ -107,9 +92,11 @@ func (c CaddyServer) Deploy(deployments []Deployment) error {
 		panic(err)
 	}
 
-	caddyConfig := caddy.Config{AppsRaw: caddy.ModuleMap{
-		"http": httpJson,
-	}}
+	caddyConfig := caddy.Config{
+		AppsRaw: caddy.ModuleMap{
+			"http": httpJson,
+		},
+	}
 
 	err = caddy.Run(&caddyConfig)
 	if err != nil {

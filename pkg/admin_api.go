@@ -77,12 +77,15 @@ func (a AdminApi) Start() {
 	huma.Put(api, "/deploy/container", func(
 		ctx context.Context, input *ContainerDeploymentInput,
 	) (*ContainerDeploymentOutput, error) {
+		// TODO: implement this at all
+		panic("not implemented")
 		fmt.Println(input.Body.ContainerUrl)
 		a.Web.PutDeployment(
 			Deployment{
-				Id:          "identifier",
-				Matcher:     "mitch.website/thing",
-				ResourceUri: "docker://thing:" + strconv.Itoa((input.Body.InternalAppPort)),
+				Id:                   "identifier",
+				Matcher:              "mitch.website/thing",
+				LocalResourceLocator: "docker://thing:" + strconv.Itoa((input.Body.InternalAppPort)),
+				LocalResourceType:    DockerContainer,
 			})
 		resp := &ContainerDeploymentOutput{}
 		resp.Body.Thing = "hi"
@@ -125,9 +128,10 @@ func (a AdminApi) Start() {
 			// not the same directory (i.e. the hashes are unequal))
 
 			a.Web.PutDeployment(Deployment{
-				Id:          formData.PublicUrl,
-				Matcher:     formData.PublicUrl,
-				ResourceUri: "file://" + outDir,
+				Id:                   formData.PublicUrl,
+				Matcher:              formData.PublicUrl,
+				LocalResourceLocator: outDir,
+				LocalResourceType:    Files,
 			})
 
 			// delete the old directory after PutDeployment is finished?

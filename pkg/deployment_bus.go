@@ -21,6 +21,20 @@ func (cc CacheControlSetting) String() string {
 	}[cc] + ")"
 }
 
+type LocalResourceType int
+
+const (
+	Files LocalResourceType = iota
+	DockerContainer
+)
+
+func (r LocalResourceType) String() string {
+	return "LocalResourceType(" + map[LocalResourceType]string{
+		Files:           "Files",
+		DockerContainer: "DockerContainer",
+	}[r] + ")"
+}
+
 type DeploymentSettings struct {
 	// defaults to AllButHtml since that's the 0 value for the enum
 	CacheControlMode CacheControlSetting `json:"cacheControlMode"`
@@ -30,10 +44,13 @@ type DeploymentSettings struct {
 }
 
 type Deployment struct {
-	Id          string             `json:"id"`
-	Matcher     string             `json:"matcher"`
-	ResourceUri string             `json:"resourceUri"`
-	Settings    DeploymentSettings `json:"settings"`
+	// why did i make this json serializable ? it should probably be kept
+	// internal
+	Id                   string             `json:"id"`
+	Matcher              string             `json:"matcher"`
+	LocalResourceLocator string             `json:"localResourceLocator"`
+	LocalResourceType    LocalResourceType  `json:"localResourceType"`
+	Settings             DeploymentSettings `json:"settings"`
 }
 
 type DeploymentBus struct {
