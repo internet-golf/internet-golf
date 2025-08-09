@@ -3,6 +3,8 @@ package internetgolf
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -60,6 +62,26 @@ func getLongestCommonPrefix(strings []string) string {
 		longestCommonPrefix = newLongestCommonPrefix
 	}
 	return longestCommonPrefix
+}
+
+func hashStream(stream io.ReadSeeker) string {
+	result := md5.New()
+	b := make([]byte, 1024)
+	stream.Seek(0, 0)
+	n, err := stream.Read(b)
+	for n > 0 {
+		fmt.Printf("read %v bytes\n", n)
+		if err != nil {
+			panic("could not read stream while computing hash")
+		}
+		result.Write(b)
+		n, err = stream.Read(b)
+	}
+
+	// cleanup
+	stream.Seek(0, 0)
+
+	return hex.EncodeToString(result.Sum(nil))
 }
 
 // from https://stackoverflow.com/a/57640231/3962267

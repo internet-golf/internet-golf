@@ -41,12 +41,13 @@ type StaticDeploymentInput struct {
 		Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
 		KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
 		// TODO: PreserveExistingFiles
+		// other stuff from settings
 	}]
 }
 
 type StaticDeploymentOutput struct {
 	Body struct {
-		Id string `json:"id"`
+		Success bool `json:"success"`
 	}
 }
 
@@ -98,8 +99,6 @@ func (a AdminApi) Start() {
 		func(
 			ctx context.Context, input *StaticDeploymentInput,
 		) (*StaticDeploymentOutput, error) {
-			output := StaticDeploymentOutput{}
-
 			formData := input.RawBody.Data()
 
 			if len(formData.PublicUrl) < 1 {
@@ -109,8 +108,9 @@ func (a AdminApi) Start() {
 			fmt.Printf("received form data: %+v\n", formData)
 
 			outDir := path.Join(
-				a.Settings.DataDirectory, slug.Make(formData.PublicUrl),
-				// TODO: hash of formData.Contents
+				a.Settings.DataDirectory,
+				slug.Make(formData.PublicUrl),
+				hashStream(formData.Contents),
 			)
 
 			// weirdly, formData.Contents is a seekable stream, which i'm pretty
@@ -134,11 +134,11 @@ func (a AdminApi) Start() {
 				LocalResourceType:    Files,
 			})
 
-			// delete the old directory after PutDeployment is finished?
+			// TODO: delete the old directory after PutDeployment is finished?
 			// presumably that'll be safe
 
-			output.Body.Id = "whatever"
-
+			output := StaticDeploymentOutput{}
+			output.Body.Success = true
 			return &output, nil
 		})
 
