@@ -3,6 +3,7 @@ package internetgolf
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/caddyserver/caddy/v2"
@@ -32,12 +33,12 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
-func getCaddyStaticRoute(d Deployment) caddyhttp.Route {
+func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	// decompose matcher into host and path
 	matcherComps := strings.Split(d.Matcher, "/")
 	host := matcherComps[0]
 	if len(host) == 0 || !strings.Contains(host, ".") {
-		panic(fmt.Sprintf("%v is not a valid matcher: does not start with valid host", d.Matcher))
+		return caddyhttp.Route{}, fmt.Errorf("\"%v\" is not a valid matcher: does not start with valid host", d.Matcher)
 	}
 	var path string
 	if len(matcherComps) == 1 || len(matcherComps[1]) == 0 {
@@ -57,17 +58,14 @@ func getCaddyStaticRoute(d Deployment) caddyhttp.Route {
 		},
 	}
 
-	return route
+	return route, nil
 }
 
 func (c CaddyServer) Deploy(deployments []Deployment) error {
-	fmt.Printf("deploying %+v\n", deployments)
-	// TODO: implement https://caddyserver.com/docs/api#concurrent-config-changes
-
 	httpApp := caddyhttp.App{
 		Servers: map[string]*caddyhttp.Server{
 			"internetgolf": {
-				Listen: []string{":80", ":443"},
+				Listen: []string{"localhost:80"},
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
 					// just for local testing...
 					Disabled: true,
@@ -76,16 +74,21 @@ func (c CaddyServer) Deploy(deployments []Deployment) error {
 			},
 		},
 	}
+
 	for _, deployment := range deployments {
-		// TODO: recover from panics and ignore the deployment with a warning
 		if deployment.LocalResourceType == Files {
-			httpApp.Servers["internetgolf"].Routes = append(
-				httpApp.Servers["internetgolf"].Routes,
-				getCaddyStaticRoute(deployment),
-			)
+			if route, err := getCaddyStaticRoute(deployment); err != nil {
+				log.Printf("encountered error: %v", err)
+			} else {
+				httpApp.Servers["internetgolf"].Routes = append(
+					httpApp.Servers["internetgolf"].Routes,
+					route,
+				)
+			}
 		}
-		// TODO: docker cases
 	}
+
+	// TODO: docker cases
 
 	httpJson, err := json.Marshal(httpApp)
 	if err != nil {
