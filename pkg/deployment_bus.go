@@ -1,7 +1,10 @@
 package internetgolf
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path"
 	"slices"
 )
 
@@ -55,27 +58,72 @@ type Deployment struct {
 }
 
 type DeploymentBus struct {
-	deployments []Deployment
-	DeployAll   func([]Deployment)
+	deployments     []Deployment
+	deploymentsFile string
+	Server          PublicWebServer
+	StorageSettings StorageSettings
 }
 
-func (bus DeploymentBus) PutDeployment(newDeployment Deployment) error {
+// brings any persisted deployments back to life and initializes the
+// DeploymentBus' Server with them
+func (bus *DeploymentBus) Init() {
+	bus.deploymentsFile = path.Join(bus.StorageSettings.DataDirectory, "deployments.json")
+	infile, infileErr := os.Open(bus.deploymentsFile)
+	// TODO: handle file not existing yet differently from other errors
+	if infileErr == nil {
+		decoder := json.NewDecoder(infile)
+		decoderError := decoder.Decode(&bus.deployments)
+		if decoderError != nil {
+			fmt.Printf("error decoding existing deployments: %v", decoderError)
+		}
+	}
+	bus.Server.DeployAll(bus.deployments)
+}
+
+func (bus *DeploymentBus) PersistDeployments() error {
+	// TODO: this doesn't seem that atomic since an error after this would leave
+	// an empty bus.deploymentsFile with no way to rollback
+	outfile, outfileErr := os.Create(bus.deploymentsFile)
+	if outfileErr != nil {
+		return outfileErr
+	}
+
+	encoder := json.NewEncoder(outfile)
+	jsonErr := encoder.Encode(bus.deployments)
+	if jsonErr != nil {
+		return jsonErr
+	}
+
+	return nil
+}
+
+func (bus *DeploymentBus) PutDeployment(newDeployment Deployment) error {
 	fmt.Printf("adding deployment %+v\n", newDeployment)
 	newDeployments := slices.DeleteFunc(bus.deployments, func(d Deployment) bool {
 		return d.Id == newDeployment.Id
 	})
 	bus.deployments = append(newDeployments, newDeployment)
-	bus.DeployAll(bus.deployments)
 
-	return nil
+	deploymentErr := bus.Server.DeployAll(bus.deployments)
+	if deploymentErr != nil {
+		return deploymentErr
+	}
+
+	return bus.PersistDeployments()
 }
 
-func (bus DeploymentBus) DeleteDeployment(id string) error {
+func (bus *DeploymentBus) DeleteDeployment(id string) error {
 	fmt.Printf("removing deployment with id %v\n", id)
 	bus.deployments = slices.DeleteFunc(bus.deployments, func(d Deployment) bool {
 		return d.Id == id
 	})
-	bus.DeployAll(bus.deployments)
+
+	deploymentErr := bus.Server.DeployAll(bus.deployments)
+	if deploymentErr != nil {
+		return deploymentErr
+	}
+
+	bus.PersistDeployments()
 
 	return nil
 }

@@ -14,6 +14,21 @@ import (
 	"strings"
 )
 
+type StorageSettings struct {
+	// will be automatically set to $HOME/.internetgolf if not set
+	DataDirectory string
+}
+
+// pass in an empty string to use the default data directory
+func (s *StorageSettings) Init(nonDefaultDataDirectory string) {
+	var dataDirectoryError error
+	s.DataDirectory, dataDirectoryError = getDataDirectory(nonDefaultDataDirectory)
+	if dataDirectoryError != nil {
+		panic("Could not create data directory: " + dataDirectoryError.Error())
+	}
+	fmt.Printf("Initialized data directory to %s\n", s.DataDirectory)
+}
+
 func getDataDirectory(nonDefaultDir string) (string, error) {
 	if nonDefaultDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -68,7 +83,7 @@ func hashStream(stream io.ReadSeeker) (string, error) {
 	hashWriter := md5.New()
 	stream.Seek(0, 0)
 	written, err := io.Copy(hashWriter, stream)
-		if err != nil {
+	if err != nil {
 		return "", err
 	}
 	fmt.Printf("hashed %v bytes\n", written)

@@ -53,26 +53,17 @@ type StaticDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web      DeploymentBus
-	Settings struct {
-		// will be automatically set to $HOME/.internetgolf if not set
-		DataDirectory string
-	}
+	Web             DeploymentBus
+	StorageSettings StorageSettings
 }
 
-func (a AdminApi) Start() {
+func (a *AdminApi) Start() {
 	// still not sure if chi is better than the current standard library router
 	router := chi.NewMux()
 	api := humachi.New(
 		router,
 		huma.DefaultConfig("Deployment Agent API", "0.5.0"),
 	)
-
-	var dataDirectoryError error
-	a.Settings.DataDirectory, dataDirectoryError = getDataDirectory(a.Settings.DataDirectory)
-	if dataDirectoryError != nil {
-		panic("Could not create data directory: " + dataDirectoryError.Error())
-	}
 
 	api.UseMiddleware(checkHMAC)
 
@@ -115,7 +106,7 @@ func (a AdminApi) Start() {
 			}
 
 			outDir := path.Join(
-				a.Settings.DataDirectory,
+				a.StorageSettings.DataDirectory,
 				slug.Make(formData.PublicUrl),
 				hash,
 			)

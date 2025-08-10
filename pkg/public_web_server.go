@@ -20,10 +20,14 @@ import (
 )
 
 type PublicWebServer interface {
-	Deploy([]Deployment)
+	DeployAll([]Deployment) error
 }
 
-type CaddyServer struct{}
+type CaddyServer struct {
+	Settings struct {
+		LocalOnly bool
+	}
+}
 
 // utility function to turn a value into json without possibly returning an
 // error. should only really be used if it seems incredibly unlikely that
@@ -64,14 +68,19 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	return route, nil
 }
 
-func (c CaddyServer) DeployAll(deployments []Deployment) error {
+func (c *CaddyServer) DeployAll(deployments []Deployment) error {
+	var listen []string
+	if c.Settings.LocalOnly {
+		listen = []string{"localhost:80"}
+	} else {
+		listen = []string{":80", ":443"}
+	}
 	httpApp := caddyhttp.App{
 		Servers: map[string]*caddyhttp.Server{
 			"internetgolf": {
-				Listen: []string{"localhost:80"},
+				Listen: listen,
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
-					// just for local testing...
-					Disabled: true,
+					Disabled: !c.Settings.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{},
 			},
