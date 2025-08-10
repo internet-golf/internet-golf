@@ -64,24 +64,30 @@ func getLongestCommonPrefix(strings []string) string {
 	return longestCommonPrefix
 }
 
-func hashStream(stream io.ReadSeeker) string {
-	result := md5.New()
+func hashStream(stream io.ReadSeeker) (string, error) {
+	hashWriter := md5.New()
 	b := make([]byte, 1024)
 	stream.Seek(0, 0)
-	n, err := stream.Read(b)
-	for n > 0 {
-		fmt.Printf("read %v bytes\n", n)
-		if err != nil {
-			panic("could not read stream while computing hash")
+
+	for true {
+		n, err := stream.Read(b)
+		if n == 0 {
+			break
 		}
-		result.Write(b)
-		n, err = stream.Read(b)
+		hashWriter.Write(b[:n])
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				return "", fmt.Errorf("could not hash stream: %v", err)
+			}
+		}
 	}
 
 	// cleanup
 	stream.Seek(0, 0)
 
-	return hex.EncodeToString(result.Sum(nil))
+	return hex.EncodeToString(hashWriter.Sum(nil)), nil
 }
 
 // from https://stackoverflow.com/a/57640231/3962267

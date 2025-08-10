@@ -43,9 +43,10 @@ type DeploymentSettings struct {
 	// also: basic auth config
 }
 
+// why did i make this json serializable ? it should probably be kept
+// internal
 type Deployment struct {
-	// why did i make this json serializable ? it should probably be kept
-	// internal
+	// TODO: do i need or want an ID? or does the Matcher fill that role effectively?
 	Id                   string             `json:"id"`
 	Matcher              string             `json:"matcher"`
 	LocalResourceLocator string             `json:"localResourceLocator"`
@@ -54,8 +55,8 @@ type Deployment struct {
 }
 
 type DeploymentBus struct {
-	deployments        []Deployment
-	OnDeploymentChange func([]Deployment)
+	deployments []Deployment
+	DeployAll   func([]Deployment)
 }
 
 func (bus DeploymentBus) PutDeployment(newDeployment Deployment) error {
@@ -64,7 +65,7 @@ func (bus DeploymentBus) PutDeployment(newDeployment Deployment) error {
 		return d.Id == newDeployment.Id
 	})
 	bus.deployments = append(newDeployments, newDeployment)
-	bus.OnDeploymentChange(bus.deployments)
+	bus.DeployAll(bus.deployments)
 
 	return nil
 }
@@ -74,7 +75,7 @@ func (bus DeploymentBus) DeleteDeployment(id string) error {
 	bus.deployments = slices.DeleteFunc(bus.deployments, func(d Deployment) bool {
 		return d.Id == id
 	})
-	bus.OnDeploymentChange(bus.deployments)
+	bus.DeployAll(bus.deployments)
 
 	return nil
 }

@@ -25,6 +25,9 @@ type PublicWebServer interface {
 
 type CaddyServer struct{}
 
+// utility function to turn a value into json without possibly returning an
+// error. should only really be used if it seems incredibly unlikely that
+// json.Marshal will panic when given v.
 func jsonOrPanic(v any) []byte {
 	result, err := json.Marshal(v)
 	if err != nil {
@@ -61,7 +64,7 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	return route, nil
 }
 
-func (c CaddyServer) Deploy(deployments []Deployment) error {
+func (c CaddyServer) DeployAll(deployments []Deployment) error {
 	httpApp := caddyhttp.App{
 		Servers: map[string]*caddyhttp.Server{
 			"internetgolf": {

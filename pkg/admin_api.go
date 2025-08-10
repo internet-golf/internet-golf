@@ -2,6 +2,7 @@ package internetgolf
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -102,15 +103,21 @@ func (a AdminApi) Start() {
 			formData := input.RawBody.Data()
 
 			if len(formData.PublicUrl) < 1 {
-				panic("public URL for deployment is required")
+				return nil, errors.New("public URL for deployment is required")
 			}
 
 			fmt.Printf("received form data: %+v\n", formData)
 
+			hash, hashErr := hashStream(formData.Contents)
+
+			if hashErr != nil {
+				return nil, fmt.Errorf("could not hash files for %v", formData.PublicUrl)
+			}
+
 			outDir := path.Join(
 				a.Settings.DataDirectory,
 				slug.Make(formData.PublicUrl),
-				hashStream(formData.Contents),
+				hash,
 			)
 
 			// weirdly, formData.Contents is a seekable stream, which i'm pretty

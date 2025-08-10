@@ -10,11 +10,14 @@ func main() {
 	// interface to the web server that actually deploys the deployments
 	deploymentServer := internetgolf.CaddyServer{}
 
+	// TODO: make the deploymentBus deploy all persisted deployments
+	deploymentServer.DeployAll([]internetgolf.Deployment{})
+
 	// object that stores (and theoretically persists) the active deployments
 	// and broadcasts them to the deploymentServer when necessary
 	deploymentBus := internetgolf.DeploymentBus{
-		OnDeploymentChange: func(d []internetgolf.Deployment) {
-			deploymentServer.Deploy(d)
+		DeployAll: func(d []internetgolf.Deployment) {
+			deploymentServer.DeployAll(d)
 		},
 	}
 
