@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/caddyserver/caddy/v2"
@@ -29,6 +30,8 @@ type CaddyServer struct {
 	}
 }
 
+type jsonObj map[string]any
+
 // utility function to turn a value into json without possibly returning an
 // error. should only really be used if it seems incredibly unlikely that
 // json.Marshal will panic when given v.
@@ -40,6 +43,14 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
+// returns a caddy route that corresponds to a static file server for the
+// Deployment d.
+//
+// this function is composed mainly of terrifying json soup but it's unclear how
+// else to do it since caddy.Run() expects json-serializable stuff (and the doc
+// comment for the caddy Config struct says "Go programs which are directly
+// building a Config struct value should take care to populate the
+// JSON-encodable fields of the struct")
 func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	// decompose matcher into host and path
 	matcherComps := strings.Split(d.Matcher, "/")
@@ -49,20 +60,75 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	}
 	var path string
 	if len(matcherComps) == 1 || len(matcherComps[1]) == 0 {
-		path = "/*"
+		path = ""
 	} else {
 		path = "/" + strings.Join(matcherComps[1:], "/")
 	}
 
+	standardSubroute := jsonObj{
+		"handle": []jsonObj{
+			{
+				"handler": "vars",
+				"root":    d.LocalResourceLocator,
+			},
+			{
+				"handler": "encode",
+				"encodings": jsonObj{
+					"gzip": jsonObj{},
+					"zstd": jsonObj{},
+				},
+				"prefer": []string{"zstd", "gzip"},
+			},
+			{
+				"handler": "file_server",
+			},
+		},
+	}
+
+	var initialSubroutes []jsonObj
+
+	if d.Settings.CacheControlMode != Default {
+		var cacheControlMatcher []string
+		switch d.Settings.CacheControlMode {
+		case AllButHtml:
+			// */ is supposed to match index routes (i.e. those ending in /,
+			// like thing.com/whatever/)
+			cacheControlMatcher = []string{"*/", "*.html"}
+		case Nothing:
+			cacheControlMatcher = []string{"*"}
+		}
+		initialSubroutes = append(initialSubroutes, jsonObj{
+			"match": []jsonObj{
+				{"path": cacheControlMatcher},
+			},
+			"handle": []jsonObj{
+				{
+					"handler": "headers",
+					"response": jsonObj{
+						"set": jsonObj{
+							"Cache-Control": []string{"max-age=0,no-store"},
+						},
+					}},
+			},
+		})
+	}
+
 	route := caddyhttp.Route{
 		MatcherSetsRaw: caddyhttp.RawMatcherSets{
-			caddy.ModuleMap{"host": jsonOrPanic([]string{host})},
-			caddy.ModuleMap{"path": jsonOrPanic([]string{path})},
+			caddy.ModuleMap{
+				"host": jsonOrPanic([]string{host}),
+			},
 		},
 		HandlersRaw: []json.RawMessage{
-			[]byte(fmt.Sprintf(`{"handler": "vars", "root": "%s"}`, d.LocalResourceLocator)),
-			[]byte(`{"handler": "file_server"}`),
+			jsonOrPanic(jsonObj{
+				"handler": "subroute",
+				"routes":  slices.Concat(initialSubroutes, []jsonObj{standardSubroute}),
+			}),
 		},
+	}
+
+	if path != "" {
+		route.MatcherSetsRaw[0]["path"] = jsonOrPanic([]string{path})
 	}
 
 	return route, nil
