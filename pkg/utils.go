@@ -66,27 +66,13 @@ func getLongestCommonPrefix(strings []string) string {
 
 func hashStream(stream io.ReadSeeker) (string, error) {
 	hashWriter := md5.New()
-	b := make([]byte, 1024)
 	stream.Seek(0, 0)
-
-	for true {
-		n, err := stream.Read(b)
-		if n == 0 {
-			break
-		}
-		hashWriter.Write(b[:n])
+	written, err := io.Copy(hashWriter, stream)
 		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				return "", fmt.Errorf("could not hash stream: %v", err)
-			}
-		}
+		return "", err
 	}
-
-	// cleanup
+	fmt.Printf("hashed %v bytes\n", written)
 	stream.Seek(0, 0)
-
 	return hex.EncodeToString(hashWriter.Sum(nil)), nil
 }
 
