@@ -29,8 +29,9 @@ func (s *StorageSettings) Init(nonDefaultDataDirectory string) {
 	fmt.Printf("Initialized data directory to %s\n", s.DataDirectory)
 }
 
-func getDataDirectory(nonDefaultDir string) (string, error) {
-	if nonDefaultDir == "" {
+// why is this even a separate function
+func getDataDirectory(dataDirectoryPath string) (string, error) {
+	if dataDirectoryPath == "" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			return "", errors.New(
@@ -38,24 +39,25 @@ func getDataDirectory(nonDefaultDir string) (string, error) {
 					"automatically created. please manually configure the data directory",
 			)
 		}
-		nonDefaultDir = path.Join(
+		dataDirectoryPath = path.Join(
 			// hopefully this replaceAll doesn't have weird consequences -
 			// everything still seems to work here on windows
 			strings.ReplaceAll(homeDir, "\\", "/"), ".internetgolf", // TODO: extract to constant
 		)
 	}
 
-	if _, err := os.Lstat(nonDefaultDir); err != nil {
-		fmt.Printf("Creating data directory at %v\n", nonDefaultDir)
+	if _, err := os.Lstat(dataDirectoryPath); err != nil {
+		fmt.Printf("Creating data directory at %v\n", dataDirectoryPath)
 		// TODO: hope that 0750 works for permissions. can Caddy access the result???
-		if os.Mkdir(nonDefaultDir, 0750) != nil {
-			return "", errors.New("could not create data directory at " + nonDefaultDir)
+		// will this work recursively?
+		if os.Mkdir(dataDirectoryPath, 0750) != nil {
+			return "", errors.New("could not create data directory at " + dataDirectoryPath)
 		}
 	} else {
-		fmt.Printf("Found data directory at %v\n", nonDefaultDir)
+		fmt.Printf("Found data directory at %v\n", dataDirectoryPath)
 	}
 
-	return nonDefaultDir, nil
+	return dataDirectoryPath, nil
 }
 
 func getLongestCommonPrefix(strings []string) string {
@@ -79,19 +81,33 @@ func getLongestCommonPrefix(strings []string) string {
 	return longestCommonPrefix
 }
 
+// turns the contents of a stream into an md5 hash. seeks the stream back to its
+// start before and after computing the hash.
 func hashStream(stream io.ReadSeeker) (string, error) {
 	hashWriter := md5.New()
 	stream.Seek(0, 0)
+	defer stream.Seek(0, 0)
+
 	written, err := io.Copy(hashWriter, stream)
 	if err != nil {
 		return "", err
 	}
 	fmt.Printf("hashed %v bytes\n", written)
-	stream.Seek(0, 0)
 	return hex.EncodeToString(hashWriter.Sum(nil)), nil
 }
 
-// from https://stackoverflow.com/a/57640231/3962267
+// function that takes a stream containing .tar.gz data and extracts the files
+// and folders within to baseOutDir.
+//
+// if trimLeadingDirs is true, parent directories at the top level that have no
+// siblings and that contain every other file in the tarball within them will be
+// discarded (e.g. if the files in the .tar.gz are ["dist/index.html",
+// "dist/index.js", "dist/favicon.ico"], it will discard the "dist/" and just
+// create the files ["index.html", "index.js", "favicon.ico"]). this is
+// generally what you want.
+//
+// the tar file traversal is heavily referenced from
+// https://stackoverflow.com/a/57640231/3962267
 func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs bool) error {
 	os.MkdirAll(baseOutDir, 0750)
 
@@ -103,8 +119,11 @@ func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs b
 	tarReader := tar.NewReader(uncompressedStream)
 
 	longestCommonPrefix := ""
-
 	if trimLeadingDirs {
+
+		// perform a first pass over the contents of the tar data that just
+		// gathers the paths of the files in it and figures out if there's a
+		// common leading prefix that can be removed
 
 		var filePaths []string
 
@@ -117,8 +136,6 @@ func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs b
 
 			filePaths = append(filePaths, header.Name)
 		}
-
-		fmt.Printf("file paths: %v\n", filePaths)
 
 		longestCommonPrefix = getLongestCommonPrefix(filePaths)
 
