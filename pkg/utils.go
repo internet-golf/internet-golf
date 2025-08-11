@@ -53,8 +53,6 @@ func getDataDirectory(dataDirectoryPath string) (string, error) {
 		if os.Mkdir(dataDirectoryPath, 0750) != nil {
 			return "", errors.New("could not create data directory at " + dataDirectoryPath)
 		}
-	} else {
-		fmt.Printf("Found data directory at %v\n", dataDirectoryPath)
 	}
 
 	return dataDirectoryPath, nil

@@ -2,6 +2,7 @@ package internetgolf
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -9,41 +10,14 @@ import (
 )
 
 // TODO: make into string so it can be json-serialized more durably
-type CacheControlSetting int
-
-// TODO: prefix names???
-const (
-	AllButHtml CacheControlSetting = iota
-	Default
-	Nothing
-)
-
-func (cc CacheControlSetting) String() string {
-	return "CacheControlSetting(" + map[CacheControlSetting]string{
-		AllButHtml: "AllButHtml",
-		Default:    "Default",
-		Nothing:    "Nothing",
-	}[cc] + ")"
-}
-
-// TODO: make into string so it can be json-serialized more durably
-type LocalResourceType int
+type LocalResourceType string
 
 const (
-	Files LocalResourceType = iota
-	DockerContainer
+	StaticFiles     LocalResourceType = "StaticFiles"
+	DockerContainer LocalResourceType = "DockerContainer"
 )
-
-func (r LocalResourceType) String() string {
-	return "LocalResourceType(" + map[LocalResourceType]string{
-		Files:           "Files",
-		DockerContainer: "DockerContainer",
-	}[r] + ")"
-}
 
 type DeploymentSettings struct {
-	// defaults to AllButHtml since that's the 0 value for the enum
-	CacheControlMode CacheControlSetting `json:"cacheControlMode"`
 	// 404 page address for static sites?
 	// TODO: ensure config exists for SPAs that serves the same file for all paths
 	// and config for ignoring .html extensions?
@@ -71,15 +45,20 @@ type DeploymentBus struct {
 // DeploymentBus' Server with them
 func (bus *DeploymentBus) Init() {
 	bus.deploymentsFile = path.Join(bus.StorageSettings.DataDirectory, "deployments.json")
-	infile, infileErr := os.Open(bus.deploymentsFile)
-	// TODO: handle file not existing yet differently from other errors
-	if infileErr == nil {
+	if infile, infileErr := os.Open(bus.deploymentsFile); infileErr == nil {
 		defer infile.Close()
 		decoder := json.NewDecoder(infile)
 		decoderError := decoder.Decode(&bus.deployments)
 		if decoderError != nil {
 			fmt.Printf("error decoding existing deployments: %v", decoderError)
 		}
+	} else if !errors.Is(infileErr, os.ErrNotExist) {
+		panic(
+			fmt.Sprintf(
+				"could not initialize deployment bus; \"%v\" not openable",
+				bus.deploymentsFile,
+			),
+		)
 	}
 	bus.Server.DeployAll(bus.deployments)
 }

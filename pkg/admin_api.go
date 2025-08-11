@@ -129,7 +129,7 @@ func (a *AdminApi) Start() {
 				Id:                   formData.PublicUrl,
 				Matcher:              formData.PublicUrl,
 				LocalResourceLocator: outDir,
-				LocalResourceType:    Files,
+				LocalResourceType:    StaticFiles,
 			})
 
 			// TODO: delete the old directory after PutDeployment is finished?

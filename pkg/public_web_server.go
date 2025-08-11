@@ -87,31 +87,31 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 
 	var initialSubroutes []jsonObj
 
-	if d.Settings.CacheControlMode != Default {
-		var cacheControlMatcher []string
-		switch d.Settings.CacheControlMode {
-		case AllButHtml:
-			// */ is supposed to match index routes (i.e. those ending in /,
-			// like thing.com/whatever/)
-			cacheControlMatcher = []string{"*/", "*.html"}
-		case Nothing:
-			cacheControlMatcher = []string{"*"}
-		}
-		initialSubroutes = append(initialSubroutes, jsonObj{
-			"match": []jsonObj{
-				{"path": cacheControlMatcher},
-			},
-			"handle": []jsonObj{
-				{
-					"handler": "headers",
-					"response": jsonObj{
-						"set": jsonObj{
-							"Cache-Control": []string{"max-age=0,no-store"},
-						},
-					}},
-			},
-		})
-	}
+	// if d.Settings.CacheControlMode != Default {
+	// 	var cacheControlMatcher []string
+	// 	switch d.Settings.CacheControlMode {
+	// 	case AllButHtml:
+	// 		// */ is supposed to match index routes (i.e. those ending in /,
+	// 		// like thing.com/whatever/)
+	// 		cacheControlMatcher = []string{"*/", "*.html"}
+	// 	case Nothing:
+	// 		cacheControlMatcher = []string{"*"}
+	// 	}
+	// 	initialSubroutes = append(initialSubroutes, jsonObj{
+	// 		"match": []jsonObj{
+	// 			{"path": cacheControlMatcher},
+	// 		},
+	// 		"handle": []jsonObj{
+	// 			{
+	// 				"handler": "headers",
+	// 				"response": jsonObj{
+	// 					"set": jsonObj{
+	// 						"Cache-Control": []string{"max-age=0,no-store"},
+	// 					},
+	// 				}},
+	// 		},
+	// 	})
+	// }
 
 	route := caddyhttp.Route{
 		MatcherSetsRaw: caddyhttp.RawMatcherSets{
@@ -154,7 +154,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		if deployment.LocalResourceType == Files {
+		if deployment.LocalResourceType == StaticFiles {
 			if route, err := getCaddyStaticRoute(deployment); err != nil {
 				log.Printf("encountered error: %v", err)
 			} else {
