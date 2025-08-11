@@ -19,8 +19,14 @@ var busCreated bool = false
 
 func createBus() {
 	if !busCreated {
+
+		tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
+		if tempDirError != nil {
+			panic(tempDirError)
+		}
+
 		settings := internetgolf.StorageSettings{}
-		settings.Init("")
+		settings.Init(tempDir)
 
 		// interface to the web server that actually deploys the deployments
 		deploymentServer := internetgolf.CaddyServer{}
@@ -57,10 +63,12 @@ func TestMain(m *testing.M) {
 	createBus()
 	// setupHosts()
 	code := m.Run()
+
+	os.RemoveAll(deploymentBus.StorageSettings.DataDirectory)
 	os.Exit(code)
 }
 
-func urlToString(url string, t *testing.T) string {
+func urlToPageContent(url string, t *testing.T) string {
 	resp, err := http.Get(url)
 	if err != nil {
 		t.Fatal(err)
@@ -79,10 +87,12 @@ func TestNormalDeployment(t *testing.T) {
 		panic(wdErr)
 	}
 
+	// create a deployment that serves the static-site fixture at
+	// http://internet-golf-test.local
 	deploymentBus.PutDeployment(internetgolf.Deployment{
 		Id:                "whatever",
 		Matcher:           "internet-golf-test.local",
-		LocalResourceType: internetgolf.Files,
+		LocalResourceType: internetgolf.StaticFiles,
 		LocalResourceLocator: path.Join(
 			// for some reason the cwd already includes /test/
 			strings.ReplaceAll(cwd, "\\", "/"), "fixtures", "static-site"),
@@ -91,7 +101,7 @@ func TestNormalDeployment(t *testing.T) {
 	// configStr := urlToString("http://localhost:2019/config", t)
 	// fmt.Println(configStr)
 
-	bodyStr := urlToString("http://internet-golf-test.local", t)
+	bodyStr := urlToPageContent("http://internet-golf-test.local", t)
 	if bodyStr != "stuff\n" {
 		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
 	}
