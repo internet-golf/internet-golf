@@ -69,7 +69,7 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 		"handle": []jsonObj{
 			{
 				"handler": "vars",
-				"root":    d.LocalResourceLocator,
+				"root":    d.SiteResourceLocator,
 			},
 			{
 				"handler": "encode",
@@ -154,7 +154,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		if deployment.LocalResourceType == StaticFiles {
+		if deployment.SiteResourceType == StaticFiles {
 			if route, err := getCaddyStaticRoute(deployment); err != nil {
 				log.Printf("encountered error: %v", err)
 			} else {

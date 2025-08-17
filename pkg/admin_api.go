@@ -75,10 +75,10 @@ func (a *AdminApi) Start() {
 		fmt.Println(input.Body.ContainerUrl)
 		a.Web.PutDeployment(
 			Deployment{
-				Id:                   "identifier",
-				Matcher:              "mitch.website/thing",
-				LocalResourceLocator: "docker://thing:" + strconv.Itoa((input.Body.InternalAppPort)),
-				LocalResourceType:    DockerContainer,
+				Id:                  "identifier",
+				Matcher:             "mitch.website/thing",
+				SiteResourceLocator: "docker://thing:" + strconv.Itoa((input.Body.InternalAppPort)),
+				SiteResourceType:    DockerContainer,
 			})
 		resp := &ContainerDeploymentOutput{}
 		resp.Body.Thing = "hi"
@@ -126,10 +126,10 @@ func (a *AdminApi) Start() {
 			// not the same directory (i.e. the hashes are unequal))
 
 			a.Web.PutDeployment(Deployment{
-				Id:                   formData.PublicUrl,
-				Matcher:              formData.PublicUrl,
-				LocalResourceLocator: outDir,
-				LocalResourceType:    StaticFiles,
+				Id:                  formData.PublicUrl,
+				Matcher:             formData.PublicUrl,
+				SiteResourceLocator: outDir,
+				SiteResourceType:    StaticFiles,
 			})
 
 			// TODO: delete the old directory after PutDeployment is finished?

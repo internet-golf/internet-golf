@@ -9,29 +9,24 @@ import (
 	"slices"
 )
 
-// TODO: make into string so it can be json-serialized more durably
-type LocalResourceType string
+type SiteResourceType string
 
 const (
-	StaticFiles     LocalResourceType = "StaticFiles"
-	DockerContainer LocalResourceType = "DockerContainer"
+	StaticFiles     SiteResourceType = "StaticFiles"
+	DockerContainer SiteResourceType = "DockerContainer"
+	Redirect        SiteResourceType = "Redirect"
 )
 
 type DeploymentSettings struct {
-	// 404 page address for static sites?
-	// TODO: ensure config exists for SPAs that serves the same file for all paths
-	// and config for ignoring .html extensions?
-	// also: basic auth config
-	// CORS
 }
 
 type Deployment struct {
 	// TODO: do i need or want an ID? or does the Matcher fill that role effectively?
-	Id                   string             `json:"id"`
-	Matcher              string             `json:"matcher"`
-	LocalResourceLocator string             `json:"localResourceLocator"`
-	LocalResourceType    LocalResourceType  `json:"localResourceType"`
-	Settings             DeploymentSettings `json:"settings"`
+	Id                  string             `json:"id"`
+	Matcher             string             `json:"matcher"`
+	SiteResourceType    SiteResourceType   `json:"siteResourceType"`
+	SiteResourceLocator string             `json:"siteResourceLocator"`
+	Settings            DeploymentSettings `json:"settings"`
 }
 
 type DeploymentBus struct {
