@@ -15,6 +15,8 @@ const (
 	StaticFiles     SiteResourceType = "StaticFiles"
 	DockerContainer SiteResourceType = "DockerContainer"
 	Redirect        SiteResourceType = "Redirect"
+	// low-level deployment type; currently just used to expose the admin api
+	ReverseProxy SiteResourceType = "ReverseProxy"
 )
 
 type DeploymentSettings struct {
@@ -27,6 +29,7 @@ type Deployment struct {
 	SiteResourceType    SiteResourceType   `json:"siteResourceType"`
 	SiteResourceLocator string             `json:"siteResourceLocator"`
 	Settings            DeploymentSettings `json:"settings"`
+	Persist             bool
 }
 
 type DeploymentBus struct {
@@ -39,7 +42,9 @@ type DeploymentBus struct {
 // brings any persisted deployments back to life and initializes the
 // DeploymentBus' Server with them
 func (bus *DeploymentBus) Init() {
+	// source of truth for where deployments are persisted to
 	bus.deploymentsFile = path.Join(bus.StorageSettings.DataDirectory, "deployments.json")
+
 	if infile, infileErr := os.Open(bus.deploymentsFile); infileErr == nil {
 		defer infile.Close()
 		decoder := json.NewDecoder(infile)
@@ -69,7 +74,16 @@ func (bus *DeploymentBus) persistDeployments() error {
 	defer outfile.Close()
 
 	encoder := json.NewEncoder(outfile)
-	jsonErr := encoder.Encode(bus.deployments)
+	persistable := slices.Collect(func(yield func(Deployment) bool) {
+		for _, d := range bus.deployments {
+			if d.Persist {
+				if !yield(d) {
+					return
+				}
+			}
+		}
+	})
+	jsonErr := encoder.Encode(persistable)
 	if jsonErr != nil {
 		return jsonErr
 	}

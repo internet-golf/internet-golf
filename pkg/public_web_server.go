@@ -18,6 +18,7 @@ import (
 	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/encode/zstd"
 	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/fileserver"
 	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/headers"
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/reverseproxy"
 )
 
 type PublicWebServer interface {
@@ -30,6 +31,7 @@ type CaddyServer struct {
 	}
 }
 
+// this is apparently how you have to do this
 type jsonObj map[string]any
 
 // utility function to turn a value into json without possibly returning an
@@ -52,6 +54,14 @@ func jsonOrPanic(v any) []byte {
 // building a Config struct value should take care to populate the
 // JSON-encodable fields of the struct")
 func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
+	if d.SiteResourceType != StaticFiles {
+		return caddyhttp.Route{}, fmt.Errorf(
+			"deployment with ID %s passed to getCaddyStaticRoute despite having resource type %s",
+			d.Id, d.SiteResourceType,
+		)
+	}
+
+	// TODO: extract this to a utility function for the other route builder functions
 	// decompose matcher into host and path
 	matcherComps := strings.Split(d.Matcher, "/")
 	host := matcherComps[0]
@@ -87,6 +97,7 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 
 	var initialSubroutes []jsonObj
 
+	// TODO: #2
 	// if d.Settings.CacheControlMode != Default {
 	// 	var cacheControlMatcher []string
 	// 	switch d.Settings.CacheControlMode {
@@ -134,6 +145,52 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	return route, nil
 }
 
+// TODO: this function is incomplete and only works for the trivial case used to
+// deploy the admin API. see TODOs below for more info
+func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
+	if d.SiteResourceType != ReverseProxy {
+		return caddyhttp.Route{}, fmt.Errorf(
+			"deployment with ID %s passed to getCaddyReverseProxyRoute despite having resource type %s",
+			d.Id, d.SiteResourceType,
+		)
+	}
+	return caddyhttp.Route{
+		MatcherSetsRaw: caddyhttp.RawMatcherSets{
+			caddy.ModuleMap{
+				// TODO: extract matcher handling to common function instead of
+				// improvising with asterisks
+				"path": jsonOrPanic([]string{d.Matcher + "*"}),
+			},
+		},
+		HandlersRaw: []json.RawMessage{
+			jsonOrPanic(jsonObj{
+				"handler": "subroute",
+				"routes": []jsonObj{
+					{
+						"handle": []jsonObj{
+							// TODO: control strip_path_prefix with a setting
+							{"handler": "rewrite", "strip_path_prefix": d.Matcher},
+							{
+								"handler": "reverse_proxy",
+								// TODO: control this with a setting? maybe?
+								"headers": jsonObj{
+									"request": jsonObj{
+										"set": jsonObj{
+											"Host":      []string{"{http.request.host}"},
+											"X-Real-Ip": []string{"{http.request.remote}"},
+										},
+									},
+								},
+								"upstreams": []jsonObj{{"dial": d.SiteResourceLocator}},
+							},
+						},
+					},
+				},
+			}),
+		},
+	}, nil
+}
+
 func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	var listen []string
 	if c.Settings.LocalOnly {
@@ -154,15 +211,24 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		if deployment.SiteResourceType == StaticFiles {
-			if route, err := getCaddyStaticRoute(deployment); err != nil {
-				log.Printf("encountered error: %v", err)
-			} else {
-				httpApp.Servers["internetgolf"].Routes = append(
-					httpApp.Servers["internetgolf"].Routes,
-					route,
-				)
-			}
+		var getCaddyRoute func(Deployment) (caddyhttp.Route, error)
+
+		switch deployment.SiteResourceType {
+		case StaticFiles:
+			getCaddyRoute = getCaddyStaticRoute
+		case ReverseProxy:
+			getCaddyRoute = getCaddyReverseProxyRoute
+		default:
+			fmt.Printf("could not process deployment with type %s\n", deployment.SiteResourceType)
+		}
+
+		if route, err := getCaddyRoute(deployment); err != nil {
+			log.Printf("encountered error: %v", err)
+		} else {
+			httpApp.Servers["internetgolf"].Routes = append(
+				httpApp.Servers["internetgolf"].Routes,
+				route,
+			)
 		}
 	}
 

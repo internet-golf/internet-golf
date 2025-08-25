@@ -44,6 +44,11 @@ func createBus() {
 	}
 }
 
+const (
+	BasicTestHost = "internet-golf-test.local"
+	CacheTestHost = "internet-golf-cache-test.local"
+)
+
 // TODO: this requires elevated permissions to run and only needs to run once...
 func setupHosts() {
 	// this does not actually appear to create a new hosts file but rather
@@ -53,7 +58,8 @@ func setupHosts() {
 		panic(err)
 	}
 	fmt.Println(hosts)
-	hosts.AddHost("127.0.0.1", "internet-golf-test.local")
+	hosts.AddHost("127.0.0.1", BasicTestHost)
+	hosts.AddHost("127.0.0.1", CacheTestHost)
 	if saveErr := hosts.Save(); saveErr != nil {
 		panic(saveErr)
 	}
@@ -81,7 +87,7 @@ func urlToPageContent(url string, t *testing.T) string {
 	return bodyStr
 }
 
-func TestNormalDeployment(t *testing.T) {
+func TestBasicStaticDeployment(t *testing.T) {
 	cwd, wdErr := os.Getwd()
 	if wdErr != nil {
 		panic(wdErr)
@@ -91,8 +97,9 @@ func TestNormalDeployment(t *testing.T) {
 	// http://internet-golf-test.local
 	deploymentBus.PutDeployment(internetgolf.Deployment{
 		Id:               "whatever",
-		Matcher:          "internet-golf-test.local",
+		Matcher:          BasicTestHost,
 		SiteResourceType: internetgolf.StaticFiles,
+		Settings:         internetgolf.DeploymentSettings{},
 		SiteResourceLocator: path.Join(
 			// for some reason the cwd already includes /test/
 			strings.ReplaceAll(cwd, "\\", "/"), "fixtures", "static-site"),
@@ -101,7 +108,7 @@ func TestNormalDeployment(t *testing.T) {
 	// configStr := urlToString("http://localhost:2019/config", t)
 	// fmt.Println(configStr)
 
-	bodyStr := urlToPageContent("http://internet-golf-test.local", t)
+	bodyStr := urlToPageContent("http://"+BasicTestHost, t)
 	if bodyStr != "stuff\n" {
 		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
 	}

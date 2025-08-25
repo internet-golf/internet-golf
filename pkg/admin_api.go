@@ -36,6 +36,12 @@ type ContainerDeploymentOutput struct {
 	}
 }
 
+type HealthCheckOutput struct {
+	Body struct {
+		Ok bool `json:"ok"`
+	}
+}
+
 type StaticDeploymentInput struct {
 	RawBody huma.MultipartFormFiles[struct {
 		PublicUrl              string        `form:"publicUrl"`
@@ -55,9 +61,14 @@ type StaticDeploymentOutput struct {
 type AdminApi struct {
 	Web             DeploymentBus
 	StorageSettings StorageSettings
+	Port            string
 }
 
 func (a *AdminApi) Start() {
+	if len(a.Port) == 0 {
+		panic("Admin API port not set")
+	}
+
 	// still not sure if chi is better than the current standard library router
 	router := chi.NewMux()
 	api := humachi.New(
@@ -66,6 +77,13 @@ func (a *AdminApi) Start() {
 	)
 
 	api.UseMiddleware(checkHMAC)
+
+	huma.Get(api, "/alive",
+		func(ctx context.Context, i *struct{}) (*HealthCheckOutput, error) {
+			resp := &HealthCheckOutput{}
+			resp.Body.Ok = true
+			return resp, nil
+		})
 
 	huma.Put(api, "/deploy/container", func(
 		ctx context.Context, input *ContainerDeploymentInput,
@@ -140,6 +158,7 @@ func (a *AdminApi) Start() {
 			return &output, nil
 		})
 
-	fmt.Println("Starting admin API server at http://127.0.0.1:8888")
-	http.ListenAndServe("127.0.0.1:8888", router)
+	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
+	// TODO: bind to more addresses? i guess not bc caddy will reverse proxy to it
+	http.ListenAndServe("127.0.0.1:"+a.Port, router)
 }
