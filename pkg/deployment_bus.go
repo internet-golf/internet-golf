@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"slices"
+	"strings"
 )
 
 type ServedThingType string
@@ -120,7 +121,7 @@ func (bus *DeploymentBus) persistDeployments() error {
 }
 
 // create a deployment or update its metadata
-func (bus *DeploymentBus) PutDeploymentMetadata(metadata DeploymentMetadata) error {
+func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	fmt.Printf("adding deployment %+v\n", metadata)
 	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
 		return d.Url == metadata.Url
@@ -141,22 +142,88 @@ func (bus *DeploymentBus) PutDeploymentMetadata(metadata DeploymentMetadata) err
 	return bus.persistDeployments()
 }
 
-func (bus *DeploymentBus) PutDeploymentContent(url string, content DeploymentContent) error {
+func (bus *DeploymentBus) PutDeploymentContentByUrl(
+	url string, content DeploymentContent,
+) error {
 	fmt.Printf("updating deployment content %+v\n", content)
 	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
 		return d.Url == url
 	})
 
 	if existingIndex == -1 {
-		return fmt.Errorf("Could not find deployment with URL \"%v\" to update content", url)
-	} else {
-		bus.deployments[existingIndex].DeploymentContent = content
-		bus.deployments[existingIndex].DeploymentContent.HasContent = true
+		return fmt.Errorf(
+			"Could not find deployment with URL \"%v\" to update content", url,
+		)
 	}
+
+	return bus.updateDeploymentContentByIndex(existingIndex, content)
+}
+
+func (bus *DeploymentBus) getDeploymentIndexByExternalSource(
+	externalSource string, externalSourceType ExternalSourceType,
+) int {
+	// look for a deployment that matches the external source and external
+	// source type
+	deploymentIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
+		return (d.DeploymentMetadata.ExternalSourceType == externalSourceType &&
+			d.DeploymentMetadata.ExternalSource == externalSource)
+	})
+
+	// special fallback logic for github repos - try finding a deployment that
+	// has just the repo specified, without a branch
+	if externalSourceType == GithubRepo && deploymentIndex == -1 {
+		// branches are specified in an external source like this:
+		// repoOwner/repoName#branch-name
+		branchIndex := strings.Index(externalSource, "#")
+		if branchIndex != -1 {
+			// get the repo name without the branch name
+			repo := externalSource[:branchIndex]
+			// if there is a deployment that has just the repo specified as its
+			// external source (without the branch name), it can be pushed to
+			// from any branch
+			deploymentIndex = slices.IndexFunc(bus.deployments, func(d Deployment) bool {
+				return (d.DeploymentMetadata.ExternalSourceType == GithubRepo &&
+					d.DeploymentMetadata.ExternalSource == repo)
+			})
+		}
+	}
+
+	return deploymentIndex
+}
+
+func (bus *DeploymentBus) DeploymentWithExternalSourceExists(
+	externalSource string, externalSourceType ExternalSourceType,
+) bool {
+	return bus.getDeploymentIndexByExternalSource(externalSource, externalSourceType) != -1
+}
+
+func (bus *DeploymentBus) PutDeploymentContentByExternalSource(
+	externalSource string, externalSourceType ExternalSourceType, content DeploymentContent,
+) error {
+	fmt.Printf("updating deployment content for %s - %s\n", externalSource, externalSourceType)
+
+	deploymentIndex := bus.getDeploymentIndexByExternalSource(externalSource, externalSourceType)
+
+	if deploymentIndex == -1 {
+		return fmt.Errorf(
+			"Could not find deployment for external source %s of type %s",
+			externalSource,
+			externalSourceType,
+		)
+	}
+
+	return bus.updateDeploymentContentByIndex(deploymentIndex, content)
+}
+
+func (bus *DeploymentBus) updateDeploymentContentByIndex(
+	index int, content DeploymentContent,
+) error {
+	bus.deployments[index].DeploymentContent = content
+	bus.deployments[index].DeploymentContent.HasContent = true
 
 	deploymentErr := bus.Server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
-		// rollback to persisted state?
+		// rollback to previous persisted state?
 		return deploymentErr
 	}
 

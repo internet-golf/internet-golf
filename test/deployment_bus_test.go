@@ -96,12 +96,12 @@ func TestBasicStaticDeployment(t *testing.T) {
 	// create a deployment that serves the static-site fixture at
 	// http://internet-golf-test.local
 
-	deploymentBus.PutDeploymentMetadata(internetgolf.DeploymentMetadata{
+	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
 		Url:      BasicTestHost,
 		Settings: internetgolf.DeploymentSettings{},
 	})
 
-	deploymentBus.PutDeploymentContent(BasicTestHost, internetgolf.DeploymentContent{
+	deploymentBus.PutDeploymentContentByUrl(BasicTestHost, internetgolf.DeploymentContent{
 		ServedThingType: internetgolf.StaticFiles,
 		ServedThing: path.Join(
 			// for some reason the cwd already includes /test/

@@ -2,7 +2,6 @@ package internetgolf
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -14,53 +13,34 @@ import (
 	"github.com/gosimple/slug"
 )
 
-func readAuth(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
+func readAuth(api huma.API) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		authHeader := strings.Split(ctx.Header("Authorization"), " ")
 
 		// like, i guess? technically anything local could be sending/proxying
 		// requests to this api
-		if ctx.RemoteAddr() == "127.0.0.1" {
+		if ctx.RemoteAddr() == "127.0.0.1" || strings.HasPrefix(ctx.RemoteAddr(), "127.0.0.1:") {
 			ctx = huma.WithValue(ctx, "local", true)
-		} else if len(authHeader) == 2 && authHeader[0] == "Github-OIDC" {
-			jwtData, err := ParseGithubOidcToken(authHeader[1])
-			if err != nil {
-				huma.WriteErr(api, ctx, http.StatusInternalServerError, "Failed to parse Github OIDC token")
-				return
-			}
-			ctx = huma.WithValue(ctx, "externalSourceType", GithubRepo)
-			repo := jwtData.Repository
-			if jwtData.RefType == "branch" {
-				branchNameLocation := strings.LastIndex(jwtData.Ref, "/")
-				if branchNameLocation != -1 {
-					repo += jwtData.Ref[branchNameLocation+1:]
+		} else {
+			ctx = huma.WithValue(ctx, "local", false)
+			if len(authHeader) == 2 && authHeader[0] == "Github-OIDC" {
+				jwtData, err := ParseGithubOidcToken(authHeader[1])
+				if err != nil {
+					huma.WriteErr(api, ctx, http.StatusInternalServerError, "Failed to parse Github OIDC token")
+					return
 				}
+				ctx = huma.WithValue(ctx, "externalSourceType", GithubRepo)
+				repo := jwtData.Repository
+				if jwtData.RefType == "branch" {
+					branchNameLocation := strings.LastIndex(jwtData.Ref, "/")
+					if branchNameLocation != -1 {
+						repo += jwtData.Ref[branchNameLocation+1:]
+					}
+				}
+				ctx = huma.WithValue(ctx, "externalSource", jwtData.Repository)
 			}
-			ctx = huma.WithValue(ctx, "externalSource", jwtData.Repository)
 		}
 		next(ctx)
-	}
-}
-
-type ContainerDeploymentInput struct {
-	Body struct {
-		// should this be json even though the static deployment input is form data??
-		ContainerUrl    string `json:"containerUrl"`
-		InternalAppPort int    `json:"internalAppPort"`
-		PublicUrl       string `json:"publicUrl"`
-	}
-}
-
-type ContainerDeploymentOutput struct {
-	Body struct {
-		// no real idea what to return from the api call for any of these
-		Thing string `json:"thing"`
-	}
-}
-
-type HealthCheckOutput struct {
-	Body struct {
-		Ok bool `json:"ok"`
 	}
 }
 
@@ -70,24 +50,35 @@ type DeploymentCreateInput struct {
 	}
 }
 
-type DeploymentCreateOutput struct {
-	Body struct {
-		Success bool `json:"success"`
-	}
-}
-
-type StaticDeploymentInput struct {
+type DeployFilesInput struct {
 	RawBody huma.MultipartFormFiles[struct {
-		Url                    string        `form:"url"`
+		// this can be specified manually or it can come from the token in the
+		// auth header (which is scoped to specific deployments)
+		Url                    string        `form:"url" required:"false"`
 		Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
 		KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
 		PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
 	}]
 }
 
-type StaticDeploymentOutput struct {
+type DeployContainerInput struct {
+	Body struct {
+		// should this be json even though the static deployment input is form data??
+		ContainerUrl    string `json:"containerUrl"`
+		InternalAppPort int    `json:"internalAppPort"`
+		Url             string `json:"url" required:"false"`
+	}
+}
+
+type SuccessOutput struct {
 	Body struct {
 		Success bool `json:"success"`
+	}
+}
+
+type HealthCheckOutput struct {
+	Body struct {
+		Ok bool `json:"ok"`
 	}
 }
 
@@ -102,7 +93,7 @@ func (a *AdminApi) Start() {
 		panic("Admin API port not set")
 	}
 
-	// still not sure if chi is better than the current standard library router
+	// TODO: just use standard library router
 	router := chi.NewMux()
 	api := humachi.New(
 		router,
@@ -118,30 +109,14 @@ func (a *AdminApi) Start() {
 			return resp, nil
 		})
 
-	huma.Put(api, "/deploy/container", func(
-		ctx context.Context, input *ContainerDeploymentInput,
-	) (*ContainerDeploymentOutput, error) {
-		// TODO: implement this at all
-		panic("not implemented")
-		fmt.Println(input.Body.ContainerUrl)
-		a.Web.PutDeploymentMetadata(
-			DeploymentMetadata{
-				Url: "mitch.website/thing",
-			})
-		resp := &ContainerDeploymentOutput{}
-		resp.Body.Thing = "hi"
-		return resp, nil
-	})
-
 	huma.Post(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
-	) (*DeploymentCreateOutput, error) {
-		// TODO: validate
-		putDeploymentErr := a.Web.PutDeploymentMetadata(input.Body.DeploymentMetadata)
+	) (*SuccessOutput, error) {
+		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
 		if putDeploymentErr != nil {
 			return nil, putDeploymentErr
 		}
-		var output DeploymentCreateOutput
+		var output SuccessOutput
 		output.Body.Success = true
 		return &output, nil
 	})
@@ -150,28 +125,63 @@ func (a *AdminApi) Start() {
 		api,
 		"/deploy/files",
 		func(
-			ctx context.Context, input *StaticDeploymentInput,
-		) (*StaticDeploymentOutput, error) {
+			ctx context.Context, input *DeployFilesInput,
+		) (*SuccessOutput, error) {
+			// 0. parse the form data
 			formData := input.RawBody.Data()
-
-			if len(formData.Url) < 1 {
-				return nil, errors.New("public URL for deployment is required")
-			}
-
 			fmt.Printf("received form data: %+v\n", formData)
 
-			hash, hashErr := hashStream(formData.Contents)
+			// 1. based on the authorization information set by the readAuth
+			// middleware, figure out how the content should be sent to the
+			// deployment bus once it's created once it's created (or return an
+			// error if it shouldn't be sent anywhere.) TODO: extract this logic
+			// so it can be used in other /deploy api routes somehow
 
+			var deployContent func(DeploymentContent) error
+			if ctx.Value("externalSource") != nil {
+				externalSource := ctx.Value("externalSource").(string)
+				externalSourceType := ctx.Value("externalSourceType").(string)
+				fmt.Println(externalSource, externalSourceType)
+				if !a.Web.DeploymentWithExternalSourceExists(
+					externalSource, ExternalSourceType(externalSourceType),
+				) {
+					return nil, fmt.Errorf(
+						"Could not find deployment with external source %s (%s)",
+						externalSource, externalSourceType,
+					)
+				}
+				deployContent = func(content DeploymentContent) error {
+					return a.Web.PutDeploymentContentByExternalSource(
+						externalSource, ExternalSourceType(externalSourceType), content,
+					)
+				}
+			} else if len(formData.Url) > 0 {
+				// TODO: other checks using keys or whatever
+				authorized := ctx.Value("local") != nil && ctx.Value("local").(bool)
+				if !authorized {
+					return nil, fmt.Errorf("not authorized to deploy to %s", formData.Url)
+				}
+				deployContent = func(content DeploymentContent) error {
+					return a.Web.PutDeploymentContentByUrl(
+						formData.Url,
+						content,
+					)
+				}
+			} else {
+				return nil, fmt.Errorf("no url or external source; unclear where to deploy to")
+			}
+
+			// 2. actually create the deployment content locally
+
+			hash, hashErr := hashStream(formData.Contents)
 			if hashErr != nil {
 				return nil, fmt.Errorf("could not hash files for %v", formData.Url)
 			}
-
 			outDir := path.Join(
 				a.StorageSettings.DataDirectory,
 				slug.Make(formData.Url),
 				hash,
 			)
-
 			// weirdly, formData.Contents is a seekable stream, which i'm pretty
 			// sure means its entire contents must be being kept in memory so that
 			// they can be sought back to (unless it falls back to saving them
@@ -184,22 +194,38 @@ func (a *AdminApi) Start() {
 
 			// TODO: if PreserveExistingFiles, find the existing deployment for
 			// this url and copy its files into the new directory (if they're
-			// not the same directory (i.e. the hashes are unequal))
+			// not the same directory (i.e. if the hashes are unequal) (which
+			// will presumably require getting a reference to the existing
+			// deployment from the bus - maybe instead of creating deployContent
+			// we should be getting a cursor/active record))
 
-			a.Web.PutDeploymentContent(
-				formData.Url,
-				DeploymentContent{
-					ServedThingType: StaticFiles,
-					ServedThing:     outDir,
-				})
+			// 3. send the content to the deployment bus using the function that
+			// was created in step 1
 
-			// TODO: delete the old directory after PutDeployment is finished?
-			// presumably that'll be safe
+			err := deployContent(DeploymentContent{
+				ServedThingType: StaticFiles,
+				ServedThing:     outDir,
+			})
+			if err != nil {
+				return nil, err
+			}
 
-			output := StaticDeploymentOutput{}
+			// TODO: delete the old directory after deployContent is
+			// finished? presumably that'll be safe
+
+			// 4. return success
+
+			output := SuccessOutput{}
 			output.Body.Success = true
 			return &output, nil
 		})
+
+	huma.Put(api, "/deploy/container", func(
+		ctx context.Context, input *DeployContainerInput,
+	) (*SuccessOutput, error) {
+		// TODO: implement this at all
+		panic("not implemented")
+	})
 
 	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
 	// TODO: bind to more addresses? i guess not bc this is exposed via a caddy

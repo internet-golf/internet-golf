@@ -39,12 +39,12 @@ func main() {
 	// create a deployment for the admin api (slightly premature)
 	// this could perhaps be configurable
 	adminApiUrl := "/internet--golf--admin"
-	deploymentBus.PutDeploymentMetadata(
+	deploymentBus.SetupDeployment(
 		internetgolf.DeploymentMetadata{
 			Url:         adminApiUrl,
 			DontPersist: true,
 		})
-	deploymentBus.PutDeploymentContent(
+	deploymentBus.PutDeploymentContentByUrl(
 		adminApiUrl,
 		internetgolf.DeploymentContent{
 			ServedThingType: internetgolf.ReverseProxy,
