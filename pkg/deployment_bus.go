@@ -9,27 +9,55 @@ import (
 	"slices"
 )
 
-type SiteResourceType string
+type ServedThingType string
 
 const (
-	StaticFiles     SiteResourceType = "StaticFiles"
-	DockerContainer SiteResourceType = "DockerContainer"
-	Redirect        SiteResourceType = "Redirect"
+	StaticFiles     ServedThingType = "StaticFiles"
+	DockerContainer ServedThingType = "DockerContainer"
+	Redirect        ServedThingType = "Redirect"
 	// low-level deployment type; currently just used to expose the admin api
-	ReverseProxy SiteResourceType = "ReverseProxy"
+	ReverseProxy ServedThingType = "ReverseProxy"
+)
+
+type ExternalSourceType string
+
+const (
+	GithubRepo ExternalSourceType = "GithubRepo"
 )
 
 type DeploymentSettings struct {
 }
 
+// TODO: break into internal vs. configurable
+type DeploymentMetadata struct {
+	// public URL of the deployment. also serves as the deployment's unique ID.
+	// contains a hostname with an optional url path. examples: "mitch.website"
+	// "mitch.website/path" "mitch.website/path*"
+	Url string `json:"url"`
+
+	// for github repos, this is repoOwner/repoName or repoOwner/repoName#branch-name
+	ExternalSource     string             `json:"externalSource,omitempty"`
+	ExternalSourceType ExternalSourceType `json:"externalSourceType,omitempty"`
+
+	Tags     []string           `json:"tags,omitempty"`
+	Settings DeploymentSettings `json:"settings,omitempty"`
+
+	// used for internal deployments like the one for the admin API
+	DontPersist bool `json:"-"`
+}
+
+type DeploymentContent struct {
+	HasContent bool `json:"hasContent"`
+	// for static files, this is the path to a local directory; for a docker
+	// container, this is a port number (?); for a redirect, this is a url or url
+	// path; for a reverse proxy, this is a host and port (probably "localhost:[port]")
+	ServedThing     string          `json:"servedThing"`
+	ServedThingType ServedThingType `json:"servedThingType"`
+}
+
 type Deployment struct {
-	// TODO: do i need or want an ID? or does the Matcher fill that role effectively?
-	Id                  string             `json:"id"`
-	Matcher             string             `json:"matcher"`
-	SiteResourceType    SiteResourceType   `json:"siteResourceType"`
-	SiteResourceLocator string             `json:"siteResourceLocator"`
-	Settings            DeploymentSettings `json:"settings"`
-	Persist             bool
+	DeploymentMetadata
+	DeploymentContent
 }
 
 type DeploymentBus struct {
@@ -76,7 +104,7 @@ func (bus *DeploymentBus) persistDeployments() error {
 	encoder := json.NewEncoder(outfile)
 	persistable := slices.Collect(func(yield func(Deployment) bool) {
 		for _, d := range bus.deployments {
-			if d.Persist {
+			if !d.DontPersist {
 				if !yield(d) {
 					return
 				}
@@ -91,25 +119,54 @@ func (bus *DeploymentBus) persistDeployments() error {
 	return nil
 }
 
-func (bus *DeploymentBus) PutDeployment(newDeployment Deployment) error {
-	fmt.Printf("adding deployment %+v\n", newDeployment)
-	newDeployments := slices.DeleteFunc(bus.deployments, func(d Deployment) bool {
-		return d.Id == newDeployment.Id
+// create a deployment or update its metadata
+func (bus *DeploymentBus) PutDeploymentMetadata(metadata DeploymentMetadata) error {
+	fmt.Printf("adding deployment %+v\n", metadata)
+	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
+		return d.Url == metadata.Url
 	})
-	bus.deployments = append(newDeployments, newDeployment)
+
+	if existingIndex == -1 {
+		bus.deployments = append(bus.deployments, Deployment{DeploymentMetadata: metadata})
+	} else {
+		bus.deployments[existingIndex].DeploymentMetadata = metadata
+	}
 
 	deploymentErr := bus.Server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
+		// rollback to persisted state?
 		return deploymentErr
 	}
 
 	return bus.persistDeployments()
 }
 
-func (bus *DeploymentBus) DeleteDeployment(id string) error {
-	fmt.Printf("removing deployment with id %v\n", id)
+func (bus *DeploymentBus) PutDeploymentContent(url string, content DeploymentContent) error {
+	fmt.Printf("updating deployment content %+v\n", content)
+	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
+		return d.Url == url
+	})
+
+	if existingIndex == -1 {
+		return fmt.Errorf("Could not find deployment with URL \"%v\" to update content", url)
+	} else {
+		bus.deployments[existingIndex].DeploymentContent = content
+		bus.deployments[existingIndex].DeploymentContent.HasContent = true
+	}
+
+	deploymentErr := bus.Server.DeployAll(bus.deployments)
+	if deploymentErr != nil {
+		// rollback to persisted state?
+		return deploymentErr
+	}
+
+	return bus.persistDeployments()
+}
+
+func (bus *DeploymentBus) DeleteDeployment(url string) error {
+	fmt.Printf("removing deployment with url %v\n", url)
 	bus.deployments = slices.DeleteFunc(bus.deployments, func(d Deployment) bool {
-		return d.Id == id
+		return d.Url == url
 	})
 
 	deploymentErr := bus.Server.DeployAll(bus.deployments)

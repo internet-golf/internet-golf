@@ -54,19 +54,19 @@ func jsonOrPanic(v any) []byte {
 // building a Config struct value should take care to populate the
 // JSON-encodable fields of the struct")
 func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
-	if d.SiteResourceType != StaticFiles {
+	if d.ServedThingType != StaticFiles {
 		return caddyhttp.Route{}, fmt.Errorf(
-			"deployment with ID %s passed to getCaddyStaticRoute despite having resource type %s",
-			d.Id, d.SiteResourceType,
+			"deployment with URL %s passed to getCaddyStaticRoute despite having resource type %s",
+			d.Url, d.ServedThingType,
 		)
 	}
 
 	// TODO: extract this to a utility function for the other route builder functions
 	// decompose matcher into host and path
-	matcherComps := strings.Split(d.Matcher, "/")
+	matcherComps := strings.Split(d.Url, "/")
 	host := matcherComps[0]
 	if len(host) == 0 || !strings.Contains(host, ".") {
-		return caddyhttp.Route{}, fmt.Errorf("\"%v\" is not a valid matcher: does not start with valid host", d.Matcher)
+		return caddyhttp.Route{}, fmt.Errorf("\"%v\" is not a valid URL: does not start with valid host", d.Url)
 	}
 	var path string
 	if len(matcherComps) == 1 || len(matcherComps[1]) == 0 {
@@ -79,7 +79,7 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 		"handle": []jsonObj{
 			{
 				"handler": "vars",
-				"root":    d.SiteResourceLocator,
+				"root":    d.ServedThing,
 			},
 			{
 				"handler": "encode",
@@ -148,10 +148,10 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 // TODO: this function is incomplete and only works for the trivial case used to
 // deploy the admin API. see TODOs below for more info
 func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
-	if d.SiteResourceType != ReverseProxy {
+	if d.ServedThingType != ReverseProxy {
 		return caddyhttp.Route{}, fmt.Errorf(
-			"deployment with ID %s passed to getCaddyReverseProxyRoute despite having resource type %s",
-			d.Id, d.SiteResourceType,
+			"deployment with URL %s passed to getCaddyReverseProxyRoute despite having resource type %s",
+			d.Url, d.ServedThingType,
 		)
 	}
 	return caddyhttp.Route{
@@ -159,7 +159,7 @@ func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 			caddy.ModuleMap{
 				// TODO: extract matcher handling to common function instead of
 				// improvising with asterisks
-				"path": jsonOrPanic([]string{d.Matcher + "*"}),
+				"path": jsonOrPanic([]string{d.Url + "*"}),
 			},
 		},
 		HandlersRaw: []json.RawMessage{
@@ -169,7 +169,7 @@ func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 					{
 						"handle": []jsonObj{
 							// TODO: control strip_path_prefix with a setting
-							{"handler": "rewrite", "strip_path_prefix": d.Matcher},
+							{"handler": "rewrite", "strip_path_prefix": d.Url},
 							{
 								"handler": "reverse_proxy",
 								// TODO: control this with a setting? maybe?
@@ -181,7 +181,7 @@ func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 										},
 									},
 								},
-								"upstreams": []jsonObj{{"dial": d.SiteResourceLocator}},
+								"upstreams": []jsonObj{{"dial": d.ServedThing}},
 							},
 						},
 					},
@@ -211,15 +211,19 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 
 	for _, deployment := range deployments {
+		if !deployment.DeploymentContent.HasContent {
+			continue
+		}
+
 		var getCaddyRoute func(Deployment) (caddyhttp.Route, error)
 
-		switch deployment.SiteResourceType {
+		switch deployment.ServedThingType {
 		case StaticFiles:
 			getCaddyRoute = getCaddyStaticRoute
 		case ReverseProxy:
 			getCaddyRoute = getCaddyReverseProxyRoute
 		default:
-			fmt.Printf("could not process deployment with type %s\n", deployment.SiteResourceType)
+			fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
 		}
 
 		if route, err := getCaddyRoute(deployment); err != nil {

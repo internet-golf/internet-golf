@@ -13,39 +13,39 @@ import (
 )
 
 // example payload:
-// {
-//   "actor": "toBeOfUse",
-//   "actor_id": "49729978",
-//   "aud": "https://github.com/toBeOfUse",
-//   "base_ref": "",
-//   "event_name": "workflow_dispatch",
-//   "exp": 1756127261,
-//   "head_ref": "",
-//   "iat": 1756105661,
-//   "iss": "https://token.actions.githubusercontent.com",
-//   "job_workflow_ref": "toBeOfUse/internet-golf/.github/workflows/oidc-test.yml@refs/heads/main",
-//   "job_workflow_sha": "54fd8fbf5de6050880e24d97dd9870942c04f258",
-//   "jti": "975c1557-fd94-4a8b-ad76-89848e46cbfc",
-//   "nbf": 1756105361,
-//   "ref": "refs/heads/main",
-//   "ref_protected": "false",
-//   "ref_type": "branch",
-//   "repository": "toBeOfUse/internet-golf",
-//   "repository_id": "1034463833",
-//   "repository_owner": "toBeOfUse",
-//   "repository_owner_id": "49729978",
-//   "repository_visibility": "public",
-//   "run_attempt": "1",
-//   "run_id": "17201782829",
-//   "run_number": "2",
-//   "runner_environment": "github-hosted",
-//   "sha": "54fd8fbf5de6050880e24d97dd9870942c04f258",
-//   "sub": "repo:toBeOfUse/internet-golf:ref:refs/heads/main",
-//   "workflow": "Print and Post ID Token Variables",
-//   "workflow_ref": "toBeOfUse/internet-golf/.github/workflows/oidc-test.yml@refs/heads/main",
-//   "workflow_sha": "54fd8fbf5de6050880e24d97dd9870942c04f258"
-// }
-
+//
+//	{
+//	  "actor": "toBeOfUse",
+//	  "actor_id": "49729978",
+//	  "aud": "https://github.com/toBeOfUse",
+//	  "base_ref": "",
+//	  "event_name": "workflow_dispatch",
+//	  "exp": 1756127261,
+//	  "head_ref": "",
+//	  "iat": 1756105661,
+//	  "iss": "https://token.actions.githubusercontent.com",
+//	  "job_workflow_ref": "toBeOfUse/internet-golf/.github/workflows/oidc-test.yml@refs/heads/main",
+//	  "job_workflow_sha": "54fd8fbf5de6050880e24d97dd9870942c04f258",
+//	  "jti": "975c1557-fd94-4a8b-ad76-89848e46cbfc",
+//	  "nbf": 1756105361,
+//	  "ref": "refs/heads/main",
+//	  "ref_protected": "false",
+//	  "ref_type": "branch",
+//	  "repository": "toBeOfUse/internet-golf",
+//	  "repository_id": "1034463833",
+//	  "repository_owner": "toBeOfUse",
+//	  "repository_owner_id": "49729978",
+//	  "repository_visibility": "public",
+//	  "run_attempt": "1",
+//	  "run_id": "17201782829",
+//	  "run_number": "2",
+//	  "runner_environment": "github-hosted",
+//	  "sha": "54fd8fbf5de6050880e24d97dd9870942c04f258",
+//	  "sub": "repo:toBeOfUse/internet-golf:ref:refs/heads/main",
+//	  "workflow": "Print and Post ID Token Variables",
+//	  "workflow_ref": "toBeOfUse/internet-golf/.github/workflows/oidc-test.yml@refs/heads/main",
+//	  "workflow_sha": "54fd8fbf5de6050880e24d97dd9870942c04f258"
+//	}
 type GitHubOIDCToken struct {
 	Actor                string `json:"actor"`
 	ActorID              string `json:"actor_id"`

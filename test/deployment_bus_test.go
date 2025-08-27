@@ -95,12 +95,15 @@ func TestBasicStaticDeployment(t *testing.T) {
 
 	// create a deployment that serves the static-site fixture at
 	// http://internet-golf-test.local
-	deploymentBus.PutDeployment(internetgolf.Deployment{
-		Id:               "whatever",
-		Matcher:          BasicTestHost,
-		SiteResourceType: internetgolf.StaticFiles,
-		Settings:         internetgolf.DeploymentSettings{},
-		SiteResourceLocator: path.Join(
+
+	deploymentBus.PutDeploymentMetadata(internetgolf.DeploymentMetadata{
+		Url:      BasicTestHost,
+		Settings: internetgolf.DeploymentSettings{},
+	})
+
+	deploymentBus.PutDeploymentContent(BasicTestHost, internetgolf.DeploymentContent{
+		ServedThingType: internetgolf.StaticFiles,
+		ServedThing: path.Join(
 			// for some reason the cwd already includes /test/
 			strings.ReplaceAll(cwd, "\\", "/"), "fixtures", "static-site"),
 	})

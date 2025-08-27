@@ -35,14 +35,20 @@ func main() {
 		StorageSettings: settings,
 		Port:            adminApiPort,
 	}
+
 	// create a deployment for the admin api (slightly premature)
-	deploymentBus.PutDeployment(internetgolf.Deployment{
-		Id: "internet-golf-admin-api",
-		// this could perhaps be configurable
-		Matcher:             "/internet--golf--admin",
-		SiteResourceType:    internetgolf.ReverseProxy,
-		SiteResourceLocator: "localhost:" + adminApiPort,
-		Persist:             false,
-	})
+	// this could perhaps be configurable
+	adminApiUrl := "/internet--golf--admin"
+	deploymentBus.PutDeploymentMetadata(
+		internetgolf.DeploymentMetadata{
+			Url:         adminApiUrl,
+			DontPersist: true,
+		})
+	deploymentBus.PutDeploymentContent(
+		adminApiUrl,
+		internetgolf.DeploymentContent{
+			ServedThingType: internetgolf.ReverseProxy,
+			ServedThing:     "localhost:" + adminApiPort,
+		})
 	adminApi.Start()
 }
