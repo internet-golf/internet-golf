@@ -18,7 +18,7 @@ jobs:
           debug: true
           script: |
             const token = await core.getIDToken('internet-golf');
-            core.setOutput('NEW_TOKEN', token.trim())
+            core.setOutput('NEW_TOKEN', token)
       - uses: actions/checkout@v5
       - run: |
           go run misc/oidc_sink.go ${{steps.script.outputs.NEW_TOKEN}}

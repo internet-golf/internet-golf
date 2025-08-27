@@ -2,8 +2,10 @@ package internetgolf
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/lestrrat-go/jwx/v2/jwk"
@@ -107,7 +109,7 @@ func ParseGithubOidcToken(token string) (GitHubOIDCToken, error) {
 		return GitHubOIDCToken{}, keySetErr
 	}
 
-	parsedJwt, err := jwt.ParseString(token,
+	_, err := jwt.ParseString(token,
 		jwt.WithKeySet(keySet),
 		jwt.WithValidate(true),
 		jwt.WithAudience("internet-golf"),
@@ -117,14 +119,14 @@ func ParseGithubOidcToken(token string) (GitHubOIDCToken, error) {
 		return GitHubOIDCToken{}, err
 	}
 
-	// somehow the easiest way to turn the map from the jwt into a struct is to
-	// convert it to json first
+	// after validating the token, accessing the raw payload data is somehow
+	// the easiest way to get a struct out of it
+	rawJson, rawJsonErr := base64.RawStdEncoding.DecodeString(strings.Split(token, ".")[1])
+	if rawJsonErr != nil {
+		return GitHubOIDCToken{}, rawJsonErr
+	}
 	var tokenData GitHubOIDCToken
-	// no idea what the context is for
-	var context context.Context
-	asMap, _ := parsedJwt.AsMap(context)
-	marshaled, _ := json.Marshal(asMap)
-	json.Unmarshal(marshaled, &tokenData)
+	json.Unmarshal(rawJson, &tokenData)
 
 	return tokenData, nil
 }
