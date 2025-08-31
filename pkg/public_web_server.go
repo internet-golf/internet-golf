@@ -25,6 +25,7 @@ type PublicWebServer interface {
 	DeployAll([]Deployment) error
 }
 
+// implements the PublicWebServer interface
 type CaddyServer struct {
 	Settings struct {
 		LocalOnly bool
@@ -45,6 +46,35 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
+func urlToMatcher(url string, requireHost bool) (caddyhttp.RawMatcherSets, error) {
+	matcherComps := strings.Split(url, "/")
+	host := matcherComps[0]
+	if (len(host) == 0 || !strings.Contains(host, ".")) && requireHost {
+		return caddyhttp.RawMatcherSets{}, fmt.Errorf(
+			"\"%v\" is not a valid URL: does not start with valid host",
+			url,
+		)
+	}
+	var path string
+	if len(matcherComps) == 1 || len(matcherComps[1]) == 0 {
+		path = ""
+	} else {
+		path = "/" + strings.Join(matcherComps[1:], "/")
+	}
+	matcher := caddyhttp.RawMatcherSets{
+		caddy.ModuleMap{
+			"host": jsonOrPanic([]string{host}),
+		},
+	}
+
+	if path != "" {
+		matcher[0]["path"] = jsonOrPanic([]string{path})
+	}
+
+	return matcher, nil
+
+}
+
 // returns a caddy route that corresponds to a static file server for the
 // Deployment d.
 //
@@ -59,20 +89,6 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 			"deployment with URL %s passed to getCaddyStaticRoute despite having resource type %s",
 			d.Url, d.ServedThingType,
 		)
-	}
-
-	// TODO: extract this to a utility function for the other route builder functions
-	// decompose matcher into host and path
-	matcherComps := strings.Split(d.Url, "/")
-	host := matcherComps[0]
-	if len(host) == 0 || !strings.Contains(host, ".") {
-		return caddyhttp.Route{}, fmt.Errorf("\"%v\" is not a valid URL: does not start with valid host", d.Url)
-	}
-	var path string
-	if len(matcherComps) == 1 || len(matcherComps[1]) == 0 {
-		path = ""
-	} else {
-		path = "/" + strings.Join(matcherComps[1:], "/")
 	}
 
 	standardSubroute := jsonObj{
@@ -124,12 +140,13 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	// 	})
 	// }
 
+	matcher, matcherErr := urlToMatcher(d.Url, true)
+	if matcherErr != nil {
+		return caddyhttp.Route{}, matcherErr
+	}
+
 	route := caddyhttp.Route{
-		MatcherSetsRaw: caddyhttp.RawMatcherSets{
-			caddy.ModuleMap{
-				"host": jsonOrPanic([]string{host}),
-			},
-		},
+		MatcherSetsRaw: matcher,
 		HandlersRaw: []json.RawMessage{
 			jsonOrPanic(jsonObj{
 				"handler": "subroute",
@@ -138,15 +155,11 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 		},
 	}
 
-	if path != "" {
-		route.MatcherSetsRaw[0]["path"] = jsonOrPanic([]string{path})
-	}
-
 	return route, nil
 }
 
-// TODO: this function is incomplete and only works for the trivial case used to
-// deploy the admin API. see TODOs below for more info
+// low-level internal deployment type that probably should only be used for the
+// admin api
 func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 	if d.ServedThingType != ReverseProxy {
 		return caddyhttp.Route{}, fmt.Errorf(
@@ -154,14 +167,15 @@ func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 			d.Url, d.ServedThingType,
 		)
 	}
+
+	// not requiring a host here bc this deployment type is for meta-deployments
+	matcher, matcherErr := urlToMatcher(d.Url, false)
+	if matcherErr != nil {
+		return caddyhttp.Route{}, matcherErr
+	}
+
 	return caddyhttp.Route{
-		MatcherSetsRaw: caddyhttp.RawMatcherSets{
-			caddy.ModuleMap{
-				// TODO: extract matcher handling to common function instead of
-				// improvising with asterisks
-				"path": jsonOrPanic([]string{d.Url + "*"}),
-			},
-		},
+		MatcherSetsRaw: matcher,
 		HandlersRaw: []json.RawMessage{
 			jsonOrPanic(jsonObj{
 				"handler": "subroute",
