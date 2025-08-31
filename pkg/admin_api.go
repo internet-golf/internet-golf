@@ -8,8 +8,7 @@ import (
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humachi"
-	"github.com/go-chi/chi/v5"
+	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/gosimple/slug"
 )
 
@@ -93,9 +92,8 @@ func (a *AdminApi) Start() {
 		panic("Admin API port not set")
 	}
 
-	// TODO: just use standard library router
-	router := chi.NewMux()
-	api := humachi.New(
+	router := http.NewServeMux()
+	api := humago.New(
 		router,
 		huma.DefaultConfig("Deployment Agent API", "0.5.0"),
 	)
