@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -12,33 +13,40 @@ import (
 	"github.com/gosimple/slug"
 )
 
+type AuthResult struct {
+	localRequest       bool
+	externalSourceType ExternalSourceType
+	externalSource     string
+}
+
 func readAuth(api huma.API) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		authHeader := strings.Split(ctx.Header("Authorization"), " ")
 
-		// like, i guess? technically anything local could be sending/proxying
-		// requests to this api
+		var authResult AuthResult
+
 		if ctx.RemoteAddr() == "127.0.0.1" || strings.HasPrefix(ctx.RemoteAddr(), "127.0.0.1:") {
-			ctx = huma.WithValue(ctx, "local", true)
+			authResult.localRequest = true
 		} else {
-			ctx = huma.WithValue(ctx, "local", false)
-			if len(authHeader) == 2 && authHeader[0] == "Github-OIDC" {
-				jwtData, err := ParseGithubOidcToken(authHeader[1])
-				if err != nil {
-					huma.WriteErr(api, ctx, http.StatusInternalServerError, "Failed to parse Github OIDC token")
-					return
-				}
-				ctx = huma.WithValue(ctx, "externalSourceType", GithubRepo)
-				repo := jwtData.Repository
-				if jwtData.RefType == "branch" {
-					branchNameLocation := strings.LastIndex(jwtData.Ref, "/")
-					if branchNameLocation != -1 {
-						repo += jwtData.Ref[branchNameLocation+1:]
-					}
-				}
-				ctx = huma.WithValue(ctx, "externalSource", jwtData.Repository)
-			}
+			authResult.localRequest = false
 		}
+		if len(authHeader) == 2 && authHeader[0] == "Github-OIDC" {
+			jwtData, err := ParseGithubOidcToken(authHeader[1])
+			if err != nil {
+				huma.WriteErr(api, ctx, http.StatusInternalServerError, "Failed to parse Github OIDC token")
+				return
+			}
+			authResult.externalSourceType = GithubRepo
+			repo := jwtData.Repository
+			if jwtData.RefType == "branch" {
+				branchNameLocation := strings.LastIndex(jwtData.Ref, "/")
+				if branchNameLocation != -1 {
+					repo += jwtData.Ref[branchNameLocation+1:]
+				}
+			}
+			authResult.externalSource = repo
+		}
+		ctx = huma.WithValue(ctx, "authResult", authResult)
 		next(ctx)
 	}
 }
@@ -95,7 +103,7 @@ func (a *AdminApi) Start() {
 	router := http.NewServeMux()
 	api := humago.New(
 		router,
-		huma.DefaultConfig("Deployment Agent API", "0.5.0"),
+		huma.DefaultConfig("Internet Golf API", "0.5.0"),
 	)
 
 	api.UseMiddleware(readAuth(api))
@@ -131,32 +139,32 @@ func (a *AdminApi) Start() {
 
 			// 1. based on the authorization information set by the readAuth
 			// middleware, figure out how the content should be sent to the
-			// deployment bus once it's created once it's created (or return an
-			// error if it shouldn't be sent anywhere.) TODO: extract this logic
-			// so it can be used in other /deploy api routes somehow
+			// deployment bus once it's created (or return an error if it
+			// shouldn't be sent anywhere.) TODO: extract this logic so it can
+			// be used in other /deploy api routes somehow
 
+			authResult, authResultOk := ctx.Value("authResult").(AuthResult)
+			if !authResultOk {
+				return nil, fmt.Errorf("Auth check failed somehow")
+			}
 			var deployContent func(DeploymentContent) error
-			if ctx.Value("externalSource") != nil {
-				externalSource := ctx.Value("externalSource").(string)
-				externalSourceType := ctx.Value("externalSourceType").(string)
-				fmt.Println(externalSource, externalSourceType)
+			if len(authResult.externalSourceType) > 0 {
 				if !a.Web.DeploymentWithExternalSourceExists(
-					externalSource, ExternalSourceType(externalSourceType),
+					authResult.externalSource, authResult.externalSourceType,
 				) {
 					return nil, fmt.Errorf(
 						"Could not find deployment with external source %s (%s)",
-						externalSource, externalSourceType,
+						authResult.externalSource, authResult.externalSourceType,
 					)
 				}
 				deployContent = func(content DeploymentContent) error {
 					return a.Web.PutDeploymentContentByExternalSource(
-						externalSource, ExternalSourceType(externalSourceType), content,
+						authResult.externalSource, authResult.externalSourceType, content,
 					)
 				}
 			} else if len(formData.Url) > 0 {
 				// TODO: other checks using keys or whatever
-				authorized := ctx.Value("local") != nil && ctx.Value("local").(bool)
-				if !authorized {
+				if !authResult.localRequest {
 					return nil, fmt.Errorf("not authorized to deploy to %s", formData.Url)
 				}
 				deployContent = func(content DeploymentContent) error {
@@ -218,12 +226,19 @@ func (a *AdminApi) Start() {
 			return &output, nil
 		})
 
-	huma.Put(api, "/deploy/container", func(
-		ctx context.Context, input *DeployContainerInput,
-	) (*SuccessOutput, error) {
-		// TODO: implement this at all
-		panic("not implemented")
-	})
+	// huma.Put(api, "/deploy/container", func(
+	// 	ctx context.Context, input *DeployContainerInput,
+	// ) (*SuccessOutput, error) {
+	// 	// TODO: implement this at all
+	// 	panic("not implemented")
+	// })
+
+	fmt.Println("Writing OpenAPI spec to golf-openapi.yaml")
+	b, _ := api.OpenAPI().DowngradeYAML()
+	openApiErr := os.WriteFile("golf-openapi.yaml", b, 0644)
+	if openApiErr != nil {
+		fmt.Println("Could not write OpenAPI spec")
+	}
 
 	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
 	// TODO: bind to more addresses? i guess not bc this is exposed via a caddy

@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// create a deployment for the admin api (slightly premature)
-	// this could perhaps be configurable
+	// this url could perhaps be configurable
 	adminApiUrl := "/internet--golf--admin"
 	deploymentBus.SetupDeployment(
 		internetgolf.DeploymentMetadata{

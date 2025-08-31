@@ -40,8 +40,8 @@ type DeploymentMetadata struct {
 	ExternalSource     string             `json:"externalSource,omitempty"`
 	ExternalSourceType ExternalSourceType `json:"externalSourceType,omitempty"`
 
-	Tags     []string           `json:"tags,omitempty"`
-	Settings DeploymentSettings `json:"settings,omitempty"`
+	Tags []string `json:"tags,omitempty"`
+	// Settings DeploymentSettings `json:"settings,omitempty"`
 
 	// used for internal deployments like the one for the admin API
 	DontPersist bool `json:"-"`

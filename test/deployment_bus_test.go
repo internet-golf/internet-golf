@@ -97,8 +97,8 @@ func TestBasicStaticDeployment(t *testing.T) {
 	// http://internet-golf-test.local
 
 	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
-		Url:      BasicTestHost,
-		Settings: internetgolf.DeploymentSettings{},
+		Url: BasicTestHost,
+		// Settings: internetgolf.DeploymentSettings{},
 	})
 
 	deploymentBus.PutDeploymentContentByUrl(BasicTestHost, internetgolf.DeploymentContent{
