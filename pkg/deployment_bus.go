@@ -26,9 +26,6 @@ const (
 	GithubRepo ExternalSourceType = "GithubRepo"
 )
 
-type DeploymentSettings struct {
-}
-
 type Url struct {
 	Domain string `json:"domain"`
 	Path   string `json:"path,omitempty"`
@@ -49,7 +46,8 @@ type DeploymentMetadata struct {
 	ExternalSourceType ExternalSourceType `json:"externalSourceType,omitempty"`
 
 	Tags []string `json:"tags,omitempty"`
-	// Settings DeploymentSettings `json:"settings,omitempty"`
+
+	PreserveExternalPath bool `json:"preserveExternalPath,omitempty"`
 
 	// this is `true` for internal deployments like the one for the admin API
 	DontPersist bool `json:"-"`

@@ -46,35 +46,26 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
-// creates routes for each of the urls, all of which are handled by handlers.
-// this is used to turn groups of urls into separate routes with one matcher
-// each, so that the routes can then be sorted in order of matcher specificity.
-func urlsToRoutes(urls []Url, requireDomain bool, handlers []json.RawMessage) ([]caddyhttp.Route, error) {
-	routes := []caddyhttp.Route{}
-	for _, url := range urls {
-		if (len(url.Domain) == 0 || !strings.Contains(url.Domain, ".")) && requireDomain {
-			return []caddyhttp.Route{}, fmt.Errorf(
-				"\"%v\" is not a valid URL: does not start with valid host",
-				url,
-			)
-		}
-		matcher := caddy.ModuleMap{}
-		if url.Domain != "" {
-			matcher["host"] = jsonOrPanic([]string{url.Domain})
-		}
-		if url.Path != "" {
-			matcher["path"] = jsonOrPanic([]string{url.Path})
-		}
-		routes = append(routes, caddyhttp.Route{
-			MatcherSetsRaw: []caddy.ModuleMap{matcher},
-			HandlersRaw:    handlers,
-		})
+func urlToMatcher(url Url, requireDomain bool) (caddy.ModuleMap, error) {
+	if (len(url.Domain) == 0 || !strings.Contains(url.Domain, ".")) && requireDomain {
+		return caddy.ModuleMap{}, fmt.Errorf(
+			"\"%v\" is not a valid URL: does not start with valid host",
+			url,
+		)
 	}
-	return routes, nil
+	matcher := caddy.ModuleMap{}
+	if url.Domain != "" {
+		matcher["host"] = jsonOrPanic([]string{url.Domain})
+	}
+	if url.Path != "" {
+		matcher["path"] = jsonOrPanic([]string{url.Path})
+	}
+
+	return matcher, nil
 }
 
-// returns a caddy route that corresponds to a static file server for each URL
-// in d.Urls.
+// returns a slice of caddy Route struct instances: one caddy route that
+// corresponds to a static file server for each URL in d.Urls.
 func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 	if d.ServedThingType != StaticFiles {
 		return []caddyhttp.Route{}, fmt.Errorf(
@@ -83,38 +74,57 @@ func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 		)
 	}
 
-	standardSubroute := jsonObj{
-		"handle": []jsonObj{
-			{
-				"handler": "vars",
-				"root":    d.ServedThing,
-			},
-			{
-				"handler": "encode",
-				"encodings": jsonObj{
-					"gzip": jsonObj{},
-					"zstd": jsonObj{},
+	var routes []caddyhttp.Route
+
+	for _, url := range d.Urls {
+		matcher, matcherErr := urlToMatcher(url, true)
+		if matcherErr != nil {
+			return nil, matcherErr
+		}
+
+		standardSubroute := jsonObj{
+			"handle": []jsonObj{
+				{
+					"handler": "vars",
+					"root":    d.ServedThing,
 				},
-				"prefer": []string{"zstd", "gzip"},
+				{
+					"handler": "encode",
+					"encodings": jsonObj{
+						"gzip": jsonObj{},
+						"zstd": jsonObj{},
+					},
+					"prefer": []string{"zstd", "gzip"},
+				},
+				{
+					"handler": "file_server",
+				},
 			},
-			{
-				"handler": "file_server",
-			},
-		},
-	}
+		}
 
-	var initialSubroutes []jsonObj
+		var initialSubroutes []jsonObj
+		if !d.DeploymentMetadata.PreserveExternalPath {
+			initialSubroutes = append(initialSubroutes,
+				// TODO: does this work with asterisks?
+				jsonObj{
+					"handle": []jsonObj{
+						jsonObj{"handler": "rewrite", "strip_path_prefix": url.Path},
+					},
+				},
+			)
+		}
 
-	handlers := []json.RawMessage{
-		jsonOrPanic(jsonObj{
-			"handler": "subroute",
-			"routes":  slices.Concat(initialSubroutes, []jsonObj{standardSubroute}),
-		}),
-	}
+		handlers := []json.RawMessage{
+			jsonOrPanic(jsonObj{
+				"handler": "subroute",
+				"routes":  slices.Concat(initialSubroutes, []jsonObj{standardSubroute}),
+			}),
+		}
 
-	routes, routesErr := urlsToRoutes(d.Urls, true, handlers)
-	if routesErr != nil {
-		return []caddyhttp.Route{}, routesErr
+		routes = append(routes, caddyhttp.Route{
+			MatcherSetsRaw: caddyhttp.RawMatcherSets{matcher},
+			HandlersRaw:    handlers,
+		})
 	}
 
 	return routes, nil
@@ -130,17 +140,16 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 		)
 	}
 
+	if len(d.Urls) > 1 {
+		return []caddyhttp.Route{}, fmt.Errorf("multiple urls not implemented for getCaddyReverseProxyRoute")
+	}
+
 	handlers := []json.RawMessage{
 		jsonOrPanic(jsonObj{
 			"handler": "subroute",
 			"routes": []jsonObj{
 				{
 					"handle": []jsonObj{
-						// TODO: if this deployment type becomes public, find a
-						// way to use the relevant URL from Urls instead of
-						// assuming (as this does) that there will only be one
-						// URL. either something can be done with variables or
-						// `handlers` in urlsToRoutes should become a callback
 						{"handler": "rewrite", "strip_path_prefix": d.Urls[0].Path},
 						{
 							"handler": "reverse_proxy",
@@ -162,12 +171,17 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 	}
 
 	// not requiring a host here bc this deployment type is for meta-deployments
-	routes, routesErr := urlsToRoutes(d.Urls, false, handlers)
+	matcher, matcherErr := urlToMatcher(d.Urls[0], false)
 
-	if routesErr != nil {
-		return []caddyhttp.Route{}, routesErr
+	if matcherErr != nil {
+		return []caddyhttp.Route{}, matcherErr
 	}
-	return routes, nil
+	return []caddyhttp.Route{
+		caddyhttp.Route{
+			MatcherSetsRaw: caddyhttp.RawMatcherSets{matcher},
+			HandlersRaw:    handlers,
+		},
+	}, nil
 }
 
 const httpAppServerName = "internetgolf"
