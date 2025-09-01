@@ -59,9 +59,10 @@ type DeploymentCreateInput struct {
 
 type DeployFilesInput struct {
 	RawBody huma.MultipartFormFiles[struct {
-		// this can be specified manually or it can come from the token in the
-		// auth header (which is scoped to specific deployments)
-		Url                    string        `form:"url" required:"false"`
+		// Name is only required when the Authorization header does not imply a
+		// specific, single deployment with a token that is scoped to an
+		// externalSource and externalSourceType
+		Name                   string        `form:"name" required:"false"`
 		Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
 		KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
 		PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
@@ -73,7 +74,7 @@ type DeployContainerInput struct {
 		// should this be json even though the static deployment input is form data??
 		ContainerUrl    string `json:"containerUrl"`
 		InternalAppPort int    `json:"internalAppPort"`
-		Url             string `json:"url" required:"false"`
+		Id              string `json:"id" required:"false"`
 	}
 }
 
@@ -118,6 +119,12 @@ func (a *AdminApi) Start() {
 	huma.Post(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
+		if len(input.Body.Name) == 0 {
+			// this is a somewhat questionable quick and dirty way to
+			// autogenerate a name
+			input.Body.Name = slug.Make(input.Body.Urls[0].Domain + input.Body.Urls[0].Path)
+		}
+		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
 		if putDeploymentErr != nil {
 			return nil, putDeploymentErr
@@ -149,27 +156,20 @@ func (a *AdminApi) Start() {
 			}
 			var deployContent func(DeploymentContent) error
 			if len(authResult.externalSourceType) > 0 {
-				if !a.Web.DeploymentWithExternalSourceExists(
-					authResult.externalSource, authResult.externalSourceType,
-				) {
-					return nil, fmt.Errorf(
-						"Could not find deployment with external source %s (%s)",
-						authResult.externalSource, authResult.externalSourceType,
-					)
-				}
+
 				deployContent = func(content DeploymentContent) error {
 					return a.Web.PutDeploymentContentByExternalSource(
-						authResult.externalSource, authResult.externalSourceType, content,
+						authResult.externalSource, authResult.externalSourceType, formData.Name, content,
 					)
 				}
-			} else if len(formData.Url) > 0 {
+			} else if len(formData.Name) > 0 {
 				// TODO: other checks using keys or whatever
 				if !authResult.localRequest {
-					return nil, fmt.Errorf("not authorized to deploy to %s", formData.Url)
+					return nil, fmt.Errorf("not authorized to deploy to %s", formData.Name)
 				}
 				deployContent = func(content DeploymentContent) error {
-					return a.Web.PutDeploymentContentByUrl(
-						formData.Url,
+					return a.Web.PutDeploymentContentByName(
+						formData.Name,
 						content,
 					)
 				}
@@ -181,11 +181,11 @@ func (a *AdminApi) Start() {
 
 			hash, hashErr := hashStream(formData.Contents)
 			if hashErr != nil {
-				return nil, fmt.Errorf("could not hash files for %v", formData.Url)
+				return nil, fmt.Errorf("could not hash files for %v", formData.Name)
 			}
 			outDir := path.Join(
 				a.StorageSettings.DataDirectory,
-				slug.Make(formData.Url),
+				slug.Make(formData.Name),
 				hash,
 			)
 			// weirdly, formData.Contents is a seekable stream, which i'm pretty

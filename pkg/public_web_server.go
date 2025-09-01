@@ -46,33 +46,25 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
-func urlToMatcher(url string, requireHost bool) (caddyhttp.RawMatcherSets, error) {
-	matcherComps := strings.Split(url, "/")
-	host := matcherComps[0]
-	if (len(host) == 0 || !strings.Contains(host, ".")) && requireHost {
-		return caddyhttp.RawMatcherSets{}, fmt.Errorf(
-			"\"%v\" is not a valid URL: does not start with valid host",
-			url,
-		)
+func urlsToMatcher(urls []Url, requireDomain bool) (caddyhttp.RawMatcherSets, error) {
+	matchers := caddyhttp.RawMatcherSets{}
+	for _, url := range urls {
+		if (len(url.Domain) == 0 || !strings.Contains(url.Domain, ".")) && requireDomain {
+			return caddyhttp.RawMatcherSets{}, fmt.Errorf(
+				"\"%v\" is not a valid URL: does not start with valid host",
+				url,
+			)
+		}
+		matcher := caddy.ModuleMap{}
+		if url.Domain != "" {
+			matcher["host"] = jsonOrPanic([]string{url.Domain})
+		}
+		if url.Path != "" {
+			matcher["path"] = jsonOrPanic([]string{url.Path})
+		}
+		matchers = append(matchers, matcher)
 	}
-	var path string
-	if len(matcherComps) == 1 || len(matcherComps[1]) == 0 {
-		path = ""
-	} else {
-		path = "/" + strings.Join(matcherComps[1:], "/")
-	}
-	matcher := caddyhttp.RawMatcherSets{
-		caddy.ModuleMap{
-			"host": jsonOrPanic([]string{host}),
-		},
-	}
-
-	if path != "" {
-		matcher[0]["path"] = jsonOrPanic([]string{path})
-	}
-
-	return matcher, nil
-
+	return matchers, nil
 }
 
 // returns a caddy route that corresponds to a static file server for the
@@ -86,8 +78,8 @@ func urlToMatcher(url string, requireHost bool) (caddyhttp.RawMatcherSets, error
 func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 	if d.ServedThingType != StaticFiles {
 		return caddyhttp.Route{}, fmt.Errorf(
-			"deployment with URL %s passed to getCaddyStaticRoute despite having resource type %s",
-			d.Url, d.ServedThingType,
+			"deployment with name %s passed to getCaddyStaticRoute despite having resource type %s",
+			d.Name, d.ServedThingType,
 		)
 	}
 
@@ -113,34 +105,7 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 
 	var initialSubroutes []jsonObj
 
-	// TODO: #2
-	// if d.Settings.CacheControlMode != Default {
-	// 	var cacheControlMatcher []string
-	// 	switch d.Settings.CacheControlMode {
-	// 	case AllButHtml:
-	// 		// */ is supposed to match index routes (i.e. those ending in /,
-	// 		// like thing.com/whatever/)
-	// 		cacheControlMatcher = []string{"*/", "*.html"}
-	// 	case Nothing:
-	// 		cacheControlMatcher = []string{"*"}
-	// 	}
-	// 	initialSubroutes = append(initialSubroutes, jsonObj{
-	// 		"match": []jsonObj{
-	// 			{"path": cacheControlMatcher},
-	// 		},
-	// 		"handle": []jsonObj{
-	// 			{
-	// 				"handler": "headers",
-	// 				"response": jsonObj{
-	// 					"set": jsonObj{
-	// 						"Cache-Control": []string{"max-age=0,no-store"},
-	// 					},
-	// 				}},
-	// 		},
-	// 	})
-	// }
-
-	matcher, matcherErr := urlToMatcher(d.Url, true)
+	matcher, matcherErr := urlsToMatcher(d.Urls, true)
 	if matcherErr != nil {
 		return caddyhttp.Route{}, matcherErr
 	}
@@ -163,13 +128,13 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 	if d.ServedThingType != ReverseProxy {
 		return caddyhttp.Route{}, fmt.Errorf(
-			"deployment with URL %s passed to getCaddyReverseProxyRoute despite having resource type %s",
-			d.Url, d.ServedThingType,
+			"deployment with name %s passed to getCaddyReverseProxyRoute despite having resource type %s",
+			d.Name, d.ServedThingType,
 		)
 	}
 
 	// not requiring a host here bc this deployment type is for meta-deployments
-	matcher, matcherErr := urlToMatcher(d.Url, false)
+	matcher, matcherErr := urlsToMatcher(d.Urls, false)
 	if matcherErr != nil {
 		return caddyhttp.Route{}, matcherErr
 	}
@@ -182,11 +147,16 @@ func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 				"routes": []jsonObj{
 					{
 						"handle": []jsonObj{
-							// TODO: control strip_path_prefix with a setting
-							{"handler": "rewrite", "strip_path_prefix": d.Url},
+							// TODO: if this deployment type becomes public, fix
+							// this terrible hack. strip_path_prefix seems like
+							// it will be tricky, since we only want to strip
+							// the path prefix from the path matcher that was
+							// actually hit; will that require a different
+							// handle for every matcher?
+							{"handler": "rewrite", "strip_path_prefix": d.Urls[0].Path},
 							{
 								"handler": "reverse_proxy",
-								// TODO: control this with a setting? maybe?
+								// TODO: someday, control this with a setting? maybe?
 								"headers": jsonObj{
 									"request": jsonObj{
 										"set": jsonObj{
@@ -205,6 +175,8 @@ func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
 	}, nil
 }
 
+const httpAppServerName = "internetgolf"
+
 func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	var listen []string
 	if c.Settings.LocalOnly {
@@ -214,7 +186,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 	httpApp := caddyhttp.App{
 		Servers: map[string]*caddyhttp.Server{
-			"internetgolf": {
+			httpAppServerName: {
 				Listen: listen,
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
 					Disabled: !c.Settings.LocalOnly,
@@ -236,6 +208,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 			getCaddyRoute = getCaddyStaticRoute
 		case ReverseProxy:
 			getCaddyRoute = getCaddyReverseProxyRoute
+		// TODO: more cases
 		default:
 			fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
 		}
@@ -243,14 +216,12 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 		if route, err := getCaddyRoute(deployment); err != nil {
 			log.Printf("encountered error: %v", err)
 		} else {
-			httpApp.Servers["internetgolf"].Routes = append(
-				httpApp.Servers["internetgolf"].Routes,
+			httpApp.Servers[httpAppServerName].Routes = append(
+				httpApp.Servers[httpAppServerName].Routes,
 				route,
 			)
 		}
 	}
-
-	// TODO: docker cases
 
 	httpJson, err := json.Marshal(httpApp)
 	if err != nil {
@@ -258,9 +229,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 
 	caddyConfig := caddy.Config{
-		AppsRaw: caddy.ModuleMap{
-			"http": httpJson,
-		},
+		AppsRaw: caddy.ModuleMap{"http": httpJson},
 	}
 
 	err = caddy.Run(&caddyConfig)
