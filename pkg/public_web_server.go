@@ -46,11 +46,14 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
-func urlsToMatcher(urls []Url, requireDomain bool) (caddyhttp.RawMatcherSets, error) {
-	matchers := caddyhttp.RawMatcherSets{}
+// creates routes for each of the urls, all of which are handled by handlers.
+// this is used to turn groups of urls into separate routes with one matcher
+// each, so that the routes can then be sorted in order of matcher specificity.
+func urlsToRoutes(urls []Url, requireDomain bool, handlers []json.RawMessage) ([]caddyhttp.Route, error) {
+	routes := []caddyhttp.Route{}
 	for _, url := range urls {
 		if (len(url.Domain) == 0 || !strings.Contains(url.Domain, ".")) && requireDomain {
-			return caddyhttp.RawMatcherSets{}, fmt.Errorf(
+			return []caddyhttp.Route{}, fmt.Errorf(
 				"\"%v\" is not a valid URL: does not start with valid host",
 				url,
 			)
@@ -62,22 +65,19 @@ func urlsToMatcher(urls []Url, requireDomain bool) (caddyhttp.RawMatcherSets, er
 		if url.Path != "" {
 			matcher["path"] = jsonOrPanic([]string{url.Path})
 		}
-		matchers = append(matchers, matcher)
+		routes = append(routes, caddyhttp.Route{
+			MatcherSetsRaw: []caddy.ModuleMap{matcher},
+			HandlersRaw:    handlers,
+		})
 	}
-	return matchers, nil
+	return routes, nil
 }
 
-// returns a caddy route that corresponds to a static file server for the
-// Deployment d.
-//
-// this function is composed mainly of terrifying json soup but it's unclear how
-// else to do it since caddy.Run() expects json-serializable stuff (and the doc
-// comment for the caddy Config struct says "Go programs which are directly
-// building a Config struct value should take care to populate the
-// JSON-encodable fields of the struct")
-func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
+// returns a caddy route that corresponds to a static file server for each URL
+// in d.Urls.
+func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 	if d.ServedThingType != StaticFiles {
-		return caddyhttp.Route{}, fmt.Errorf(
+		return []caddyhttp.Route{}, fmt.Errorf(
 			"deployment with name %s passed to getCaddyStaticRoute despite having resource type %s",
 			d.Name, d.ServedThingType,
 		)
@@ -105,78 +105,75 @@ func getCaddyStaticRoute(d Deployment) (caddyhttp.Route, error) {
 
 	var initialSubroutes []jsonObj
 
-	matcher, matcherErr := urlsToMatcher(d.Urls, true)
-	if matcherErr != nil {
-		return caddyhttp.Route{}, matcherErr
+	handlers := []json.RawMessage{
+		jsonOrPanic(jsonObj{
+			"handler": "subroute",
+			"routes":  slices.Concat(initialSubroutes, []jsonObj{standardSubroute}),
+		}),
 	}
 
-	route := caddyhttp.Route{
-		MatcherSetsRaw: matcher,
-		HandlersRaw: []json.RawMessage{
-			jsonOrPanic(jsonObj{
-				"handler": "subroute",
-				"routes":  slices.Concat(initialSubroutes, []jsonObj{standardSubroute}),
-			}),
-		},
+	routes, routesErr := urlsToRoutes(d.Urls, true, handlers)
+	if routesErr != nil {
+		return []caddyhttp.Route{}, routesErr
 	}
 
-	return route, nil
+	return routes, nil
 }
 
 // low-level internal deployment type that probably should only be used for the
 // admin api
-func getCaddyReverseProxyRoute(d Deployment) (caddyhttp.Route, error) {
+func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 	if d.ServedThingType != ReverseProxy {
-		return caddyhttp.Route{}, fmt.Errorf(
+		return []caddyhttp.Route{}, fmt.Errorf(
 			"deployment with name %s passed to getCaddyReverseProxyRoute despite having resource type %s",
 			d.Name, d.ServedThingType,
 		)
 	}
 
-	// not requiring a host here bc this deployment type is for meta-deployments
-	matcher, matcherErr := urlsToMatcher(d.Urls, false)
-	if matcherErr != nil {
-		return caddyhttp.Route{}, matcherErr
-	}
-
-	return caddyhttp.Route{
-		MatcherSetsRaw: matcher,
-		HandlersRaw: []json.RawMessage{
-			jsonOrPanic(jsonObj{
-				"handler": "subroute",
-				"routes": []jsonObj{
-					{
-						"handle": []jsonObj{
-							// TODO: if this deployment type becomes public, fix
-							// this terrible hack. strip_path_prefix seems like
-							// it will be tricky, since we only want to strip
-							// the path prefix from the path matcher that was
-							// actually hit; will that require a different
-							// handle for every matcher?
-							{"handler": "rewrite", "strip_path_prefix": d.Urls[0].Path},
-							{
-								"handler": "reverse_proxy",
-								// TODO: someday, control this with a setting? maybe?
-								"headers": jsonObj{
-									"request": jsonObj{
-										"set": jsonObj{
-											"Host":      []string{"{http.request.host}"},
-											"X-Real-Ip": []string{"{http.request.remote}"},
-										},
+	handlers := []json.RawMessage{
+		jsonOrPanic(jsonObj{
+			"handler": "subroute",
+			"routes": []jsonObj{
+				{
+					"handle": []jsonObj{
+						// TODO: if this deployment type becomes public, find a
+						// way to use the relevant URL from Urls instead of
+						// assuming (as this does) that there will only be one
+						// URL. either something can be done with variables or
+						// `handlers` in urlsToRoutes should become a callback
+						{"handler": "rewrite", "strip_path_prefix": d.Urls[0].Path},
+						{
+							"handler": "reverse_proxy",
+							// TODO: someday, control this with a setting? maybe?
+							"headers": jsonObj{
+								"request": jsonObj{
+									"set": jsonObj{
+										"Host":      []string{"{http.request.host}"},
+										"X-Real-Ip": []string{"{http.request.remote}"},
 									},
 								},
-								"upstreams": []jsonObj{{"dial": d.ServedThing}},
 							},
+							"upstreams": []jsonObj{{"dial": d.ServedThing}},
 						},
 					},
 				},
-			}),
-		},
-	}, nil
+			},
+		}),
+	}
+
+	// not requiring a host here bc this deployment type is for meta-deployments
+	routes, routesErr := urlsToRoutes(d.Urls, false, handlers)
+
+	if routesErr != nil {
+		return []caddyhttp.Route{}, routesErr
+	}
+	return routes, nil
 }
 
 const httpAppServerName = "internetgolf"
 
+// puts all the deployments on the public internet. prioritizes more specific
+// urls over less specific urls;
 func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	var listen []string
 	if c.Settings.LocalOnly {
@@ -201,11 +198,11 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 			continue
 		}
 
-		var getCaddyRoute func(Deployment) (caddyhttp.Route, error)
+		var getCaddyRoute func(Deployment) ([]caddyhttp.Route, error)
 
 		switch deployment.ServedThingType {
 		case StaticFiles:
-			getCaddyRoute = getCaddyStaticRoute
+			getCaddyRoute = getCaddyStaticRoutes
 		case ReverseProxy:
 			getCaddyRoute = getCaddyReverseProxyRoute
 		// TODO: more cases
@@ -213,15 +210,43 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 			fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
 		}
 
-		if route, err := getCaddyRoute(deployment); err != nil {
+		if routes, err := getCaddyRoute(deployment); err != nil {
 			log.Printf("encountered error: %v", err)
 		} else {
 			httpApp.Servers[httpAppServerName].Routes = append(
 				httpApp.Servers[httpAppServerName].Routes,
-				route,
+				routes...,
 			)
 		}
 	}
+
+	// sort more specific routes to the beginning of the slice so that they'll
+	// get matched with higher precedence than the less specific routes; i.e.
+	// mitch.website/thing needs to be sorted before mitch.website or else
+	// mitch.website will always be matched and mitch.website/thing will never
+	// be matched
+	slices.SortFunc(
+		httpApp.Servers[httpAppServerName].Routes,
+		func(a caddyhttp.Route, b caddyhttp.Route) int {
+			// these routes are guaranteed to have only one matcher set because of
+			// how urlsToRoutes works
+			if len(a.MatcherSetsRaw[0]["path"]) == 0 && len(b.MatcherSetsRaw[0]["path"]) == 0 {
+				// if they both just have a host and no path, then they're equal
+				return 0
+			} else if len(b.MatcherSetsRaw[0]["path"]) == 0 {
+				// if only a has a path, then a is more specific and should be first
+				return -1
+			} else if len(a.MatcherSetsRaw[0]["path"]) == 0 {
+				// if only b has a path, then b is more specific and should be first
+				return 1
+			} else {
+				// otherwise, assume the longer path is more specific. which i think
+				// will give good results?
+				// TODO: account for asterisks? needs testing
+				return len(b.MatcherSetsRaw[0]["path"]) - len(a.MatcherSetsRaw[0]["path"])
+			}
+		},
+	)
 
 	httpJson, err := json.Marshal(httpApp)
 	if err != nil {
