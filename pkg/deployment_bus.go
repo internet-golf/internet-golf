@@ -29,12 +29,20 @@ const (
 type DeploymentSettings struct {
 }
 
-// TODO: break into internal vs. configurable
+type Url struct {
+	Domain string `json:"domain"`
+	Path   string `json:"path,omitempty"`
+}
+
+// TODO: since this is used by the Huma API, it probably should have more docs
+// and stuff in the struct tags
 type DeploymentMetadata struct {
-	// public URL of the deployment. also serves as the deployment's unique ID.
-	// contains a hostname with an optional url path. examples: "mitch.website"
-	// "mitch.website/path" "mitch.website/path*"
-	Url string `json:"url"`
+	// this has omitempty so that the name doesn't have to be specified when
+	// POSTing an object of this type to the API
+	Name string `json:"name,omitempty"`
+	Urls []Url  `json:"urls"`
+
+	// assuming that there won't be multiple external sources...
 
 	// for github repos, this is repoOwner/repoName or repoOwner/repoName#branch-name
 	ExternalSource     string             `json:"externalSource,omitempty"`
@@ -43,7 +51,7 @@ type DeploymentMetadata struct {
 	Tags []string `json:"tags,omitempty"`
 	// Settings DeploymentSettings `json:"settings,omitempty"`
 
-	// used for internal deployments like the one for the admin API
+	// this is `true` for internal deployments like the one for the admin API
 	DontPersist bool `json:"-"`
 }
 
@@ -120,11 +128,12 @@ func (bus *DeploymentBus) persistDeployments() error {
 	return nil
 }
 
-// create a deployment or update its metadata
+// create a deployment or, if a deployment with the same ID as the input
+// metadata already exists, update its metadata
 func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	fmt.Printf("adding deployment %+v\n", metadata)
 	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
-		return d.Url == metadata.Url
+		return d.Name == metadata.Name
 	})
 
 	if existingIndex == -1 {
@@ -142,79 +151,150 @@ func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	return bus.persistDeployments()
 }
 
-func (bus *DeploymentBus) PutDeploymentContentByUrl(
-	url string, content DeploymentContent,
+// TODO: method to rename existing deployment (will need to enforce that names
+// are unique, and aren't the empty string, etc)
+
+func (bus *DeploymentBus) getDeploymentIndexByName(name string) int {
+	return slices.IndexFunc(bus.deployments, func(d Deployment) bool {
+		return d.Name == name
+	})
+}
+
+func (bus *DeploymentBus) PutDeploymentContentByName(
+	name string, content DeploymentContent,
 ) error {
 	fmt.Printf("updating deployment content %+v\n", content)
-	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
-		return d.Url == url
-	})
-
+	existingIndex := bus.getDeploymentIndexByName(name)
 	if existingIndex == -1 {
 		return fmt.Errorf(
-			"Could not find deployment with URL \"%v\" to update content", url,
+			"Could not find deployment with name \"%v\" to update content", name,
 		)
 	}
-
 	return bus.updateDeploymentContentByIndex(existingIndex, content)
 }
 
-func (bus *DeploymentBus) getDeploymentIndexByExternalSource(
-	externalSource string, externalSourceType ExternalSourceType,
-) int {
-	// look for a deployment that matches the external source and external
-	// source type
-	deploymentIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
-		return (d.DeploymentMetadata.ExternalSourceType == externalSourceType &&
-			d.DeploymentMetadata.ExternalSource == externalSource)
-	})
+// TODO: this function is a prime target for branch test coverage
 
-	// special fallback logic for github repos - try finding a deployment that
-	// has just the repo specified, without a branch
-	if externalSourceType == GithubRepo && deploymentIndex == -1 {
-		// branches are specified in an external source like this:
-		// repoOwner/repoName#branch-name
-		branchIndex := strings.Index(externalSource, "#")
-		if branchIndex != -1 {
-			// get the repo name without the branch name
-			repo := externalSource[:branchIndex]
-			// if there is a deployment that has just the repo specified as its
-			// external source (without the branch name), it can be pushed to
-			// from any branch
-			deploymentIndex = slices.IndexFunc(bus.deployments, func(d Deployment) bool {
-				return (d.DeploymentMetadata.ExternalSourceType == GithubRepo &&
-					d.DeploymentMetadata.ExternalSource == repo)
-			})
+// gets the index of a stored Deployment with the provided external source,
+// external source type, and name. `name` is optional (i.e. it can be an empty
+// string, and this function will then just look for a deployment with a
+// matching external source and external source type), unless there are multiple
+// deployments with this externalSource and externalSourceType, in which case a
+// name must be specified to disambiguate between them, or an error will be
+// returned. an error will also be returned if no matching instance is found.
+//
+// if `externalSourceType == GithubRepo`, and externalSource follow the pattern
+// `repoOwner/repoName#branch-name`, if no deployment can be found matching the
+// full externalSource (and name, if it's present), one will be found that just
+// matches the "repoOwner/repoName" part.
+//
+// the logic in this function is very carefully structured so that if there is
+// an error, the most relevant and informative one is always returned, so that
+// errors can be passed back to the end user.
+func (bus *DeploymentBus) getDeploymentIndexByExternalSource(
+	externalSource string, externalSourceType ExternalSourceType, name string,
+) (int, error) {
+
+	// get the branchless externalSource if it's a github repo
+	lessSpecificExternalSource := externalSource
+	if hashIndex := strings.Index(externalSource, "#"); externalSourceType == GithubRepo && hashIndex != -1 {
+		lessSpecificExternalSource = externalSource[:hashIndex]
+	}
+
+	// the simple case is if `name` is specified
+	if len(name) > 0 {
+		nameIndex := bus.getDeploymentIndexByName(name)
+		if nameIndex == -1 {
+			return -1, fmt.Errorf("Could not find deployment with name %s", name)
+		} else {
+			// a deployment with `name` was found; make sure that the
+			// ExternalSource and ExternalSourceType match at some level
+			d := bus.deployments[nameIndex]
+			if d.ExternalSourceType != externalSourceType || (d.ExternalSource != externalSource && d.ExternalSource != lessSpecificExternalSource) {
+				if lessSpecificExternalSource != externalSource {
+					return -1, fmt.Errorf(
+						"Deployment with name %s does not match %s or %s (%s)",
+						name, externalSource, lessSpecificExternalSource, externalSourceType)
+				} else {
+					return -1, fmt.Errorf(
+						"Deployment with name %s does not match %s (%s)",
+						name, externalSource, externalSourceType,
+					)
+				}
+			} else {
+				// `name` was found and `externalSource` and
+				// `externalSourceType` match 👍
+				return nameIndex, nil
+			}
 		}
 	}
 
-	return deploymentIndex
-}
+	// if `name` was not specified, just match on the external source variables
 
-func (bus *DeploymentBus) DeploymentWithExternalSourceExists(
-	externalSource string, externalSourceType ExternalSourceType,
-) bool {
-	return bus.getDeploymentIndexByExternalSource(externalSource, externalSourceType) != -1
-}
-
-func (bus *DeploymentBus) PutDeploymentContentByExternalSource(
-	externalSource string, externalSourceType ExternalSourceType, content DeploymentContent,
-) error {
-	fmt.Printf("updating deployment content for %s - %s\n", externalSource, externalSourceType)
-
-	deploymentIndex := bus.getDeploymentIndexByExternalSource(externalSource, externalSourceType)
-
-	if deploymentIndex == -1 {
-		return fmt.Errorf(
-			"Could not find deployment for external source %s of type %s",
-			externalSource,
-			externalSourceType,
-		)
+	// get all the indexes that match so that we can report an error if there
+	// are multiple (if we didn't care about error reporting, we'd just return
+	// the first result)
+	var exactMatches []int
+	var acceptableMatches []int
+	for i, d := range bus.deployments {
+		if d.ExternalSourceType == externalSourceType && d.ExternalSource == externalSource {
+			exactMatches = append(exactMatches, i)
+		} else if d.ExternalSourceType == externalSourceType && d.ExternalSource == lessSpecificExternalSource {
+			acceptableMatches = append(acceptableMatches, i)
+		}
 	}
 
+	if len(exactMatches) > 1 {
+		return -1, fmt.Errorf(
+			"multiple deployments found for external source \"%s (%s)\"; "+
+				"please specify the name of the deployment you're looking for",
+			externalSource, externalSourceType,
+		)
+	} else if len(exactMatches) == 1 {
+		return exactMatches[0], nil
+	} else {
+		// there are no exact matches; fall back to the acceptable ones
+		if len(acceptableMatches) > 1 {
+			return -1, fmt.Errorf(
+				"multiple deployments found for external source \"%s (%s)\"; "+
+					"please specify the name of the deployment you're looking for",
+				lessSpecificExternalSource, externalSourceType,
+			)
+
+		} else if len(acceptableMatches) == 0 {
+			return -1, fmt.Errorf(
+				"could not find deployment for external source \"%s (%s)\"",
+				lessSpecificExternalSource, externalSourceType,
+			)
+		} else {
+			return acceptableMatches[0], nil
+		}
+	}
+}
+
+// updates the struct that points to content for a given deployment, and then
+// updates the public web server correspondingly, and then persists the new set
+// of deployments. `name` is optional; if it's an empty string, then only
+// externalSource and externalSourceType will be used to find the deployment
+// whose content is being updated. however, if more than one deployment exists
+// with this externalSource and externalSourceType, `name` must be non-empty, or
+// an error will be returned.
+func (bus *DeploymentBus) PutDeploymentContentByExternalSource(
+	externalSource string, externalSourceType ExternalSourceType, name string,
+	content DeploymentContent,
+) error {
+	fmt.Printf("updating deployment content for %s - %s\n", externalSource, externalSourceType)
+	deploymentIndex, err := bus.getDeploymentIndexByExternalSource(
+		externalSource, externalSourceType, name,
+	)
+	if err != nil {
+		return err
+	}
 	return bus.updateDeploymentContentByIndex(deploymentIndex, content)
 }
 
+// updates the content of the deployment at the given index, pushes the
+// deployments to the public web server, and then saves them
 func (bus *DeploymentBus) updateDeploymentContentByIndex(
 	index int, content DeploymentContent,
 ) error {
@@ -230,11 +310,16 @@ func (bus *DeploymentBus) updateDeploymentContentByIndex(
 	return bus.persistDeployments()
 }
 
-func (bus *DeploymentBus) DeleteDeployment(url string) error {
-	fmt.Printf("removing deployment with url %v\n", url)
-	bus.deployments = slices.DeleteFunc(bus.deployments, func(d Deployment) bool {
-		return d.Url == url
-	})
+// deletes the deployment from the given name, pushes the deployment set
+// (without the deleted one) to the public web server, and then saves the new
+// deployment set
+func (bus *DeploymentBus) DeleteDeployment(name string) error {
+	index := bus.getDeploymentIndexByName(name)
+	if index == -1 {
+		return fmt.Errorf("could not find deployment with name \"%s\" to delete it", name)
+	}
+
+	bus.deployments = slices.Delete(bus.deployments, index, index+1)
 
 	deploymentErr := bus.Server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
