@@ -31,19 +31,18 @@ func (s *StorageSettings) Init(nonDefaultDataDirectory string) {
 
 // why is this even a separate function
 func getDataDirectory(dataDirectoryPath string) (string, error) {
-	if dataDirectoryPath == "" {
+	if strings.Index(dataDirectoryPath, "$HOME") != -1 {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			return "", errors.New(
 				"could not obtain home directory, so data directory could not be " +
-					"automatically created. please manually configure the data directory",
+					"created using it. please manually configure the data directory",
 			)
 		}
-		dataDirectoryPath = path.Join(
-			// hopefully this replaceAll doesn't have weird consequences -
-			// everything still seems to work here on windows
-			strings.ReplaceAll(homeDir, "\\", "/"), ".internetgolf", // TODO: extract to constant
-		)
+		// hopefully this replaceAll doesn't have weird consequences -
+		// everything still seems to work here on windows
+		homeDir = strings.ReplaceAll(homeDir, "\\", "/")
+		dataDirectoryPath = strings.ReplaceAll(dataDirectoryPath, "$HOME", homeDir)
 	}
 
 	if _, err := os.Lstat(dataDirectoryPath); err != nil {

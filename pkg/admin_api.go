@@ -96,19 +96,9 @@ type AdminApi struct {
 	Port            string
 }
 
-func (a *AdminApi) Start() {
-	if len(a.Port) == 0 {
-		panic("Admin API port not set")
-	}
+var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
 
-	router := http.NewServeMux()
-	api := humago.New(
-		router,
-		huma.DefaultConfig("Internet Golf API", "0.5.0"),
-	)
-
-	api.UseMiddleware(readAuth(api))
-
+func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Get(api, "/alive",
 		func(ctx context.Context, i *struct{}) (*HealthCheckOutput, error) {
 			resp := &HealthCheckOutput{}
@@ -149,6 +139,11 @@ func (a *AdminApi) Start() {
 			// deployment bus once it's created (or return an error if it
 			// shouldn't be sent anywhere.) TODO: extract this logic so it can
 			// be used in other /deploy api routes somehow
+
+			// also TODO: would it be possible to proxy unauthorized requests to
+			// the public web server so that they can be handled as a standard
+			// 404? that would help protect against scanning for the admin api
+			// endpoints, but would also hurt useability
 
 			authResult, authResultOk := ctx.Value("authResult").(AuthResult)
 			if !authResultOk {
@@ -232,13 +227,34 @@ func (a *AdminApi) Start() {
 	// 	// TODO: implement this at all
 	// 	panic("not implemented")
 	// })
+}
 
-	fmt.Println("Writing OpenAPI spec to golf-openapi.yaml")
+func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
+	router := http.NewServeMux()
+	api := humago.New(router, humaConfig)
+	api.UseMiddleware(readAuth(api))
+
+	a.addRoutes(api)
+
+	fmt.Printf("Writing OpenAPI spec to %s\n", outputPath)
 	b, _ := api.OpenAPI().DowngradeYAML()
-	openApiErr := os.WriteFile("golf-openapi.yaml", b, 0644)
+	openApiErr := os.WriteFile(outputPath, b, 0644)
 	if openApiErr != nil {
 		fmt.Println("Could not write OpenAPI spec")
 	}
+}
+
+func (a *AdminApi) Start() {
+	if len(a.Port) == 0 {
+		panic("Admin API port not set")
+	}
+
+	router := http.NewServeMux()
+	api := humago.New(router, humaConfig)
+
+	api.UseMiddleware(readAuth(api))
+
+	a.addRoutes(api)
 
 	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
 	// TODO: bind to more addresses? i guess not bc this is exposed via a caddy
