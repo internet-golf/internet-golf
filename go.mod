@@ -7,6 +7,7 @@ require (
 	github.com/danielgtaylor/huma/v2 v2.32.0
 	github.com/gosimple/slug v1.15.0
 	github.com/lestrrat-go/jwx/v2 v2.1.6
+	github.com/magefile/mage v1.15.0
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/spf13/cobra v1.9.1
 	github.com/txn2/txeh v1.5.5
@@ -165,4 +166,7 @@ require (
 	howett.net/plist v1.0.0 // indirect
 )
 
-tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+tool (
+	github.com/magefile/mage
+	github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+)
