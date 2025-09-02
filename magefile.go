@@ -35,8 +35,21 @@ func BuildServer() error {
 	return cmd.Run()
 }
 
+func GenerateClientSdk() error {
+	mg.Deps(InstallDeps)
+	fmt.Println("Regenerating client code...")
+	openapiCmd := exec.Command("go", "run", "./cmd", "openapi")
+	err := openapiCmd.Run()
+	if err != nil {
+		return err
+	}
+	generateCmd := exec.Command("go", "generate", "./client-cmd")
+	err = generateCmd.Run()
+	return err
+}
+
 func BuildClient() error {
-	mg.Deps(SetExtension, InstallDeps)
+	mg.Deps(SetExtension, InstallDeps, GenerateClientSdk)
 	fmt.Println("Building client...")
 	cmd := exec.Command("go", "build", "-o", "golf"+extension, "./client-cmd")
 	return cmd.Run()
