@@ -4,3 +4,4 @@ generate:
   # specifying just these to avoid generating server code
   client: true
   models: true
+output: "sdk.gen.go"

@@ -19,11 +19,13 @@ import (
 // DeploymentCreateInputBody defines model for DeploymentCreateInputBody.
 type DeploymentCreateInputBody struct {
 	// Schema A URL to the JSON Schema for this object.
-	Schema             *string   `json:"$schema,omitempty"`
-	ExternalSource     *string   `json:"externalSource,omitempty"`
-	ExternalSourceType *string   `json:"externalSourceType,omitempty"`
-	Tags               *[]string `json:"tags"`
-	Url                string    `json:"url"`
+	Schema               *string   `json:"$schema,omitempty"`
+	ExternalSource       *string   `json:"externalSource,omitempty"`
+	ExternalSourceType   *string   `json:"externalSourceType,omitempty"`
+	Name                 *string   `json:"name,omitempty"`
+	PreserveExternalPath *bool     `json:"preserveExternalPath,omitempty"`
+	Tags                 *[]string `json:"tags"`
+	Urls                 *[]Url    `json:"urls"`
 }
 
 // ErrorDetail defines model for ErrorDetail.
@@ -76,12 +78,18 @@ type SuccessOutputBody struct {
 	Success bool    `json:"success"`
 }
 
+// Url defines model for Url.
+type Url struct {
+	Domain string  `json:"domain"`
+	Path   *string `json:"path,omitempty"`
+}
+
 // PutDeployFilesMultipartBody defines parameters for PutDeployFiles.
 type PutDeployFilesMultipartBody struct {
 	Contents               *openapi_types.File `json:"contents,omitempty"`
 	KeepLeadingDirectories *bool               `json:"keepLeadingDirectories,omitempty"`
+	Name                   *string             `json:"name,omitempty"`
 	PreserveExistingFiles  *bool               `json:"preserveExistingFiles,omitempty"`
-	Url                    *string             `json:"url,omitempty"`
 }
 
 // PutDeployFilesMultipartRequestBody defines body for PutDeployFiles for multipart/form-data ContentType.
