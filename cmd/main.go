@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
@@ -68,9 +69,12 @@ func main() {
 		},
 	}
 
+	openPort, openPortErr := internetgolf.GetFreePort()
+	if openPortErr != nil {
+		panic(openPortErr.Error())
+	}
 	rootCmd.Flags().StringVar(
-		// TODO: automatically find open port for default value
-		&adminApiPort, "admin-api-port", "8888",
+		&adminApiPort, "admin-api-port", strconv.Itoa(openPort),
 		"Specify a port for the internal admin API.\n"+
 			"This is only really useful for testing and to avoid port conflicts.",
 	)

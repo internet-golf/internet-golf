@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
@@ -15,7 +16,6 @@ import (
 )
 
 type StorageSettings struct {
-	// will be automatically set to $HOME/.internetgolf if not set
 	DataDirectory string
 }
 
@@ -29,7 +29,8 @@ func (s *StorageSettings) Init(nonDefaultDataDirectory string) {
 	fmt.Printf("Initialized data directory to %s\n", s.DataDirectory)
 }
 
-// why is this even a separate function
+// receives a dataDirectoryPath; translates "$HOME" to the user's home
+// directory; creates a directory at the path if it doesn't already exist
 func getDataDirectory(dataDirectoryPath string) (string, error) {
 	if strings.Index(dataDirectoryPath, "$HOME") != -1 {
 		homeDir, err := os.UserHomeDir()
@@ -76,6 +77,20 @@ func getLongestCommonPrefix(strings []string) string {
 		longestCommonPrefix = newLongestCommonPrefix
 	}
 	return longestCommonPrefix
+}
+
+// getFreePort asks the kernel for a free open port that is ready to use.
+// https://gist.github.com/sevkin/96bdae9274465b2d09191384f86ef39d
+func GetFreePort() (port int, err error) {
+	var a *net.TCPAddr
+	if a, err = net.ResolveTCPAddr("tcp", "localhost:0"); err == nil {
+		var l *net.TCPListener
+		if l, err = net.ListenTCP("tcp", a); err == nil {
+			defer l.Close()
+			return l.Addr().(*net.TCPAddr).Port, nil
+		}
+	}
+	return
 }
 
 // turns the contents of a stream into an md5 hash. seeks the stream back to its
