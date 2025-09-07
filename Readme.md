@@ -14,7 +14,7 @@ Install dependencies:
 go get .
 ```
 
-Build:
+Build (requires Docker for code generation step):
 
 ```
 go tool mage build

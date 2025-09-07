@@ -1,0 +1,225 @@
+openapi: 3.1.0
+info:
+  title: Internet Golf API
+  version: 0.5.0
+servers:
+- url: /
+paths:
+  /alive:
+    get:
+      operationId: get-alive
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthCheckOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get alive
+  /deploy/files:
+    put:
+      operationId: put-deploy-files
+      requestBody:
+        content:
+          multipart/form-data:
+            encoding:
+              contents:
+                contentType: "application/gzip,application/octet-stream"
+                style: form
+              keepLeadingDirectories:
+                contentType: text/plain
+                style: form
+              name:
+                contentType: text/plain
+                style: form
+              preserveExistingFiles:
+                contentType: text/plain
+                style: form
+            schema:
+              $ref: "#/components/schemas/put_deploy_files_request"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Put deploy files
+  /deploy/new:
+    post:
+      operationId: post-deploy-new
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentCreateInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Post deploy new
+components:
+  schemas:
+    DeploymentCreateInputBody:
+      additionalProperties: false
+      example:
+        urls:
+        - path: path
+          domain: domain
+        - path: path
+          domain: domain
+        $schema: https://openapi-generator.tech
+        externalSourceType: externalSourceType
+        name: name
+        preserveExternalPath: true
+        externalSource: externalSource
+        tags:
+        - tags
+        - tags
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        externalSource:
+          type: string
+        externalSourceType:
+          type: string
+        name:
+          type: string
+        preserveExternalPath:
+          type: boolean
+        tags:
+          items:
+            type: string
+          nullable: true
+          type: array
+        urls:
+          items:
+            $ref: "#/components/schemas/Url"
+          nullable: true
+          type: array
+      required:
+      - urls
+    ErrorDetail:
+      additionalProperties: false
+      properties:
+        location:
+          description: "Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id'"
+          type: string
+        message:
+          description: Error message text
+          type: string
+        value: {}
+    ErrorModel:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        detail:
+          description: A human-readable explanation specific to this occurrence of
+            the problem.
+          type: string
+        errors:
+          description: Optional list of individual error details
+          items:
+            $ref: "#/components/schemas/ErrorDetail"
+          nullable: true
+          type: array
+        instance:
+          description: A URI reference that identifies the specific occurrence of
+            the problem.
+          format: uri
+          type: string
+        status:
+          description: HTTP status code
+          format: int64
+          type: integer
+        title:
+          description: "A short, human-readable summary of the problem type. This\
+            \ value should not change between occurrences of the error."
+          type: string
+        type:
+          default: about:blank
+          description: A URI reference to human-readable documentation for the error.
+          format: uri
+          type: string
+    HealthCheckOutputBody:
+      additionalProperties: false
+      example:
+        $schema: https://openapi-generator.tech
+        ok: true
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        ok:
+          type: boolean
+      required:
+      - ok
+    SuccessOutputBody:
+      additionalProperties: false
+      example:
+        $schema: https://openapi-generator.tech
+        success: true
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        success:
+          type: boolean
+      required:
+      - success
+    Url:
+      additionalProperties: false
+      example:
+        path: path
+        domain: domain
+      properties:
+        domain:
+          type: string
+        path:
+          type: string
+      required:
+      - domain
+    put_deploy_files_request:
+      properties:
+        contents:
+          format: binary
+          type: string
+        keepLeadingDirectories:
+          type: boolean
+        name:
+          type: string
+        preserveExistingFiles:
+          type: boolean

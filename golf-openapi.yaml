@@ -5,7 +5,8 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/DeploymentCreateInputBody.json
+          examples:
+            - https://example.com/schemas/DeploymentCreateInputBody.json
           format: uri
           readOnly: true
           type: string
@@ -13,15 +14,24 @@ components:
           type: string
         externalSourceType:
           type: string
+        name:
+          type: string
+        preserveExternalPath:
+          type: boolean
         tags:
           items:
             type: string
-          nullable: true
-          type: array
-        url:
-          type: string
+          type:
+            - array
+            - "null"
+        urls:
+          items:
+            $ref: "#/components/schemas/Url"
+          type:
+            - array
+            - "null"
       required:
-        - url
+        - urls
       type: object
     ErrorDetail:
       additionalProperties: false
@@ -40,38 +50,45 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/ErrorModel.json
+          examples:
+            - https://example.com/schemas/ErrorModel.json
           format: uri
           readOnly: true
           type: string
         detail:
           description: A human-readable explanation specific to this occurrence of the problem.
-          example: Property foo is required but is missing.
+          examples:
+            - Property foo is required but is missing.
           type: string
         errors:
           description: Optional list of individual error details
           items:
             $ref: "#/components/schemas/ErrorDetail"
-          nullable: true
-          type: array
+          type:
+            - array
+            - "null"
         instance:
           description: A URI reference that identifies the specific occurrence of the problem.
-          example: https://example.com/error-log/abc123
+          examples:
+            - https://example.com/error-log/abc123
           format: uri
           type: string
         status:
           description: HTTP status code
-          example: 400
+          examples:
+            - 400
           format: int64
           type: integer
         title:
           description: A short, human-readable summary of the problem type. This value should not change between occurrences of the error.
-          example: Bad Request
+          examples:
+            - Bad Request
           type: string
         type:
           default: about:blank
           description: A URI reference to human-readable documentation for the error.
-          example: https://example.com/errors/example
+          examples:
+            - https://example.com/errors/example
           format: uri
           type: string
       type: object
@@ -80,7 +97,8 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/HealthCheckOutputBody.json
+          examples:
+            - https://example.com/schemas/HealthCheckOutputBody.json
           format: uri
           readOnly: true
           type: string
@@ -94,7 +112,8 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/SuccessOutputBody.json
+          examples:
+            - https://example.com/schemas/SuccessOutputBody.json
           format: uri
           readOnly: true
           type: string
@@ -103,10 +122,20 @@ components:
       required:
         - success
       type: object
+    Url:
+      additionalProperties: false
+      properties:
+        domain:
+          type: string
+        path:
+          type: string
+      required:
+        - domain
+      type: object
 info:
   title: Internet Golf API
   version: 0.5.0
-openapi: 3.0.3
+openapi: 3.1.0
 paths:
   /alive:
     get:
@@ -136,9 +165,9 @@ paths:
                 contentType: application/gzip,application/octet-stream
               keepLeadingDirectories:
                 contentType: text/plain
-              preserveExistingFiles:
+              name:
                 contentType: text/plain
-              url:
+              preserveExistingFiles:
                 contentType: text/plain
             schema:
               properties:
@@ -149,10 +178,10 @@ paths:
                   type: string
                 keepLeadingDirectories:
                   type: boolean
+                name:
+                  type: string
                 preserveExistingFiles:
                   type: boolean
-                url:
-                  type: string
               type: object
       responses:
         "200":
