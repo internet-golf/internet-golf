@@ -237,7 +237,7 @@ func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
 	a.addRoutes(api)
 
 	fmt.Printf("Writing OpenAPI spec to %s\n", outputPath)
-	b, _ := api.OpenAPI().DowngradeYAML()
+	b, _ := api.OpenAPI().YAML()
 	openApiErr := os.WriteFile(outputPath, b, 0644)
 	if openApiErr != nil {
 		fmt.Println("Could not write OpenAPI spec")

@@ -104,11 +104,12 @@ func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 
 		var initialSubroutes []jsonObj
 		if !d.DeploymentMetadata.PreserveExternalPath {
+			cleanPath, _ := strings.CutSuffix(url.Path, "*")
 			initialSubroutes = append(initialSubroutes,
 				// TODO: does this work with asterisks?
 				jsonObj{
 					"handle": []jsonObj{
-						jsonObj{"handler": "rewrite", "strip_path_prefix": url.Path},
+						jsonObj{"handler": "rewrite", "strip_path_prefix": cleanPath},
 					},
 				},
 			)

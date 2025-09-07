@@ -54,6 +54,7 @@ type DeploymentMetadata struct {
 }
 
 type DeploymentContent struct {
+	// this is false if no actual content has been added to the deployment (yet)
 	HasContent bool `json:"hasContent"`
 	// for static files, this is the path to a local directory; for a docker
 	// container, this is a port number (?); for a redirect, this is a url or url

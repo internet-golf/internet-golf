@@ -120,6 +120,9 @@ func hashStream(stream io.ReadSeeker) (string, error) {
 //
 // the tar file traversal is heavily referenced from
 // https://stackoverflow.com/a/57640231/3962267
+//
+// TODO: would probably be easier with
+// https://github.com/mholt/archives?tab=readme-ov-file#extract-archive
 func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs bool) error {
 	os.MkdirAll(baseOutDir, 0750)
 
