@@ -89,14 +89,14 @@ func runOpenapiGenerator() error {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			panic(err)
+			return err
 		}
 	case <-statusCh:
 	}
 
 	out, err := cli.ContainerLogs(ctx, cont.ID, container.LogsOptions{ShowStdout: true})
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	stdcopy.StdCopy(os.Stdout, os.Stderr, out)

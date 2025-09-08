@@ -23,6 +23,7 @@ import (
 
 type PublicWebServer interface {
 	DeployAll([]Deployment) error
+	Stop() error
 }
 
 // implements the PublicWebServer interface
@@ -278,4 +279,8 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 
 	return nil
+}
+
+func (c *CaddyServer) Stop() error {
+	return caddy.Stop()
 }

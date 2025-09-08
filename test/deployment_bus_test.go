@@ -88,6 +88,7 @@ func getFixturePath(fixture string) string {
 func TestBasicStaticDeployment(t *testing.T) {
 
 	deploymentBus := createBus()
+	defer deploymentBus.Stop()
 
 	// create a deployment that serves the static-site fixture at
 	// http://internet-golf-test.local
@@ -114,6 +115,7 @@ func TestBasicStaticDeployment(t *testing.T) {
 func TestStaticDeploymentWithPath(t *testing.T) {
 
 	deploymentBus := createBus()
+	defer deploymentBus.Stop()
 
 	// create a deployment that serves the static-site-2 fixture at
 	// http://internet-golf-test.local/stuff/
@@ -151,6 +153,7 @@ func TestStaticDeploymentWithPath(t *testing.T) {
 func TestStaticDeploymentWithPreservedPath(t *testing.T) {
 
 	deploymentBus := createBus()
+	defer deploymentBus.Stop()
 
 	// create a deployment that serves the static-site-2 fixture at
 	// http://internet-golf-test.local/stuff/

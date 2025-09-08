@@ -18,12 +18,16 @@ var rootCmd = &cobra.Command{
 // TODO: should all the subcommands run the health check and wait for it to work
 // for a few seconds?
 
-var client = golfsdk.NewAPIClient(&golfsdk.Configuration{
-	UserAgent: "InternetGolfClient",
-	Servers: golfsdk.ServerConfigurations{
-		{URL: "http://localhost:8888"},
-	},
-})
+var apiUrl string
+
+func createClient() *golfsdk.APIClient {
+	return golfsdk.NewAPIClient(&golfsdk.Configuration{
+		UserAgent: "InternetGolfClient",
+		Servers: golfsdk.ServerConfigurations{
+			{URL: apiUrl},
+		},
+	})
+}
 
 func createDeploymentCommand() *cobra.Command {
 
@@ -52,6 +56,9 @@ func createDeploymentCommand() *cobra.Command {
 				externalSourceType = "GithubRepo"
 				externalSource = github
 			}
+
+			client := createClient()
+			fmt.Printf("created client with config %+v\n", client.GetConfig())
 
 			body, resp, respError := client.
 				DefaultAPI.PostDeployNew(context.TODO()).
@@ -89,8 +96,9 @@ func deployContentCommand() *cobra.Command {
 	var files string
 
 	deployContent := cobra.Command{
-		Use:  "deploy-content",
-		Args: cobra.NoArgs,
+		Use:   "deploy-content",
+		Short: "Deploys content",
+		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.TODO()
 			files, err := archives.FilesFromDisk(ctx, nil, map[string]string{
@@ -113,6 +121,8 @@ func deployContentCommand() *cobra.Command {
 			if archiveErr != nil {
 				panic(archiveErr.Error())
 			}
+
+			client := createClient()
 
 			body, resp, respError := client.
 				DefaultAPI.PutDeployFiles(context.TODO()).
@@ -145,6 +155,10 @@ func deployContentCommand() *cobra.Command {
 func main() {
 	rootCmd.AddCommand(createDeploymentCommand())
 	rootCmd.AddCommand(deployContentCommand())
+	// TODO: the default should actually depend on the passed-in url arg(s)
+	rootCmd.PersistentFlags().StringVar(
+		&apiUrl, "apiUrl", "http://localhost:8888", "Specify the API URL",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

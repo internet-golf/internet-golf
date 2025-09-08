@@ -81,6 +81,7 @@ func getLongestCommonPrefix(strings []string) string {
 
 // getFreePort asks the kernel for a free open port that is ready to use.
 // https://gist.github.com/sevkin/96bdae9274465b2d09191384f86ef39d
+// exported for use in tests :/
 func GetFreePort() (port int, err error) {
 	var a *net.TCPAddr
 	if a, err = net.ResolveTCPAddr("tcp", "localhost:0"); err == nil {

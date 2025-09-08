@@ -99,6 +99,10 @@ func (bus *DeploymentBus) Init() {
 	bus.Server.DeployAll(bus.deployments)
 }
 
+func (bus *DeploymentBus) Stop() error {
+	return bus.Server.Stop()
+}
+
 func (bus *DeploymentBus) persistDeployments() error {
 	// TODO: this doesn't seem that atomic since an error after this would leave
 	// an empty bus.deploymentsFile with no way to rollback. realistically
