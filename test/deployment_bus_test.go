@@ -13,67 +13,42 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/txn2/txeh"
-
 	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
 )
 
-var deploymentBus internetgolf.DeploymentBus
-var busCreated bool = false
+var tempDirs []string
 
-func createBus() {
-	if !busCreated {
+func createBus() internetgolf.DeploymentBus {
 
-		tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
-		if tempDirError != nil {
-			panic(tempDirError)
-		}
-
-		settings := internetgolf.StorageSettings{}
-		settings.Init(tempDir)
-
-		// interface to the web server that actually deploys the deployments
-		deploymentServer := internetgolf.CaddyServer{}
-		deploymentServer.Settings.LocalOnly = true
-
-		// object that (persistently) stores the active deployments and broadcasts
-		// them to the deploymentServer when necessary
-		deploymentBus = internetgolf.DeploymentBus{
-			Server:          &deploymentServer,
-			StorageSettings: settings,
-		}
-		deploymentBus.Init()
-
-		busCreated = true
+	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
+	if tempDirError != nil {
+		panic(tempDirError)
 	}
+	tempDirs = append(tempDirs, tempDir)
+
+	settings := internetgolf.StorageSettings{}
+	settings.Init(tempDir)
+
+	// interface to the web server that actually deploys the deployments
+	deploymentServer := internetgolf.CaddyServer{}
+	deploymentServer.Settings.LocalOnly = true
+
+	// object that (persistently) stores the active deployments and broadcasts
+	// them to the deploymentServer when necessary
+	deploymentBus := internetgolf.DeploymentBus{
+		Server:          &deploymentServer,
+		StorageSettings: settings,
+	}
+	deploymentBus.Init()
+
+	return deploymentBus
 }
 
-const (
-	BasicTestHost = "internet-golf-test.local"
-)
-
-// TODO: this requires elevated permissions to run and only needs to run once...
-func setupHosts() {
-	// this does not actually appear to create a new hosts file but rather
-	// loads the existing one
-	hosts, err := txeh.NewHostsDefault()
-	if err != nil {
-		panic(err)
+// this is called by TestMain which lives in utils_test.go
+func busCleanup() {
+	for _, tempDir := range tempDirs {
+		os.RemoveAll(tempDir)
 	}
-	fmt.Println(hosts)
-	hosts.AddHost("127.0.0.1", BasicTestHost)
-	if saveErr := hosts.Save(); saveErr != nil {
-		panic(saveErr)
-	}
-}
-
-func TestMain(m *testing.M) {
-	createBus()
-	// setupHosts()
-	code := m.Run()
-
-	os.RemoveAll(deploymentBus.StorageSettings.DataDirectory)
-	os.Exit(code)
 }
 
 func urlToPageContent(url string, t *testing.T) (string, error) {
@@ -112,6 +87,8 @@ func getFixturePath(fixture string) string {
 
 func TestBasicStaticDeployment(t *testing.T) {
 
+	deploymentBus := createBus()
+
 	// create a deployment that serves the static-site fixture at
 	// http://internet-golf-test.local
 
@@ -135,6 +112,8 @@ func TestBasicStaticDeployment(t *testing.T) {
 }
 
 func TestStaticDeploymentWithPath(t *testing.T) {
+
+	deploymentBus := createBus()
 
 	// create a deployment that serves the static-site-2 fixture at
 	// http://internet-golf-test.local/stuff/
@@ -170,6 +149,8 @@ func TestStaticDeploymentWithPath(t *testing.T) {
 }
 
 func TestStaticDeploymentWithPreservedPath(t *testing.T) {
+
+	deploymentBus := createBus()
 
 	// create a deployment that serves the static-site-2 fixture at
 	// http://internet-golf-test.local/stuff/
