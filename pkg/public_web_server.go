@@ -31,6 +31,7 @@ type PublicWebServer interface {
 type CaddyServer struct {
 	Settings struct {
 		LocalOnly bool
+		Verbose   bool
 	}
 }
 
@@ -272,10 +273,21 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 
 	port, _ := GetFreePort()
 
+	logLevel := "ERROR"
+	if c.Settings.Verbose {
+		logLevel = "DEBUG"
+	}
 	caddyConfig := caddy.Config{
 		AppsRaw: caddy.ModuleMap{"http": httpJson},
 		Admin: &caddy.AdminConfig{
 			Listen: "localhost:" + strconv.Itoa(port),
+		},
+		Logging: &caddy.Logging{
+			Logs: map[string]*caddy.CustomLog{
+				"default": &caddy.CustomLog{
+					BaseLog: caddy.BaseLog{Level: logLevel},
+				},
+			},
 		},
 	}
 

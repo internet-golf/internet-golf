@@ -13,6 +13,7 @@ func main() {
 	var localOnly bool
 	var adminApiUrl string
 	var dataDirectory string
+	var verbose bool
 
 	var rootCmd = &cobra.Command{
 		Use:   "golf-server",
@@ -29,6 +30,7 @@ func main() {
 			// 1. interface to the web server that actually deploys the deployments
 			deploymentServer := internetgolf.CaddyServer{}
 			deploymentServer.Settings.LocalOnly = localOnly
+			deploymentServer.Settings.Verbose = verbose
 
 			// 2. object that (persistently) stores the active deployments and
 			// broadcasts them to the deploymentServer when necessary
@@ -92,6 +94,10 @@ func main() {
 		&dataDirectory, "data-dir", "$HOME/.internetgolf",
 		"Location on disk where deployments will be stored. "+
 			"Separate from Caddy's data directory.\n",
+	)
+	rootCmd.Flags().BoolVarP(
+		&verbose, "verbose", "v", false,
+		"Output all internal logs",
 	)
 
 	var openapiOutputPath string
