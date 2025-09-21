@@ -97,6 +97,36 @@ func TestBasicStaticDeployment(t *testing.T) {
 	}
 }
 
+func TestBasicStaticDeploymentPersistence(t *testing.T) {
+	deploymentBus := createBus()
+
+	url := "http://" + BasicTestHost
+
+	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
+		Urls: []internetgolf.Url{internetgolf.Url{Domain: BasicTestHost}},
+		Name: "test-1",
+	})
+
+	deploymentBus.PutDeploymentContentByName("test-1", internetgolf.DeploymentContent{
+		ServedThingType: internetgolf.StaticFiles,
+		ServedThing:     getFixturePath("static-site"),
+	})
+
+	bodyStr := urlToPageContent(url, t)
+	if bodyStr != "stuff\n" {
+		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
+	}
+
+	deploymentBus.Stop()
+
+	deploymentBus.Init()
+
+	bodyStr = urlToPageContent(url, t)
+	if bodyStr != "stuff\n" {
+		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
+	}
+}
+
 func TestStaticDeploymentWithPath(t *testing.T) {
 
 	deploymentBus := createBus()

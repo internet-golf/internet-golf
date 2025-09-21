@@ -1,13 +1,12 @@
 package internetgolf
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"os"
 	"path"
 	"slices"
 	"strings"
+
+	"github.com/asdine/storm/v3"
 )
 
 type ServedThingType string
@@ -36,7 +35,7 @@ type Url struct {
 type DeploymentMetadata struct {
 	// this has omitempty so that the name doesn't have to be specified when
 	// POSTing an object of this type to the API
-	Name string `json:"name,omitempty"`
+	Name string `json:"name,omitempty" storm:"id"`
 	Urls []Url  `json:"urls"`
 
 	// assuming that there won't be multiple external sources...
@@ -71,8 +70,8 @@ type DeploymentContent struct {
 }
 
 type Deployment struct {
-	DeploymentMetadata
-	DeploymentContent
+	DeploymentMetadata `storm:"inline"`
+	DeploymentContent  `storm:"inline"`
 }
 
 type DeploymentBus struct {
@@ -86,23 +85,26 @@ type DeploymentBus struct {
 // DeploymentBus' Server with them
 func (bus *DeploymentBus) Init() {
 	// source of truth for where deployments are persisted to
-	bus.deploymentsFile = path.Join(bus.StorageSettings.DataDirectory, "deployments.json")
+	bus.deploymentsFile = path.Join(bus.StorageSettings.DataDirectory, "deployments.db")
 
-	if infile, infileErr := os.Open(bus.deploymentsFile); infileErr == nil {
-		defer infile.Close()
-		decoder := json.NewDecoder(infile)
-		decoderError := decoder.Decode(&bus.deployments)
-		if decoderError != nil {
-			fmt.Printf("error decoding existing deployments: %v", decoderError)
-		}
-	} else if !errors.Is(infileErr, os.ErrNotExist) {
-		panic(
-			fmt.Sprintf(
-				"could not initialize deployment bus; \"%v\" not openable",
-				bus.deploymentsFile,
-			),
-		)
+	db, dbOpenErr := storm.Open(bus.deploymentsFile)
+	if dbOpenErr != nil {
+		panic(dbOpenErr)
 	}
+	defer db.Close()
+
+	deploymentBucketErr := db.Init(&Deployment{})
+	if deploymentBucketErr != nil {
+		panic(deploymentBucketErr)
+	}
+
+	var existingDeployments []Deployment
+	loadingExistingErr := db.All(&existingDeployments)
+	if loadingExistingErr != nil {
+		panic(loadingExistingErr)
+	}
+
+	bus.deployments = existingDeployments
 	bus.Server.DeployAll(bus.deployments)
 }
 
@@ -111,28 +113,23 @@ func (bus *DeploymentBus) Stop() error {
 }
 
 func (bus *DeploymentBus) persistDeployments() error {
-	// TODO: this doesn't seem that atomic since an error after this would leave
-	// an empty bus.deploymentsFile with no way to rollback. realistically
-	// probably would want something like sqlite for better durability
-	outfile, outfileErr := os.Create(bus.deploymentsFile)
-	if outfileErr != nil {
-		return outfileErr
-	}
-	defer outfile.Close()
 
-	encoder := json.NewEncoder(outfile)
-	persistable := slices.Collect(func(yield func(Deployment) bool) {
-		for _, d := range bus.deployments {
-			if !d.DontPersist {
-				if !yield(d) {
-					return
-				}
+	db, dbOpenErr := storm.Open(bus.deploymentsFile)
+	if dbOpenErr != nil {
+		return dbOpenErr
+	}
+	defer db.Close()
+
+	for _, d := range bus.deployments {
+		if !d.DontPersist {
+			saveErr := db.Save(&d)
+			if saveErr != nil {
+				fmt.Printf(
+					"could not save deployment with name %s: %+v\n",
+					d.Name, saveErr,
+				)
 			}
 		}
-	})
-	jsonErr := encoder.Encode(persistable)
-	if jsonErr != nil {
-		return jsonErr
 	}
 
 	return nil

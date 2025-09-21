@@ -3,6 +3,7 @@ module github.com/toBeOfUse/internet-golf
 go 1.25
 
 require (
+	github.com/asdine/storm/v3 v3.2.1
 	github.com/caddyserver/caddy/v2 v2.10.2
 	github.com/danielgtaylor/huma/v2 v2.32.0
 	github.com/docker/docker v28.3.1+incompatible
