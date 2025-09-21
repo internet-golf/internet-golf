@@ -101,8 +101,8 @@ func deployContentCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.TODO()
-			files, err := archives.FilesFromDisk(ctx, nil, map[string]string{
-				files: "content",
+			fileTree, err := archives.FilesFromDisk(ctx, nil, map[string]string{
+				files: "",
 			})
 			if err != nil {
 				panic(err.Error())
@@ -117,10 +117,12 @@ func deployContentCommand() *cobra.Command {
 			}
 			defer os.Remove(tempFile.Name())
 
-			archiveErr := format.Archive(ctx, tempFile, files)
+			archiveErr := format.Archive(ctx, tempFile, fileTree)
 			if archiveErr != nil {
 				panic(archiveErr.Error())
 			}
+
+			tempFile.Seek(0, 0)
 
 			client := createClient()
 
@@ -135,7 +137,7 @@ func deployContentCommand() *cobra.Command {
 			}
 			fmt.Printf("status: %v\n", resp.Status)
 			fmt.Printf("response body: %+v\n", body)
-			if !body.Success {
+			if body == nil || !body.Success {
 				panic("Did not get success status back from server")
 			}
 		},

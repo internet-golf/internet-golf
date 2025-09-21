@@ -150,7 +150,9 @@ func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs b
 				break
 			}
 
-			filePaths = append(filePaths, header.Name)
+			if header.Typeflag == tar.TypeReg {
+				filePaths = append(filePaths, header.Name)
+			}
 		}
 
 		longestCommonPrefix = getLongestCommonPrefix(filePaths)

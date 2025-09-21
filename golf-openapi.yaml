@@ -92,6 +92,48 @@ components:
           format: uri
           type: string
       type: object
+    GetDeploymentOutputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/GetDeploymentOutputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        externalSource:
+          type: string
+        externalSourceType:
+          type: string
+        hasContent:
+          type: boolean
+        name:
+          type: string
+        preserveExternalPath:
+          type: boolean
+        servedThing:
+          type: string
+        servedThingType:
+          type: string
+        tags:
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        urls:
+          items:
+            $ref: "#/components/schemas/Url"
+          type:
+            - array
+            - "null"
+      required:
+        - urls
+        - hasContent
+        - servedThing
+        - servedThingType
+      type: object
     HealthCheckOutputBody:
       additionalProperties: false
       properties:
@@ -220,3 +262,26 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Post deploy new
+  /deployment/{name}:
+    get:
+      operationId: get-deployment-by-name
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetDeploymentOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get deployment by name

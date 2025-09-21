@@ -1,3 +1,16 @@
+// this file runs integration tests across the whole system: the client cli, the
+// admin API, and the deployment server.
+//
+// for each test case, the client cli is called from the shell; it makes a
+// request to a mock http server that intercepts the request; and the request is
+// inspected to make sure that the client cli is making the correct request.
+// then, a copy of the request is forwarded to a real version of the admin API,
+// and a function is run to make sure that the deployment was created
+// accordingly.
+//
+// there's a lot of plumbing going on here. all you should really have to worry
+// about when creating new tests are the tests cases at the beginning.
+
 package internetgolf_test
 
 import (
@@ -7,17 +20,104 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
 	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
 )
+
+// test case stuff =======================================================
+
+type CliApiTestCase struct {
+	// name for the test case: used for logging
+	name string
+	// client cli commands that should be run against the real api to prepare
+	// for the test
+	setupCommands []string
+	// client cli command that should be run for the test case; it will be given
+	// the url of the mock server to send requests to so that they can be
+	// intercepted and checked to make sure they match the fields below
+	cliCommand string
+	// path of the api request that the client cli should make as a result of
+	// the command
+	apiPath string
+	// method of the api request that the client cli should make as a result of
+	// the command
+	apiMethod string
+	// function that should be run after the client cli is called to check the
+	// state of the server and verify that it was updated correctly
+	deploymentTest func(*testing.T)
+}
+
+type NewDeploymentTestCase struct {
+	CliApiTestCase
+	apiBody internetgolf.DeploymentCreateInput
+}
+
+var deploymentCreateTestCases = []NewDeploymentTestCase{
+	{
+		CliApiTestCase: CliApiTestCase{
+			name:       "Create basic deployment",
+			cliCommand: "create-deployment --name example-com example.com",
+			apiPath:    "/deploy/new",
+			apiMethod:  "POST",
+			deploymentTest: func(t *testing.T) {
+				output, _, _ := client.DefaultAPI.GetDeploymentByName(context.TODO(), "example-com").Execute()
+				if output.Urls[0].Domain != "example.com" {
+					t.Fail()
+				}
+			},
+		},
+		apiBody: internetgolf.DeploymentCreateInput{
+			Body: struct {
+				internetgolf.DeploymentMetadata
+			}{
+				DeploymentMetadata: internetgolf.DeploymentMetadata{
+					Name: "example-com",
+					Urls: []internetgolf.Url{{Domain: "example.com", Path: ""}},
+				},
+			},
+		},
+	},
+}
+
+type DeployFilesTestCase struct {
+	CliApiTestCase
+	formData map[string][]string
+}
+
+var deployFilesTestCases = []DeployFilesTestCase{
+	{
+		CliApiTestCase: CliApiTestCase{
+			name:          "Upload some files",
+			setupCommands: []string{"create-deployment --name golf-test-1 internet-golf-test.local"},
+			cliCommand:    "deploy-content --name golf-test-1 --files ./fixtures/static-site",
+			apiPath:       "/deploy/files",
+			apiMethod:     "PUT",
+			deploymentTest: func(t *testing.T) {
+				if content := urlToPageContent("http://internet-golf-test.local", t); content != "stuff\n" {
+					t.Fatalf("expected stuff\\n, got %v", []byte(content))
+				}
+				if content := urlToPageContent("http://internet-golf-test.local/nested/concept.txt", t); content != "fnord" {
+					t.Fatalf("expected fnord, got %v", []byte(content))
+				}
+			},
+		},
+		formData: map[string][]string{
+			"name": []string{"golf-test-1"},
+		},
+	},
+}
+
+// meaningless plumbing ==================================================
 
 func createClient(url string) *golfsdk.APIClient {
 	return golfsdk.NewAPIClient(&golfsdk.Configuration{
@@ -26,18 +126,6 @@ func createClient(url string) *golfsdk.APIClient {
 			{URL: url},
 		},
 	})
-}
-
-type CliApiTestCase[ReqBody interface {
-	// this union will be expanded
-	internetgolf.DeploymentCreateInput | internetgolf.DeployFilesInput
-}] struct {
-	name           string
-	cliCommand     string
-	apiPath        string
-	apiMethod      string
-	apiReqBody     ReqBody
-	deploymentTest func(*testing.T)
 }
 
 type InterceptedRequest struct {
@@ -66,11 +154,17 @@ func (m *MockApiServer) Init() {
 		if err != nil {
 			panic(err.Error())
 		}
+		if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+			r.Body = io.NopCloser(bytes.NewReader(body))
+			r.ParseMultipartForm(1000000)
+		}
 		m.reqQueue <- InterceptedRequest{
 			Req:  *r,
 			Body: body,
 		}
 
+		w.Header().Add("Content-Type", "application/json")
+		w.Write([]byte("{\"$schema\": \"whatever\", \"success\": true}"))
 	})
 	port, err := internetgolf.GetFreePort()
 	if err != nil {
@@ -83,15 +177,17 @@ func (m *MockApiServer) Init() {
 	}
 
 	fmt.Printf("starting mock server at localhost:%s\n", m.port)
+	listener, err := net.Listen("tcp", "localhost:"+m.port)
+	if err != nil {
+		panic(err)
+	}
 	go func() {
 		// always returns error. ErrServerClosed on graceful close
-		if err := m.server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := m.server.Serve(listener); err != http.ErrServerClosed {
 			// unexpected error. port in use?
 			log.Fatalf("ListenAndServe(): %v", err)
 		}
 	}()
-
-	time.Sleep(2 * time.Second)
 }
 
 func (m *MockApiServer) Stop() {
@@ -100,19 +196,17 @@ func (m *MockApiServer) Stop() {
 	}
 }
 
-func runClientCliCommand(command string, apiPort string) {
+func runClientCliCommand(command string, apiPort string, t *testing.T) {
 	cmd := exec.Command(
 		"go",
 		strings.Split(
 			"run ../client-cmd --apiUrl http://localhost:"+apiPort+" "+command, " ",
 		)...,
 	)
-	fmt.Printf("running %v\n", cmd.Args)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("%v", err.Error())
-		panic(err)
+		t.Fatal(err.Error())
 	}
 }
 
@@ -144,23 +238,17 @@ func startRealServer() func() {
 	}
 
 	server := adminApi.CreateServer()
+	listener, err := net.Listen("tcp", server.Addr)
+	if err != nil {
+		panic(err)
+	}
 	go func() {
-		err := server.ListenAndServe()
-		if err != nil && err.Error() != "http: Server closed" {
-			panic(err)
+		// always returns error. ErrServerClosed on graceful close
+		if err := server.Serve(listener); err != http.ErrServerClosed {
+			// unexpected error. port in use?
+			log.Fatalf("Serve(): %v", err)
 		}
 	}()
-
-	for i := 0; i < 100; i++ {
-		body, res, err := client.DefaultAPI.GetAlive(context.TODO()).Execute()
-		if err == nil && res.StatusCode == 200 && body.Ok {
-			break
-		}
-		if i == 99 {
-			panic("real server failed health check")
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
 
 	return func() {
 		server.Shutdown(context.TODO())
@@ -168,8 +256,7 @@ func startRealServer() func() {
 	}
 }
 
-// this tests deployment creation (with no content added yet)
-func TestCreateDeployment(t *testing.T) {
+func TestClientCli(t *testing.T) {
 	// create mock intermediary server
 	m := MockApiServer{}
 	m.Init()
@@ -179,51 +266,32 @@ func TestCreateDeployment(t *testing.T) {
 	stopRealServer := startRealServer()
 	defer stopRealServer()
 
-	testCases := []CliApiTestCase[internetgolf.DeploymentCreateInput]{
-		{
-			name:       "Create basic deployment",
-			cliCommand: "create-deployment --name example-com example.com",
-			apiPath:    "/deploy/new",
-			apiReqBody: internetgolf.DeploymentCreateInput{
-				Body: struct {
-					internetgolf.DeploymentMetadata
-				}{
-					DeploymentMetadata: internetgolf.DeploymentMetadata{
-						Name: "example-com",
-						Urls: []internetgolf.Url{{Domain: "example.com", Path: ""}},
-					},
-				},
-			},
-			deploymentTest: func(t *testing.T) {
-				output, res, err := client.DefaultAPI.GetDeploymentByName(context.TODO(), "example-com").Execute()
-				if err != nil {
-					fmt.Printf("deploymentTest error: %+v\n", err)
-					t.Fail()
-					return
-				}
-				if res.StatusCode != 200 {
-					fmt.Printf("deploymentTest error: status was %s", res.Status)
-					t.Fail()
-					return
-				}
-				fmt.Printf("OUTPUT: %+v\n", output)
-				if output.Urls[0].Domain != "example.com" {
-					t.Fail()
-				}
-			},
-		},
-	}
+	// TODO: deduplicate these two for loops somehow. some parts are the same
+	// and some parts are different
 
-	for _, testCase := range testCases {
+	for _, testCase := range deploymentCreateTestCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			runClientCliCommand(testCase.cliCommand, m.port)
+			for _, command := range testCase.setupCommands {
+				runClientCliCommand(command, realServerPort, t)
+			}
+
+			// run client cli command
+			runClientCliCommand(testCase.cliCommand, m.port, t)
+
+			// get the request that was sent to the mock server as a result of
+			// the client cli command
 			intercepted := <-m.reqQueue
 			req := intercepted.Req
+
+			// do assertions about the intercepted request
+
 			if req.URL.Path != testCase.apiPath {
 				t.Fatalf("expected %s, got %s\n", testCase.apiPath, req.URL.Path)
 			}
 
-			fmt.Printf("%+v\n", req)
+			if req.Method != testCase.apiMethod {
+				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
+			}
 
 			var contents internetgolf.DeploymentMetadata
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
@@ -231,16 +299,91 @@ func TestCreateDeployment(t *testing.T) {
 				t.Fatal(jsonErr.Error())
 			}
 
-			if !contents.Equals(&testCase.apiReqBody.Body.DeploymentMetadata) {
+			if !contents.Equals(&testCase.apiBody.Body.DeploymentMetadata) {
 				t.Fatalf("%s failed; incorrect struct: %+v\n", testCase.name, contents)
 			}
 
-			if _, err := http.Post("http://127.0.0.1:"+realServerPort+testCase.apiPath, "application/json", bytes.NewReader(intercepted.Body)); err != nil {
+			// forward the intercepted request to the real server
+			realUrl, err := url.Parse("http://127.0.0.1:" + realServerPort + testCase.apiPath)
+			if err != nil {
+				panic(err)
+			}
+			if _, err := http.DefaultClient.Do(
+				&http.Request{
+					Method: testCase.apiMethod,
+					URL:    realUrl,
+					Body:   io.NopCloser(bytes.NewReader(intercepted.Body)),
+					Header: req.Header,
+				},
+			); err != nil {
 				t.Fatalf("%s", err.Error())
 			}
 
+			// run the given deployment test function that should verify that
+			// the real server's state has been updated correctly
 			testCase.deploymentTest(t)
+		})
+	}
 
+	for _, testCase := range deployFilesTestCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			for _, command := range testCase.setupCommands {
+				runClientCliCommand(command, realServerPort, t)
+			}
+
+			// run client cli command
+			runClientCliCommand(testCase.cliCommand, m.port, t)
+
+			// get the request that was sent to the mock server as a result of
+			// the client cli command
+			intercepted := <-m.reqQueue
+			req := intercepted.Req
+
+			// do assertions about the intercepted request
+
+			if req.URL.Path != testCase.apiPath {
+				t.Fatalf("expected %s, got %s\n", testCase.apiPath, req.URL.Path)
+			}
+
+			if req.Method != testCase.apiMethod {
+				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
+			}
+
+			// note that we just compare the form values and not the files, bc
+			// comparing the files is hard and should be covered by the
+			// deploymentTest
+			if !reflect.DeepEqual(req.MultipartForm.Value, testCase.formData) {
+				t.Fatalf(
+					"invalid form values: expected %+v, got %+v\n",
+					testCase.formData,
+					req.MultipartForm.Value,
+				)
+			}
+
+			// forward the intercepted request to the real server
+			realUrl, err := url.Parse("http://127.0.0.1:" + realServerPort + testCase.apiPath)
+			if err != nil {
+				panic(err)
+			}
+
+			if res, err := http.DefaultClient.Do(
+				&http.Request{
+					Method:        req.Method,
+					URL:           realUrl,
+					Body:          io.NopCloser(bytes.NewReader(intercepted.Body)),
+					Header:        req.Header,
+					ContentLength: req.ContentLength,
+				},
+			); err != nil {
+				t.Fatal(err.Error())
+			} else if res.StatusCode != 200 {
+				body, _ := io.ReadAll(res.Body)
+				t.Fatalf("Received error when forwarding request: %s: %s", res.Status, string(body))
+			}
+
+			// run the given deployment test function that should verify that
+			// the real server's state has been updated correctly
+			testCase.deploymentTest(t)
 		})
 	}
 }

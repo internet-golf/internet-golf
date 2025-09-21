@@ -57,16 +57,17 @@ type DeploymentCreateInput struct {
 	}
 }
 
+type DeployFilesBody struct {
+	// Name is only required when the Authorization header does not imply a
+	// specific, single deployment with a token that is scoped to an
+	// externalSource and externalSourceType
+	Name                   string        `form:"name" required:"false"`
+	Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
+	KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
+	PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
+}
 type DeployFilesInput struct {
-	RawBody huma.MultipartFormFiles[struct {
-		// Name is only required when the Authorization header does not imply a
-		// specific, single deployment with a token that is scoped to an
-		// externalSource and externalSourceType
-		Name                   string        `form:"name" required:"false"`
-		Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
-		KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
-		PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
-	}]
+	RawBody huma.MultipartFormFiles[DeployFilesBody]
 }
 
 type DeployContainerInput struct {
@@ -172,7 +173,6 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			}
 			var deployContent func(DeploymentContent) error
 			if len(authResult.externalSourceType) > 0 {
-
 				deployContent = func(content DeploymentContent) error {
 					return a.Web.PutDeploymentContentByExternalSource(
 						authResult.externalSource, authResult.externalSourceType, formData.Name, content,
@@ -184,6 +184,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 					return nil, fmt.Errorf("not authorized to deploy to %s", formData.Name)
 				}
 				deployContent = func(content DeploymentContent) error {
+					fmt.Printf("putting deployment content by name, %v, %+v\n", formData.Name, content)
 					return a.Web.PutDeploymentContentByName(
 						formData.Name,
 						content,

@@ -5,6 +5,8 @@ package internetgolf_test
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"testing"
 
@@ -20,6 +22,20 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	busCleanup()
 	os.Exit(code)
+}
+
+func urlToPageContent(url string, t *testing.T) string {
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("request to %s failed", url)
+		return ""
+	}
+	body, bodyErr := io.ReadAll(resp.Body)
+	if bodyErr != nil {
+		t.Fatal(bodyErr)
+	}
+	bodyStr := string(body)
+	return bodyStr
 }
 
 func setupHosts() {

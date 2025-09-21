@@ -6,8 +6,6 @@ package internetgolf_test
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -51,25 +49,12 @@ func busCleanup() {
 	}
 }
 
-func urlToPageContent(url string, t *testing.T) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	body, bodyErr := io.ReadAll(resp.Body)
-	if bodyErr != nil {
-		panic(bodyErr)
-	}
-	bodyStr := string(body)
-	return bodyStr, nil
-}
-
 func assertUrlEmpty(url string, t *testing.T) {
 	// TODO: should this return an error? the caddy Routes type says "By
 	// default, all unrouted requests receive a 200 OK response to indicate the
 	// server is working." maybe i should add a catch-all non-persisted route
 	// with default content? but with, like, a 404 status code?
-	blankResp, _ := urlToPageContent(url, t)
+	blankResp := urlToPageContent(url, t)
 	if len(blankResp) > 0 {
 		t.Fatal("deployment already existed at beginning of test")
 	}
@@ -106,7 +91,7 @@ func TestBasicStaticDeployment(t *testing.T) {
 		ServedThing:     getFixturePath("static-site"),
 	})
 
-	bodyStr, _ := urlToPageContent(url, t)
+	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff\n" {
 		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
 	}
@@ -136,15 +121,15 @@ func TestStaticDeploymentWithPath(t *testing.T) {
 		ServedThing:     getFixturePath("static-site-2"),
 	})
 
-	configStr, _ := urlToPageContent("http://localhost:2019/config", t)
+	configStr := urlToPageContent("http://localhost:2019/config", t)
 	fmt.Println(configStr)
 
-	bodyStr, _ := urlToPageContent(url, t)
+	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff 2\n" {
 		t.Fatalf("expected stuff 2\\n, got %v", bodyStr)
 	}
 
-	bodyStr, _ = urlToPageContent(url+"thing.txt", t)
+	bodyStr = urlToPageContent(url+"thing.txt", t)
 	if strings.Trim(bodyStr, " \n\r") != "whatever 2" {
 		t.Fatalf("expected whatever 2, got %v", bodyStr)
 	}
@@ -174,10 +159,10 @@ func TestStaticDeploymentWithPreservedPath(t *testing.T) {
 		ServedThing:     getFixturePath("static-site-3"),
 	})
 
-	configStr, _ := urlToPageContent("http://localhost:2019/config", t)
+	configStr := urlToPageContent("http://localhost:2019/config", t)
 	fmt.Println(configStr)
 
-	bodyStr, _ := urlToPageContent(url, t)
+	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff 3\n" {
 		t.Fatalf("expected stuff 3\\n, got %v", []byte(bodyStr))
 	}
