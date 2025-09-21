@@ -4,7 +4,7 @@ This is a Go web server built on top of [Caddy](https://caddyserver.com/). Its p
 
 It does some interesting things, but is not finished yet.
 
-## Usage
+## Setup
 
 Install Go.
 
@@ -14,17 +14,21 @@ Install dependencies:
 go get .
 ```
 
-Build (requires Docker for code generation step):
+## Build
+
+The build is controlled by [Mage](https://magefile.org/). Docker is required to run the OpenAPI code generation step.
 
 ```
 go tool mage build
 ```
 
-Run tests:
+- This command generates just the OpenAPI spec (golf-openapi.yaml) and client SDK (./client-sdk/) without running the full build:
 
 ```
-go test ./...
+go tool mage generateclientsdk
 ```
+
+## Usage
 
 Run server by itself (during dev, you probably just want it to bind to localhost):
 
@@ -38,8 +42,19 @@ Run client by itself (-h gives you the available commands):
 go run ./client-cmd -h
 ```
 
-Generate OpenAPI spec (golf-openapi.yaml) and client SDK (client-cmd/sdk.gen.go) by themselves (the build command does this automatically):
+## Tests
+
+> [!NOTE]  
+> The first time you run tests, you must either do it with sudo/the administrator terminal, or manually add the hosts from `test/utils_test.go` to your system's `hosts` file so that they point to 127.0.0.1. These hosts are used for integration tests.
+
+Run tests:
 
 ```
-go tool mage generateclientsdk
+go test ./...
+```
+
+Or for more readable output:
+
+```
+go test ./... -json | go tool tparse -all
 ```
