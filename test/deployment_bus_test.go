@@ -5,7 +5,6 @@
 package internetgolf_test
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -151,9 +150,6 @@ func TestStaticDeploymentWithPath(t *testing.T) {
 		ServedThing:     getFixturePath("static-site-2"),
 	})
 
-	configStr := urlToPageContent("http://localhost:2019/config", t)
-	fmt.Println(configStr)
-
 	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff 2\n" {
 		t.Fatalf("expected stuff 2\\n, got %v", bodyStr)
@@ -188,9 +184,6 @@ func TestStaticDeploymentWithPreservedPath(t *testing.T) {
 		ServedThingType: internetgolf.StaticFiles,
 		ServedThing:     getFixturePath("static-site-3"),
 	})
-
-	configStr := urlToPageContent("http://localhost:2019/config", t)
-	fmt.Println(configStr)
 
 	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff 3\n" {
