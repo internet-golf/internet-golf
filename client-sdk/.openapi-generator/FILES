@@ -9,6 +9,7 @@ docs/DefaultAPI.md
 docs/DeploymentCreateInputBody.md
 docs/ErrorDetail.md
 docs/ErrorModel.md
+docs/GetDeploymentOutputBody.md
 docs/HealthCheckOutputBody.md
 docs/SuccessOutputBody.md
 docs/Url.md
@@ -16,6 +17,7 @@ git_push.sh
 model_deployment_create_input_body.go
 model_error_detail.go
 model_error_model.go
+model_get_deployment_output_body.go
 model_health_check_output_body.go
 model_success_output_body.go
 model_url.go

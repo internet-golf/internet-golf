@@ -135,7 +135,9 @@ func deployContentCommand() *cobra.Command {
 			}
 			fmt.Printf("status: %v\n", resp.Status)
 			fmt.Printf("response body: %+v\n", body)
-
+			if !body.Success {
+				panic("Did not get success status back from server")
+			}
 		},
 	}
 
@@ -155,7 +157,9 @@ func deployContentCommand() *cobra.Command {
 func main() {
 	rootCmd.AddCommand(createDeploymentCommand())
 	rootCmd.AddCommand(deployContentCommand())
-	// TODO: the default should actually depend on the passed-in url arg(s)
+	// TODO: the default should actually depend on the passed-in url arg(s).
+	// also, the /internet--golf--admin path should be added for non-local
+	// requests
 	rootCmd.PersistentFlags().StringVar(
 		&apiUrl, "apiUrl", "http://localhost:8888", "Specify the API URL",
 	)

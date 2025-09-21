@@ -90,6 +90,12 @@ type HealthCheckOutput struct {
 	}
 }
 
+type GetDeploymentOutput struct {
+	Body struct {
+		Deployment
+	}
+}
+
 type AdminApi struct {
 	Web             DeploymentBus
 	StorageSettings StorageSettings
@@ -121,6 +127,21 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		}
 		var output SuccessOutput
 		output.Body.Success = true
+		return &output, nil
+	})
+
+	huma.Get(api, "/deployment/{name}", func(ctx context.Context, input *struct {
+		Name string `path:"name"`
+	}) (*GetDeploymentOutput, error) {
+		// TODO: auth check i guess
+		deployment, err := a.Web.GetDeploymentByName(input.Name)
+		if err != nil {
+			return nil, huma.Error404NotFound(
+				fmt.Sprintf("Could not find deployment called \"%s\"", input.Name),
+			)
+		}
+		var output GetDeploymentOutput
+		output.Body.Deployment = deployment
 		return &output, nil
 	})
 
@@ -244,7 +265,7 @@ func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
 	}
 }
 
-func (a *AdminApi) Start() {
+func (a *AdminApi) CreateServer() *http.Server {
 	if len(a.Port) == 0 {
 		panic("Admin API port not set")
 	}
@@ -259,5 +280,6 @@ func (a *AdminApi) Start() {
 	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
 	// TODO: bind to more addresses? i guess not bc this is exposed via a caddy
 	// reverse proxy
-	http.ListenAndServe("127.0.0.1:"+a.Port, router)
+	server := http.Server{Addr: "127.0.0.1:" + a.Port, Handler: router}
+	return &server
 }

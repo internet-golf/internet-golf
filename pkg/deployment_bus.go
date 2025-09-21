@@ -53,6 +53,13 @@ type DeploymentMetadata struct {
 	DontPersist bool `json:"-"`
 }
 
+func (d *DeploymentMetadata) Equals(e *DeploymentMetadata) bool {
+	return (d.DontPersist == e.DontPersist && d.ExternalSource == e.ExternalSource &&
+		d.ExternalSourceType == e.ExternalSourceType && d.Name == e.Name &&
+		d.PreserveExternalPath == e.PreserveExternalPath && slices.Equal(d.Urls, e.Urls) &&
+		slices.Equal(d.Tags, e.Tags))
+}
+
 type DeploymentContent struct {
 	// this is false if no actual content has been added to the deployment (yet)
 	HasContent bool `json:"hasContent"`
@@ -131,7 +138,7 @@ func (bus *DeploymentBus) persistDeployments() error {
 	return nil
 }
 
-// create a deployment or, if a deployment with the same ID as the input
+// create a deployment or, if a deployment with the same name as the input
 // metadata already exists, update its metadata
 func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	fmt.Printf("adding deployment %+v\n", metadata)
@@ -161,6 +168,14 @@ func (bus *DeploymentBus) getDeploymentIndexByName(name string) int {
 	return slices.IndexFunc(bus.deployments, func(d Deployment) bool {
 		return d.Name == name
 	})
+}
+
+func (bus *DeploymentBus) GetDeploymentByName(name string) (Deployment, error) {
+	index := bus.getDeploymentIndexByName(name)
+	if index == -1 {
+		return Deployment{}, fmt.Errorf("Deployment with name %s not found", name)
+	}
+	return bus.deployments[index], nil
 }
 
 func (bus *DeploymentBus) PutDeploymentContentByName(

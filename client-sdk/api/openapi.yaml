@@ -80,6 +80,31 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Post deploy new
+  /deployment/{name}:
+    get:
+      operationId: get-deployment-by-name
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetDeploymentOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get deployment by name
 components:
   schemas:
     DeploymentCreateInputBody:
@@ -170,6 +195,60 @@ components:
           description: A URI reference to human-readable documentation for the error.
           format: uri
           type: string
+    GetDeploymentOutputBody:
+      additionalProperties: false
+      example:
+        urls:
+        - path: path
+          domain: domain
+        - path: path
+          domain: domain
+        $schema: https://openapi-generator.tech
+        hasContent: true
+        externalSourceType: externalSourceType
+        name: name
+        preserveExternalPath: true
+        servedThing: servedThing
+        externalSource: externalSource
+        servedThingType: servedThingType
+        tags:
+        - tags
+        - tags
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        externalSource:
+          type: string
+        externalSourceType:
+          type: string
+        hasContent:
+          type: boolean
+        name:
+          type: string
+        preserveExternalPath:
+          type: boolean
+        servedThing:
+          type: string
+        servedThingType:
+          type: string
+        tags:
+          items:
+            type: string
+          nullable: true
+          type: array
+        urls:
+          items:
+            $ref: "#/components/schemas/Url"
+          nullable: true
+          type: array
+      required:
+      - hasContent
+      - servedThing
+      - servedThingType
+      - urls
     HealthCheckOutputBody:
       additionalProperties: false
       example:

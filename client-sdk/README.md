@@ -79,6 +79,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultAPI* | [**GetAlive**](docs/DefaultAPI.md#getalive) | **Get** /alive | Get alive
+*DefaultAPI* | [**GetDeploymentByName**](docs/DefaultAPI.md#getdeploymentbyname) | **Get** /deployment/{name} | Get deployment by name
 *DefaultAPI* | [**PostDeployNew**](docs/DefaultAPI.md#postdeploynew) | **Post** /deploy/new | Post deploy new
 *DefaultAPI* | [**PutDeployFiles**](docs/DefaultAPI.md#putdeployfiles) | **Put** /deploy/files | Put deploy files
 
@@ -88,6 +89,7 @@ Class | Method | HTTP request | Description
  - [DeploymentCreateInputBody](docs/DeploymentCreateInputBody.md)
  - [ErrorDetail](docs/ErrorDetail.md)
  - [ErrorModel](docs/ErrorModel.md)
+ - [GetDeploymentOutputBody](docs/GetDeploymentOutputBody.md)
  - [HealthCheckOutputBody](docs/HealthCheckOutputBody.md)
  - [SuccessOutputBody](docs/SuccessOutputBody.md)
  - [Url](docs/Url.md)

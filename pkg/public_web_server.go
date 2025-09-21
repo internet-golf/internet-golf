@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/caddyserver/caddy/v2"
@@ -269,8 +270,13 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 		panic(err)
 	}
 
+	port, _ := GetFreePort()
+
 	caddyConfig := caddy.Config{
 		AppsRaw: caddy.ModuleMap{"http": httpJson},
+		Admin: &caddy.AdminConfig{
+			Listen: "localhost:" + strconv.Itoa(port),
+		},
 	}
 
 	err = caddy.Run(&caddyConfig)

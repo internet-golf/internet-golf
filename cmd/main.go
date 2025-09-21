@@ -64,7 +64,8 @@ func main() {
 					ServedThingType: internetgolf.ReverseProxy,
 					ServedThing:     "localhost:" + adminApiPort,
 				})
-			adminApi.Start()
+			server := adminApi.CreateServer()
+			server.ListenAndServe()
 		},
 	}
 

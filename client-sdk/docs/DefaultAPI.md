@@ -5,6 +5,7 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
+[**GetDeploymentByName**](DefaultAPI.md#GetDeploymentByName) | **Get** /deployment/{name} | Get deployment by name
 [**PostDeployNew**](DefaultAPI.md#PostDeployNew) | **Post** /deploy/new | Post deploy new
 [**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
 
@@ -54,6 +55,74 @@ Other parameters are passed through a pointer to a apiGetAliveRequest struct via
 ### Return type
 
 [**HealthCheckOutputBody**](HealthCheckOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## GetDeploymentByName
+
+> GetDeploymentOutputBody GetDeploymentByName(ctx, name).Execute()
+
+Get deployment by name
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	name := "name_example" // string | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.GetDeploymentByName(context.Background(), name).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeploymentByName``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `GetDeploymentByName`: GetDeploymentOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeploymentByName`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**name** | **string** |  | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiGetDeploymentByNameRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+[**GetDeploymentOutputBody**](GetDeploymentOutputBody.md)
 
 ### Authorization
 
