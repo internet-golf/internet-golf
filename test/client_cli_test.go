@@ -34,13 +34,13 @@ type MockApiServer struct {
 }
 
 func (m *MockApiServer) Init() {
+	// making this have a buffer of size 2 so that sends and receives don't
+	// instantly block
+	m.reqQueue = make(chan http.Request, 2)
 	sm := http.NewServeMux()
 	// "/" matches every path. for some reason
 	sm.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("request to %s\n", r.RequestURI)
-		// TODO: we are blocking here bc the client command never completes and
-		// thus the test function can't proceed to receive this message
-		// find a way to send an early 200 back?
 		m.reqQueue <- *r
 
 	})
@@ -125,6 +125,9 @@ func TestBasicDeploymentCreate(t *testing.T) {
 			if req.URL.Path != testCase.apiPath {
 				t.Fatalf("expected %s, got %s\n", testCase.apiPath, req.URL.Path)
 			}
+
+			fmt.Printf("%+v\n", req)
+
 			// TODO: assert that request body matches expectations
 
 			// TODO: forward the api req to the real server; run
