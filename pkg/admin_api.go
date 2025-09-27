@@ -6,47 +6,21 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/gosimple/slug"
 )
 
-type AuthResult struct {
-	localRequest       bool
-	externalSourceType ExternalSourceType
-	externalSource     string
-}
-
 func readAuth(api huma.API) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		authHeader := strings.Split(ctx.Header("Authorization"), " ")
 
-		var authResult AuthResult
+		remoteAddr := ctx.RemoteAddr()
+		authHeader := ctx.Header("Authorization")
 
-		if ctx.RemoteAddr() == "127.0.0.1" || strings.HasPrefix(ctx.RemoteAddr(), "127.0.0.1:") {
-			authResult.localRequest = true
-		} else {
-			authResult.localRequest = false
-		}
-		if len(authHeader) == 2 && authHeader[0] == "Github-OIDC" {
-			jwtData, err := ParseGithubOidcToken(authHeader[1])
-			if err != nil {
-				huma.WriteErr(api, ctx, http.StatusInternalServerError, "Failed to parse Github OIDC token")
-				return
-			}
-			authResult.externalSourceType = GithubRepo
-			repo := jwtData.Repository
-			if jwtData.RefType == "branch" {
-				branchNameLocation := strings.LastIndex(jwtData.Ref, "/")
-				if branchNameLocation != -1 {
-					repo += jwtData.Ref[branchNameLocation+1:]
-				}
-			}
-			authResult.externalSource = repo
-		}
-		ctx = huma.WithValue(ctx, "authResult", authResult)
+		permissions, _ := getPermissionsForRequest(remoteAddr, authHeader)
+		ctx = huma.WithValue(ctx, "permissions", permissions)
+
 		next(ctx)
 	}
 }
@@ -117,9 +91,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
 		if len(input.Body.Name) == 0 {
-			// this is a somewhat questionable quick and dirty way to
-			// autogenerate a name
-			input.Body.Name = slug.Make(input.Body.Urls[0].Domain + input.Body.Urls[0].Path)
+			input.Body.Name = (input.Body.Urls[0].Domain + input.Body.Urls[0].Path)
 		}
 		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
@@ -134,13 +106,27 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Get(api, "/deployment/{name}", func(ctx context.Context, input *struct {
 		Name string `path:"name"`
 	}) (*GetDeploymentOutput, error) {
-		// TODO: auth check i guess
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		if !permissionsOk {
+			return nil, fmt.Errorf("Auth check failed somehow")
+		}
+
 		deployment, err := a.Web.GetDeploymentByName(input.Name)
 		if err != nil {
 			return nil, huma.Error404NotFound(
 				fmt.Sprintf("Could not find deployment called \"%s\"", input.Name),
 			)
 		}
+
+		if !permissions.canViewDeployment(&deployment) {
+			return nil, huma.Error403Forbidden(
+				fmt.Sprintf(
+					"You are not authorized to view the deployment \"%s\"",
+					input.Name,
+				),
+			)
+		}
+
 		var output GetDeploymentOutput
 		output.Body.Deployment = deployment
 		return &output, nil
@@ -156,42 +142,22 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			formData := input.RawBody.Data()
 			fmt.Printf("received form data: %+v\n", formData)
 
-			// 1. based on the authorization information set by the readAuth
-			// middleware, figure out how the content should be sent to the
-			// deployment bus once it's created (or return an error if it
-			// shouldn't be sent anywhere.) TODO: extract this logic so it can
-			// be used in other /deploy api routes somehow
-
-			// also TODO: would it be possible to proxy unauthorized requests to
-			// the public web server so that they can be handled as a standard
-			// 404? that would help protect against scanning for the admin api
-			// endpoints, but would also hurt useability
-
-			authResult, authResultOk := ctx.Value("authResult").(AuthResult)
-			if !authResultOk {
+			permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+			if !permissionsOk {
 				return nil, fmt.Errorf("Auth check failed somehow")
 			}
-			var deployContent func(DeploymentContent) error
-			if len(authResult.externalSourceType) > 0 {
-				deployContent = func(content DeploymentContent) error {
-					return a.Web.PutDeploymentContentByExternalSource(
-						authResult.externalSource, authResult.externalSourceType, formData.Name, content,
-					)
-				}
-			} else if len(formData.Name) > 0 {
-				// TODO: other checks using keys or whatever
-				if !authResult.localRequest {
-					return nil, fmt.Errorf("not authorized to deploy to %s", formData.Name)
-				}
-				deployContent = func(content DeploymentContent) error {
-					fmt.Printf("putting deployment content by name, %v, %+v\n", formData.Name, content)
-					return a.Web.PutDeploymentContentByName(
-						formData.Name,
-						content,
-					)
-				}
-			} else {
-				return nil, fmt.Errorf("no url or external source; unclear where to deploy to")
+
+			deployment, findDeploymentError := a.Web.GetDeploymentByName(formData.Name)
+			if findDeploymentError != nil {
+				return nil, huma.Error404NotFound(
+					fmt.Sprintf("could not find deployment with name \"%s\"", formData.Name),
+				)
+			}
+
+			if !permissions.canModifyDeployment(&deployment) {
+				return nil, huma.Error403Forbidden(
+					fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", formData.Name),
+				)
 			}
 
 			// 2. actually create the deployment content locally
@@ -225,14 +191,16 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			// 3. send the content to the deployment bus using the function that
 			// was created in step 1
 
-			err := deployContent(DeploymentContent{
-				ServedThingType: StaticFiles,
-				ServedThing:     outDir,
-			})
+			err := a.Web.PutDeploymentContentByName(
+				formData.Name,
+				DeploymentContent{
+					ServedThingType: StaticFiles,
+					ServedThing:     outDir,
+				},
+			)
 			if err != nil {
 				return nil, err
 			}
-
 			// TODO: delete the old directory after deployContent is
 			// finished? presumably that'll be safe
 

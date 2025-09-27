@@ -12,6 +12,49 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
+type GithubAuthChecker struct {
+	oidcToken GitHubOIDCToken
+}
+
+func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bool {
+	headerComps := strings.Split(authHeader, " ")
+	if len(headerComps) != 2 || headerComps[0] != "GithubOIDC" {
+		return false
+	}
+	tokenData, tokenError := ParseGithubOidcToken(headerComps[1])
+	if tokenError != nil {
+		panic(tokenError)
+	}
+	g.oidcToken = tokenData
+	return true
+}
+
+func (g *GithubAuthChecker) canModifyDeployment(d *Deployment) bool {
+	if d.ExternalSourceType != GithubRepo {
+		return false
+	}
+	repo := g.oidcToken.Repository
+	branch := ""
+	if g.oidcToken.RefType == "branch" {
+		branchNameLocation := strings.LastIndex(g.oidcToken.Ref, "/")
+		if branchNameLocation != -1 {
+			branch = g.oidcToken.Ref[branchNameLocation+1:]
+		}
+	}
+
+	return (d.ExternalSource == repo || d.ExternalSource == repo+"#"+branch)
+}
+
+func (g *GithubAuthChecker) canCreateDeployment() bool {
+	// TODO: store ids of github users who are allowed to create deployments
+	return false
+}
+
+func (g *GithubAuthChecker) canViewDeployment(d *Deployment) bool {
+	// TODO: store ids of github users who are allowed to view all deployments
+	return g.canModifyDeployment(d)
+}
+
 // example payload:
 //
 //	{

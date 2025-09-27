@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path"
 	"slices"
-	"strings"
 
 	"github.com/asdine/storm/v3"
 )
@@ -46,6 +45,9 @@ type DeploymentMetadata struct {
 
 	Tags []string `json:"tags,omitempty"`
 
+	// if this is true and the deployment is at the path "/thing", then the
+	// "/thing" in the path will be transparently passed through to the
+	// underlying resource instead of being removed (which is the default)
 	PreserveExternalPath bool `json:"preserveExternalPath,omitempty"`
 
 	// this is `true` for internal deployments like the one for the admin API
@@ -186,126 +188,6 @@ func (bus *DeploymentBus) PutDeploymentContentByName(
 		)
 	}
 	return bus.updateDeploymentContentByIndex(existingIndex, content)
-}
-
-// TODO: this function is a prime target for branch test coverage
-
-// gets the index of a stored Deployment with the provided external source,
-// external source type, and name. `name` is optional (i.e. it can be an empty
-// string, and this function will then just look for a deployment with a
-// matching external source and external source type), unless there are multiple
-// deployments with this externalSource and externalSourceType, in which case a
-// name must be specified to disambiguate between them, or an error will be
-// returned. an error will also be returned if no matching instance is found.
-//
-// if `externalSourceType == GithubRepo`, and externalSource follow the pattern
-// `repoOwner/repoName#branch-name`, if no deployment can be found matching the
-// full externalSource (and name, if it's present), one will be found that just
-// matches the "repoOwner/repoName" part.
-//
-// the logic in this function is very carefully structured so that if there is
-// an error, the most relevant and informative one is always returned, so that
-// errors can be passed back to the end user.
-func (bus *DeploymentBus) getDeploymentIndexByExternalSource(
-	externalSource string, externalSourceType ExternalSourceType, name string,
-) (int, error) {
-
-	// get the branchless externalSource if it's a github repo
-	lessSpecificExternalSource := externalSource
-	if hashIndex := strings.Index(externalSource, "#"); externalSourceType == GithubRepo && hashIndex != -1 {
-		lessSpecificExternalSource = externalSource[:hashIndex]
-	}
-
-	// the simple case is if `name` is specified
-	if len(name) > 0 {
-		nameIndex := bus.getDeploymentIndexByName(name)
-		if nameIndex == -1 {
-			return -1, fmt.Errorf("Could not find deployment with name %s", name)
-		} else {
-			// a deployment with `name` was found; make sure that the
-			// ExternalSource and ExternalSourceType match at some level
-			d := bus.deployments[nameIndex]
-			if d.ExternalSourceType != externalSourceType || (d.ExternalSource != externalSource && d.ExternalSource != lessSpecificExternalSource) {
-				if lessSpecificExternalSource != externalSource {
-					return -1, fmt.Errorf(
-						"Deployment with name %s does not match %s or %s (%s)",
-						name, externalSource, lessSpecificExternalSource, externalSourceType)
-				} else {
-					return -1, fmt.Errorf(
-						"Deployment with name %s does not match %s (%s)",
-						name, externalSource, externalSourceType,
-					)
-				}
-			} else {
-				// `name` was found and `externalSource` and
-				// `externalSourceType` match 👍
-				return nameIndex, nil
-			}
-		}
-	}
-
-	// if `name` was not specified, just match on the external source variables
-
-	// get all the indexes that match so that we can report an error if there
-	// are multiple (if we didn't care about error reporting, we'd just return
-	// the first result)
-	var exactMatches []int
-	var acceptableMatches []int
-	for i, d := range bus.deployments {
-		if d.ExternalSourceType == externalSourceType && d.ExternalSource == externalSource {
-			exactMatches = append(exactMatches, i)
-		} else if d.ExternalSourceType == externalSourceType && d.ExternalSource == lessSpecificExternalSource {
-			acceptableMatches = append(acceptableMatches, i)
-		}
-	}
-
-	if len(exactMatches) > 1 {
-		return -1, fmt.Errorf(
-			"multiple deployments found for external source \"%s (%s)\"; "+
-				"please specify the name of the deployment you're looking for",
-			externalSource, externalSourceType,
-		)
-	} else if len(exactMatches) == 1 {
-		return exactMatches[0], nil
-	} else {
-		// there are no exact matches; fall back to the acceptable ones
-		if len(acceptableMatches) > 1 {
-			return -1, fmt.Errorf(
-				"multiple deployments found for external source \"%s (%s)\"; "+
-					"please specify the name of the deployment you're looking for",
-				lessSpecificExternalSource, externalSourceType,
-			)
-
-		} else if len(acceptableMatches) == 0 {
-			return -1, fmt.Errorf(
-				"could not find deployment for external source \"%s (%s)\"",
-				lessSpecificExternalSource, externalSourceType,
-			)
-		} else {
-			return acceptableMatches[0], nil
-		}
-	}
-}
-
-// updates the struct that points to content for a given deployment, and then
-// updates the public web server correspondingly, and then persists the new set
-// of deployments. `name` is optional; if it's an empty string, then only
-// externalSource and externalSourceType will be used to find the deployment
-// whose content is being updated. however, if more than one deployment exists
-// with this externalSource and externalSourceType, `name` must be non-empty, or
-// an error will be returned.
-func (bus *DeploymentBus) PutDeploymentContentByExternalSource(
-	externalSource string, externalSourceType ExternalSourceType, name string,
-	content DeploymentContent,
-) error {
-	fmt.Printf("updating deployment content for %s - %s\n", externalSource, externalSourceType)
-	deploymentIndex, err := bus.getDeploymentIndexByExternalSource(
-		externalSource, externalSourceType, name,
-	)
-	if err != nil {
-		return err
-	}
-	return bus.updateDeploymentContentByIndex(deploymentIndex, content)
 }
 
 // updates the content of the deployment at the given index, pushes the
