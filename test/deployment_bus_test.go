@@ -33,8 +33,8 @@ func createBus() internetgolf.DeploymentBus {
 	// object that (persistently) stores the active deployments and broadcasts
 	// them to the deploymentServer when necessary
 	deploymentBus := internetgolf.DeploymentBus{
-		Server:          &deploymentServer,
-		StorageSettings: settings,
+		Server: &deploymentServer,
+		Db:     &internetgolf.StormStorage{Settings: settings},
 	}
 	deploymentBus.Init()
 

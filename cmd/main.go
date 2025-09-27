@@ -22,8 +22,8 @@ func main() {
 			"You probably don't need to worry about the CLI flags.",
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			settings := internetgolf.StorageSettings{}
-			settings.Init(dataDirectory)
+			storageSettings := internetgolf.StorageSettings{}
+			storageSettings.Init(dataDirectory)
 
 			// the core architecture of this app consists of these three actors:
 
@@ -36,8 +36,8 @@ func main() {
 			// broadcasts them to the deploymentServer when necessary
 			deploymentBus := internetgolf.DeploymentBus{
 				// TODO: why does & work here ???
-				Server:          &deploymentServer,
-				StorageSettings: settings,
+				Server: &deploymentServer,
+				Db:     &internetgolf.StormStorage{Settings: storageSettings},
 			}
 			// this initializes the deployment bus and the server that it controls
 			deploymentBus.Init()
@@ -46,7 +46,7 @@ func main() {
 			// deployments in response to them
 			adminApi := internetgolf.AdminApi{
 				Web:             deploymentBus,
-				StorageSettings: settings,
+				StorageSettings: storageSettings,
 				Port:            adminApiPort,
 			}
 

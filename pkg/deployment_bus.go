@@ -2,10 +2,7 @@ package internetgolf
 
 import (
 	"fmt"
-	"path"
 	"slices"
-
-	"github.com/asdine/storm/v3"
 )
 
 type ServedThingType string
@@ -33,7 +30,8 @@ type Url struct {
 // and stuff in the struct tags
 type DeploymentMetadata struct {
 	// this has omitempty so that the name doesn't have to be specified when
-	// POSTing an object of this type to the API
+	// POSTing an object of this type to the API. this is also the ID field that
+	// storm uses when saving deployments
 	Name string `json:"name,omitempty" storm:"id"`
 	Urls []Url  `json:"urls"`
 
@@ -77,36 +75,19 @@ type Deployment struct {
 }
 
 type DeploymentBus struct {
-	deployments     []Deployment
-	deploymentsFile string
-	Server          PublicWebServer
-	StorageSettings StorageSettings
+	deployments []Deployment
+	Server      PublicWebServer
+	Db          Storage
 }
 
 // brings any persisted deployments back to life and initializes the
 // DeploymentBus' Server with them
 func (bus *DeploymentBus) Init() {
-	// source of truth for where deployments are persisted to
-	bus.deploymentsFile = path.Join(bus.StorageSettings.DataDirectory, "deployments.db")
-
-	db, dbOpenErr := storm.Open(bus.deploymentsFile)
-	if dbOpenErr != nil {
-		panic(dbOpenErr)
+	deployments, err := bus.Db.GetDeployments()
+	if err != nil {
+		panic(err)
 	}
-	defer db.Close()
-
-	deploymentBucketErr := db.Init(&Deployment{})
-	if deploymentBucketErr != nil {
-		panic(deploymentBucketErr)
-	}
-
-	var existingDeployments []Deployment
-	loadingExistingErr := db.All(&existingDeployments)
-	if loadingExistingErr != nil {
-		panic(loadingExistingErr)
-	}
-
-	bus.deployments = existingDeployments
+	bus.deployments = deployments
 	bus.Server.DeployAll(bus.deployments)
 }
 
@@ -115,26 +96,7 @@ func (bus *DeploymentBus) Stop() error {
 }
 
 func (bus *DeploymentBus) persistDeployments() error {
-
-	db, dbOpenErr := storm.Open(bus.deploymentsFile)
-	if dbOpenErr != nil {
-		return dbOpenErr
-	}
-	defer db.Close()
-
-	for _, d := range bus.deployments {
-		if !d.DontPersist {
-			saveErr := db.Save(&d)
-			if saveErr != nil {
-				fmt.Printf(
-					"could not save deployment with name %s: %+v\n",
-					d.Name, saveErr,
-				)
-			}
-		}
-	}
-
-	return nil
+	return bus.Db.SaveDeployments(bus.deployments)
 }
 
 // create a deployment or, if a deployment with the same name as the input

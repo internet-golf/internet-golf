@@ -227,8 +227,8 @@ func startRealServer() func() {
 	settings.Init(tempDir)
 
 	deploymentBus := internetgolf.DeploymentBus{
-		Server:          &deploymentServer,
-		StorageSettings: settings,
+		Server: &deploymentServer,
+		Db:     &internetgolf.StormStorage{Settings: settings},
 	}
 	deploymentBus.Init()
 	adminApi := internetgolf.AdminApi{
