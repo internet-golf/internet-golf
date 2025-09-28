@@ -12,13 +12,13 @@ import (
 	"github.com/gosimple/slug"
 )
 
-func readAuth(api huma.API) func(huma.Context, func(huma.Context)) {
+func readAuth(api huma.API, authManager AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 
 		remoteAddr := ctx.RemoteAddr()
 		authHeader := ctx.Header("Authorization")
 
-		permissions, _ := getPermissionsForRequest(remoteAddr, authHeader)
+		permissions, _ := authManager.getPermissionsForRequest(remoteAddr, authHeader)
 		ctx = huma.WithValue(ctx, "permissions", permissions)
 
 		next(ctx)
@@ -73,9 +73,9 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web             DeploymentBus
-	StorageSettings StorageSettings
-	Port            string
+	Web  DeploymentBus
+	Auth AuthManager
+	Port string
 }
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
@@ -175,7 +175,10 @@ func (a *AdminApi) addRoutes(api huma.API) {
 				return nil, fmt.Errorf("could not hash files for %v", formData.Name)
 			}
 			outDir := path.Join(
-				a.StorageSettings.DataDirectory,
+				// this is kind of a hack and file storage should probably be
+				// encapsulated in its own interface instead of being handled by
+				// random utility functions here in the admin api route handler
+				a.Auth.Db.GetStorageDirectory(),
 				slug.Make(formData.Name),
 				hash,
 			)
@@ -231,7 +234,6 @@ func (a *AdminApi) addRoutes(api huma.API) {
 func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
 	router := http.NewServeMux()
 	api := humago.New(router, humaConfig)
-	api.UseMiddleware(readAuth(api))
 
 	a.addRoutes(api)
 
@@ -251,7 +253,7 @@ func (a *AdminApi) CreateServer() *http.Server {
 	router := http.NewServeMux()
 	api := humago.New(router, humaConfig)
 
-	api.UseMiddleware(readAuth(api))
+	api.UseMiddleware(readAuth(api, a.Auth))
 
 	a.addRoutes(api)
 

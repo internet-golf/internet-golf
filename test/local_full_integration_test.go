@@ -59,6 +59,8 @@ type CliApiTestCase struct {
 
 type NewDeploymentTestCase struct {
 	CliApiTestCase
+	// expected body for the API request that the client CLI will make to the
+	// server
 	apiBody internetgolf.DeploymentCreateInput
 }
 
@@ -135,7 +137,7 @@ var deployFilesTestCases = []DeployFilesTestCase{
 			},
 		},
 		formData: map[string][]string{
-			"name": []string{"golf-test-1"},
+			"name": []string{"internet-golf-test.local"},
 		},
 	},
 }
@@ -187,7 +189,7 @@ func (m *MockApiServer) Init() {
 		}
 
 		w.Header().Add("Content-Type", "application/json")
-		w.Write([]byte("{\"$schema\": \"whatever\", \"success\": true}"))
+		w.Write([]byte("{\"$schema\": \"whatever\", \"success\": true, \"message\": \"Placeholder\"}"))
 	})
 	port, err := internetgolf.GetFreePort()
 	if err != nil {
@@ -264,16 +266,18 @@ func startRealServer() func() {
 
 	settings := internetgolf.StorageSettings{}
 	settings.Init(tempDir)
+	db := internetgolf.StormDb{}
+	db.Init(settings)
 
 	deploymentBus := internetgolf.DeploymentBus{
 		Server: &deploymentServer,
-		Db:     &internetgolf.StormStorage{Settings: settings},
+		Db:     &db,
 	}
 	deploymentBus.Init()
 	adminApi := internetgolf.AdminApi{
-		Web:             deploymentBus,
-		StorageSettings: settings,
-		Port:            realServerPort,
+		Web:  deploymentBus,
+		Auth: internetgolf.AuthManager{Db: &db},
+		Port: realServerPort,
 	}
 
 	server := adminApi.CreateServer()

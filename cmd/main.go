@@ -22,35 +22,42 @@ func main() {
 			"You probably don't need to worry about the CLI flags.",
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
+
+			// the core architecture of this app consists of these top-level actors:
+
+			// 0. the db module
 			storageSettings := internetgolf.StorageSettings{}
 			storageSettings.Init(dataDirectory)
-
-			// the core architecture of this app consists of these three actors:
+			db := internetgolf.StormDb{}
+			if err := db.Init(storageSettings); err != nil {
+				panic(err)
+			}
 
 			// 1. interface to the web server that actually deploys the deployments
 			deploymentServer := internetgolf.CaddyServer{}
 			deploymentServer.Settings.LocalOnly = localOnly
 			deploymentServer.Settings.Verbose = verbose
 
-			// 2. object that (persistently) stores the active deployments and
-			// broadcasts them to the deploymentServer when necessary
+			// 2. object that receives the active deployments and broadcasts
+			// them to the deploymentServer when necessary
 			deploymentBus := internetgolf.DeploymentBus{
-				// TODO: why does & work here ???
 				Server: &deploymentServer,
-				Db:     &internetgolf.StormStorage{Settings: storageSettings},
+				Db:     &db,
 			}
-			// this initializes the deployment bus and the server that it controls
 			deploymentBus.Init()
 
 			// 3. api server that receives admin API requests and updates the active
 			// deployments in response to them
 			adminApi := internetgolf.AdminApi{
-				Web:             deploymentBus,
-				StorageSettings: storageSettings,
-				Port:            adminApiPort,
+				Web:  deploymentBus,
+				Auth: internetgolf.AuthManager{Db: &db},
+				Port: adminApiPort,
 			}
 
-			// create a deployment for the admin api (slightly premature)
+			// putting the pieces together:
+
+			// create a deployment for the admin api (slightly premature, but
+			// that's fine as long as the health check endpoint is used)
 			adminApiName := "__internet__golf__admin__"
 			deploymentBus.SetupDeployment(
 				internetgolf.DeploymentMetadata{
@@ -66,6 +73,8 @@ func main() {
 					ServedThingType: internetgolf.ReverseProxy,
 					ServedThing:     "localhost:" + adminApiPort,
 				})
+
+			// start the admin api
 			server := adminApi.CreateServer()
 			server.ListenAndServe()
 		},

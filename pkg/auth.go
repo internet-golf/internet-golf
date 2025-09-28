@@ -5,13 +5,28 @@ import (
 	"strings"
 )
 
-func getPermissionsForRequest(remoteAddr string, authHeader string) (Permissions, error) {
+type ExternalUser struct {
+	externalSource              ExternalSourceType
+	externalId                  string `storm:"id"`
+	fullPermissions             bool
+	deploymentsTheyHaveAccessTo []string
+}
+
+type AuthManager struct {
+	Db Db
+}
+
+func (a *AuthManager) getPermissionsForRequest(remoteAddr string, authHeader string) (Permissions, error) {
 	if l := (LocalReqAuthChecker{}); l.setReqData(remoteAddr, authHeader) {
 		return &l, nil
-	} else if g := (GithubAuthChecker{}); g.setReqData(remoteAddr, authHeader) {
+	} else if g := (GithubAuthChecker{Db: a.Db}); g.setReqData(remoteAddr, authHeader) {
 		return &g, nil
 	}
 	return nil, fmt.Errorf("could not check auth for header value \"%s\"", authHeader)
+}
+
+func (a *AuthManager) registerExternalUser(e ExternalUser) {
+	a.Db.SaveExternalUser(e)
 }
 
 type Permissions interface {

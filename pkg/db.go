@@ -24,22 +24,26 @@ func (s *StorageSettings) Init(nonDefaultDataDirectory string) {
 	fmt.Printf("Initialized data directory to %s\n", s.DataDirectory)
 }
 
-type Storage interface {
-	Init() error
+type Db interface {
+	Init(settings StorageSettings) error
+	GetStorageDirectory() string
 	SaveDeployments(d []Deployment) error
 	GetDeployments() ([]Deployment, error)
+	SaveExternalUser(u ExternalUser) error
+	GetExternalUser(externalId string) (ExternalUser, error)
 }
 
 // i found the database package "storm" on github and didn't realize until after
 // i had created a storage implementation using it that it hasn't been updated
-// in 5 years. i guess it's fine???
-type StormStorage struct {
-	Settings StorageSettings
+// in 5 years. i guess it's fine??? implements the `Db` interface.
+type StormDb struct {
+	settings StorageSettings
 	dbFile   string
 }
 
-func (s *StormStorage) Init() error {
-	s.dbFile = path.Join(s.Settings.DataDirectory, "internet.db")
+func (s *StormDb) Init(settings StorageSettings) error {
+	s.settings = settings
+	s.dbFile = path.Join(settings.DataDirectory, "internet.db")
 
 	db, dbOpenErr := storm.Open(s.dbFile)
 	if dbOpenErr != nil {
@@ -52,10 +56,19 @@ func (s *StormStorage) Init() error {
 		return deploymentBucketErr
 	}
 
+	usersBucketErr := db.Init(&ExternalUser{})
+	if usersBucketErr != nil {
+		return usersBucketErr
+	}
+
 	return nil
 }
 
-func (s *StormStorage) GetDeployments() ([]Deployment, error) {
+func (s *StormDb) GetStorageDirectory() string {
+	return s.settings.DataDirectory
+}
+
+func (s *StormDb) GetDeployments() ([]Deployment, error) {
 	db, dbOpenErr := storm.Open(s.dbFile)
 	if dbOpenErr != nil {
 		return nil, dbOpenErr
@@ -70,7 +83,7 @@ func (s *StormStorage) GetDeployments() ([]Deployment, error) {
 	return existingDeployments, nil
 }
 
-func (s *StormStorage) SaveDeployments(d []Deployment) error {
+func (s *StormDb) SaveDeployments(d []Deployment) error {
 	db, dbOpenErr := storm.Open(s.dbFile)
 	if dbOpenErr != nil {
 		return dbOpenErr
@@ -90,6 +103,32 @@ func (s *StormStorage) SaveDeployments(d []Deployment) error {
 	}
 
 	return nil
+}
+
+func (s *StormDb) SaveExternalUser(u ExternalUser) error {
+	db, dbOpenErr := storm.Open(s.dbFile)
+	if dbOpenErr != nil {
+		return dbOpenErr
+	}
+	defer db.Close()
+
+	return db.Save(&u)
+}
+
+func (s *StormDb) GetExternalUser(externalId string) (ExternalUser, error) {
+	db, dbOpenErr := storm.Open(s.dbFile)
+	if dbOpenErr != nil {
+		return ExternalUser{}, dbOpenErr
+	}
+	defer db.Close()
+
+	var result ExternalUser
+	err := db.Get("ExternalUser", externalId, &result)
+	if err != nil {
+		return ExternalUser{}, err
+	}
+
+	return result, nil
 }
 
 // receives a dataDirectoryPath; translates "$HOME" to the user's home

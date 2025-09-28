@@ -15,6 +15,7 @@ import (
 // implements the interface `Permissions`
 type GithubAuthChecker struct {
 	oidcToken GitHubOIDCToken
+	Db        Db
 }
 
 func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bool {

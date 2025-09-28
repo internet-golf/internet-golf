@@ -1,6 +1,6 @@
-// unit tests for the DeploymentBus type. this testing is kind of white-box
-// (since it uses the Deployment type directly) and mostly just exists as a
-// sanity check and to aid TDD
+// tests for the DeploymentBus type. this testing is kind of white-box (since it
+// uses the Deployment type directly) and mostly just exists as a sanity check
+// and to aid TDD.
 
 package internetgolf_test
 
@@ -25,16 +25,18 @@ func createBus() internetgolf.DeploymentBus {
 
 	settings := internetgolf.StorageSettings{}
 	settings.Init(tempDir)
+	db := internetgolf.StormDb{}
+	db.Init(settings)
 
 	// interface to the web server that actually deploys the deployments
 	deploymentServer := internetgolf.CaddyServer{}
 	deploymentServer.Settings.LocalOnly = true
 
-	// object that (persistently) stores the active deployments and broadcasts
+	// object that receives the active deployments and broadcasts
 	// them to the deploymentServer when necessary
 	deploymentBus := internetgolf.DeploymentBus{
 		Server: &deploymentServer,
-		Db:     &internetgolf.StormStorage{Settings: settings},
+		Db:     &db,
 	}
 	deploymentBus.Init()
 

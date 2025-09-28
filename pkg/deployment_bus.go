@@ -80,16 +80,12 @@ type Deployment struct {
 type DeploymentBus struct {
 	deployments []Deployment
 	Server      PublicWebServer
-	Db          Storage
+	Db          Db
 }
 
 // brings any persisted deployments back to life and initializes the
 // DeploymentBus' Server with them
 func (bus *DeploymentBus) Init() {
-	dbInitErr := bus.Db.Init()
-	if dbInitErr != nil {
-		panic(dbInitErr)
-	}
 	deployments, err := bus.Db.GetDeployments()
 	if err != nil {
 		panic(err)
