@@ -105,8 +105,52 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get deployment by name
+  /user/register:
+    put:
+      operationId: put-user-register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddExternalUserInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Put user register
 components:
   schemas:
+    AddExternalUserInputBody:
+      additionalProperties: false
+      example:
+        $schema: https://openapi-generator.tech
+        externalUserId: externalUserId
+        externalUserHandle: externalUserHandle
+        externalUserSource: externalUserSource
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        externalUserHandle:
+          type: string
+        externalUserId:
+          type: string
+        externalUserSource:
+          type: string
+      required:
+      - externalUserSource
     DeploymentCreateInputBody:
       additionalProperties: false
       example:

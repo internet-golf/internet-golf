@@ -82,10 +82,12 @@ Class | Method | HTTP request | Description
 *DefaultAPI* | [**GetDeploymentByName**](docs/DefaultAPI.md#getdeploymentbyname) | **Get** /deployment/{name} | Get deployment by name
 *DefaultAPI* | [**PostDeployNew**](docs/DefaultAPI.md#postdeploynew) | **Post** /deploy/new | Post deploy new
 *DefaultAPI* | [**PutDeployFiles**](docs/DefaultAPI.md#putdeployfiles) | **Put** /deploy/files | Put deploy files
+*DefaultAPI* | [**PutUserRegister**](docs/DefaultAPI.md#putuserregister) | **Put** /user/register | Put user register
 
 
 ## Documentation For Models
 
+ - [AddExternalUserInputBody](docs/AddExternalUserInputBody.md)
  - [DeploymentCreateInputBody](docs/DeploymentCreateInputBody.md)
  - [ErrorDetail](docs/ErrorDetail.md)
  - [ErrorModel](docs/ErrorModel.md)

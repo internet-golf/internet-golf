@@ -8,6 +8,7 @@ Method | HTTP request | Description
 [**GetDeploymentByName**](DefaultAPI.md#GetDeploymentByName) | **Get** /deployment/{name} | Get deployment by name
 [**PostDeployNew**](DefaultAPI.md#PostDeployNew) | **Post** /deploy/new | Post deploy new
 [**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
+[**PutUserRegister**](DefaultAPI.md#PutUserRegister) | **Put** /user/register | Put user register
 
 
 
@@ -265,6 +266,70 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: multipart/form-data
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## PutUserRegister
+
+> SuccessOutputBody PutUserRegister(ctx).AddExternalUserInputBody(addExternalUserInputBody).Execute()
+
+Put user register
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	addExternalUserInputBody := *openapiclient.NewAddExternalUserInputBody("ExternalUserSource_example") // AddExternalUserInputBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.PutUserRegister(context.Background()).AddExternalUserInputBody(addExternalUserInputBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutUserRegister``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PutUserRegister`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutUserRegister`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPutUserRegisterRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **addExternalUserInputBody** | [**AddExternalUserInputBody**](AddExternalUserInputBody.md) |  | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
 - **Accept**: application/json, application/problem+json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

@@ -32,7 +32,7 @@ func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bo
 }
 
 func (g *GithubAuthChecker) canModifyDeployment(d *Deployment) bool {
-	if d.ExternalSourceType != GithubRepo {
+	if d.ExternalSourceType != Github {
 		return false
 	}
 	repo := g.oidcToken.Repository
@@ -47,14 +47,28 @@ func (g *GithubAuthChecker) canModifyDeployment(d *Deployment) bool {
 	return (d.ExternalSource == repo || d.ExternalSource == repo+"#"+branch)
 }
 
+func (g *GithubAuthChecker) userHasFullPermissions() bool {
+	externalUserId := g.oidcToken.ActorID
+	externalUser, err := g.Db.GetExternalUser(externalUserId)
+	if err != nil {
+		return false
+	}
+	return externalUser.fullPermissions
+}
+
 func (g *GithubAuthChecker) canCreateDeployment() bool {
-	// TODO: store ids of github users who are allowed to create deployments
-	return false
+	return g.userHasFullPermissions()
 }
 
 func (g *GithubAuthChecker) canViewDeployment(d *Deployment) bool {
-	// TODO: store ids of github users who are allowed to view all deployments
-	return g.canModifyDeployment(d)
+	if g.canModifyDeployment(d) {
+		return true
+	}
+	return g.userHasFullPermissions()
+}
+
+func (g *GithubAuthChecker) canAddUser() bool {
+	return g.userHasFullPermissions()
 }
 
 // example payload:

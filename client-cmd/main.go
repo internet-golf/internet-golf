@@ -44,10 +44,6 @@ func createDeploymentCommand() *cobra.Command {
 		// the args)
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("hello i am creating a deployment")
-			fmt.Printf("the deployment is for the url %s\n", args[0])
-			fmt.Printf("the github arg is %v\n", github)
-
 			var externalSourceType string
 			var externalSource string
 
@@ -148,9 +144,45 @@ func deployContentCommand() *cobra.Command {
 	return &deployContent
 }
 
+func registerExternalUserCommand() *cobra.Command {
+	var source string
+	var handle string
+	var id string
+
+	registerUser := cobra.Command{
+		Use:   "register-user",
+		Short: "Registers an external user from (currently, only) Github",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			client := createClient()
+			body, _, respError := client.DefaultAPI.
+				PutUserRegister(context.TODO()).
+				AddExternalUserInputBody(golfsdk.AddExternalUserInputBody{
+					ExternalUserHandle: &handle,
+					ExternalUserId:     &id,
+					ExternalUserSource: source,
+				}).Execute()
+			if respError != nil {
+				panic(respError.Error())
+			}
+			fmt.Println(body.Message)
+			if body == nil || !body.Success {
+				panic("Did not get success status back from server")
+			}
+		},
+	}
+
+	registerUser.Flags().StringVar(&source, "source", "Github", "The place where the external user lives")
+	registerUser.Flags().StringVar(&handle, "handle", "", "User's username (not needed if --id is specified)")
+	registerUser.Flags().StringVar(&id, "id", "", "User's ID (not needed if --handle is specified)")
+
+	return &registerUser
+}
+
 func main() {
 	rootCmd.AddCommand(createDeploymentCommand())
 	rootCmd.AddCommand(deployContentCommand())
+	rootCmd.AddCommand(registerExternalUserCommand())
 	// TODO: the default should actually depend on the passed-in url arg(s).
 	// also, the /internet--golf--admin path should be added for non-local
 	// requests

@@ -5,6 +5,7 @@ api/openapi.yaml
 api_default.go
 client.go
 configuration.go
+docs/AddExternalUserInputBody.md
 docs/DefaultAPI.md
 docs/DeploymentCreateInputBody.md
 docs/ErrorDetail.md
@@ -14,6 +15,7 @@ docs/HealthCheckOutputBody.md
 docs/SuccessOutputBody.md
 docs/Url.md
 git_push.sh
+model_add_external_user_input_body.go
 model_deployment_create_input_body.go
 model_error_detail.go
 model_error_model.go

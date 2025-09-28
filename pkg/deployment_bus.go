@@ -20,7 +20,7 @@ const (
 type ExternalSourceType string
 
 const (
-	GithubRepo ExternalSourceType = "GithubRepo"
+	Github ExternalSourceType = "Github"
 )
 
 type Url struct {

@@ -1,5 +1,24 @@
 components:
   schemas:
+    AddExternalUserInputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/AddExternalUserInputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        externalUserHandle:
+          type: string
+        externalUserId:
+          type: string
+        externalUserSource:
+          type: string
+      required:
+        - externalUserSource
+      type: object
     DeploymentCreateInputBody:
       additionalProperties: false
       properties:
@@ -290,3 +309,26 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get deployment by name
+  /user/register:
+    put:
+      operationId: put-user-register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddExternalUserInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Put user register

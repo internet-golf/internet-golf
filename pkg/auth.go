@@ -6,10 +6,11 @@ import (
 )
 
 type ExternalUser struct {
-	externalSource              ExternalSourceType
-	externalId                  string `storm:"id"`
-	fullPermissions             bool
-	deploymentsTheyHaveAccessTo []string
+	externalSource  ExternalSourceType
+	externalId      string `storm:"id"`
+	fullPermissions bool
+	// TODO: implement granular permissions, like this:
+	// deploymentsTheyHaveAccessTo []string
 }
 
 type AuthManager struct {
@@ -36,6 +37,7 @@ type Permissions interface {
 	canCreateDeployment() bool
 	canModifyDeployment(d *Deployment) bool
 	canViewDeployment(d *Deployment) bool
+	canAddUser() bool
 }
 
 // if a request comes from the same machine as the server (i.e. comes from
@@ -57,5 +59,8 @@ func (l *LocalReqAuthChecker) canCreateDeployment() bool {
 	return true
 }
 func (l *LocalReqAuthChecker) canViewDeployment(_ *Deployment) bool {
+	return true
+}
+func (l *LocalReqAuthChecker) canAddUser() bool {
 	return true
 }

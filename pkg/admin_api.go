@@ -2,10 +2,14 @@ package internetgolf
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
@@ -42,6 +46,17 @@ type DeployFilesBody struct {
 }
 type DeployFilesInput struct {
 	RawBody huma.MultipartFormFiles[DeployFilesBody]
+}
+
+type AddExternalUserBody struct {
+	ExternalUserHandle string             `json:"externalUserHandle,omitempty" docs:"A username, like \"toBeOfUse\" for Github user @toBeOfUse. Will be ignored if externalUserId is specified."`
+	ExternalUserId     string             `json:"externalUserId,omitempty" docs:"The ID that the user has in the external system. Not needed if externalUserHandle is specified."`
+	ExternalUserSource ExternalSourceType `json:"externalUserSource" docs:"The location of the external user. Currently only supports \"Github\"."`
+}
+type AddExternalUserInput struct {
+	Body struct {
+		AddExternalUserBody
+	}
 }
 
 type DeployContainerInput struct {
@@ -91,6 +106,15 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Post(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		if !permissionsOk {
+			return nil, huma.Error500InternalServerError("Auth check failed somehow")
+		}
+
+		if !permissions.canCreateDeployment() {
+			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
+		}
+
 		if len(input.Body.Name) == 0 {
 			if len(input.Body.Urls) == 1 {
 				input.Body.Name = (input.Body.Urls[0].Domain + input.Body.Urls[0].Path)
@@ -222,6 +246,63 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			output.Body.Message = "Updated content for the deployment called \"" + formData.Name + "\""
 			return &output, nil
 		})
+
+	huma.Put(api, "/user/register", func(ctx context.Context, input *AddExternalUserInput) (*SuccessOutput, error) {
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		if !permissionsOk {
+			return nil, fmt.Errorf("Auth check failed somehow")
+		}
+
+		if !permissions.canAddUser() {
+			return nil, huma.Error401Unauthorized("You are not authorized to add a user")
+		}
+
+		if len(input.Body.ExternalUserHandle) == 0 && len(input.Body.ExternalUserId) == 0 {
+			return nil, huma.Error400BadRequest("Either ID or handle must be specified.")
+		}
+
+		if len(input.Body.ExternalUserId) == 0 {
+			if input.Body.ExternalUserSource == Github {
+				// example api url: https://api.github.com/users/toBeOfUse
+				resp, err := http.Get(
+					"https://api.github.com/users/" + strings.TrimLeft(input.Body.ExternalUserHandle, "@"),
+				)
+				if err != nil || resp.StatusCode != 200 {
+					return nil, huma.Error400BadRequest("Could not find user")
+				}
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return nil, huma.Error500InternalServerError("Got unusable response from the Github API")
+				}
+				var apiObj struct {
+					Id int64 `json:"id"`
+				}
+				err = json.Unmarshal(body, &apiObj)
+				if err != nil || apiObj.Id == 0 {
+					return nil, huma.Error500InternalServerError("Could not parse JSON from the Github API")
+				}
+				input.Body.ExternalUserId = strconv.FormatInt(apiObj.Id, 10)
+			} else {
+				return nil, huma.Error400BadRequest("External source of user not recognized")
+			}
+		}
+
+		a.Auth.registerExternalUser(ExternalUser{
+			externalSource: input.Body.ExternalUserSource,
+			externalId:     input.Body.ExternalUserId,
+			// defaulting to full permissions until more granular permissions are added
+			fullPermissions: true,
+		})
+
+		var output SuccessOutput
+		output.Body.Success = true
+		output.Body.Message = fmt.Sprintf(
+			"Successfully added %s user with ID %s", input.Body.ExternalUserSource, input.Body.ExternalUserId,
+		)
+		return &output, nil
+	})
+
+	// TODO: get (all?) users endpoint
 
 	// huma.Put(api, "/deploy/container", func(
 	// 	ctx context.Context, input *DeployContainerInput,
