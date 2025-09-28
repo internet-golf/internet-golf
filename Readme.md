@@ -16,13 +16,21 @@ go get .
 
 ## Build
 
-The build is controlled by [Mage](https://magefile.org/). Docker is required to run the OpenAPI code generation step.
+The build is controlled by [Mage](https://magefile.org/).
+
+- This command makes sure all generated artifacts are up to date (which requires Docker, to run the OpenAPI code generation step), and then builds the result:
+
+```
+go tool mage buildwithcodegen
+```
+
+- This command just builds what's there:
 
 ```
 go tool mage build
 ```
 
-- This command generates just the OpenAPI spec (golf-openapi.yaml) and client SDK (./client-sdk/) without running the full build:
+- This command generates just the OpenAPI spec (golf-openapi.yaml) and client SDK (./client-sdk/) without running the full build, which is useful to run whenever the API changes during development (but does also require Docker):
 
 ```
 go tool mage generateclientsdk
