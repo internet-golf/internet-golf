@@ -25,6 +25,7 @@ type DeploymentCreateInputBody struct {
 	Schema *string `json:"$schema,omitempty"`
 	ExternalSource *string `json:"externalSource,omitempty"`
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
+	// The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment.
 	Name *string `json:"name,omitempty"`
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	Tags []string `json:"tags,omitempty"`

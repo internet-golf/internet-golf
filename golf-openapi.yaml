@@ -15,6 +15,7 @@ components:
         externalSourceType:
           type: string
         name:
+          description: The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment.
           type: string
         preserveExternalPath:
           type: boolean
@@ -109,6 +110,7 @@ components:
         hasContent:
           type: boolean
         name:
+          description: The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment.
           type: string
         preserveExternalPath:
           type: boolean
@@ -159,10 +161,13 @@ components:
           format: uri
           readOnly: true
           type: string
+        message:
+          type: string
         success:
           type: boolean
       required:
         - success
+        - message
       type: object
     Url:
       additionalProperties: false

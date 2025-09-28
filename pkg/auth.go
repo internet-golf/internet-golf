@@ -6,10 +6,10 @@ import (
 )
 
 func getPermissionsForRequest(remoteAddr string, authHeader string) (Permissions, error) {
-	if c := (LocalReqAuthChecker{}); c.setReqData(remoteAddr, authHeader) {
-		return &c, nil
-	} else if c := (GithubAuthChecker{}); c.setReqData(remoteAddr, authHeader) {
-		return &c, nil
+	if l := (LocalReqAuthChecker{}); l.setReqData(remoteAddr, authHeader) {
+		return &l, nil
+	} else if g := (GithubAuthChecker{}); g.setReqData(remoteAddr, authHeader) {
+		return &g, nil
 	}
 	return nil, fmt.Errorf("could not check auth for header value \"%s\"", authHeader)
 }
@@ -24,10 +24,12 @@ type Permissions interface {
 }
 
 // if a request comes from the same machine as the server (i.e. comes from
-// 127.0.0.1), let it do whatever it wants.
+// 127.0.0.1), this lets it do whatever it wants.
 //
 // this is similar to how you can access caddy's admin api from the same machine
-// of it and just do whatever
+// of it and just do whatever.
+//
+// implements the interface `Permissions`.
 type LocalReqAuthChecker struct{}
 
 func (l *LocalReqAuthChecker) setReqData(remoteAddr string, authHeader string) bool {

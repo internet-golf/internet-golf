@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **ExternalSource** | Pointer to **string** |  | [optional] 
 **ExternalSourceType** | Pointer to **string** |  | [optional] 
 **HasContent** | **bool** |  | 
-**Name** | Pointer to **string** |  | [optional] 
+**Name** | Pointer to **string** | The primary identifier for the deployment. Defaults to the deployment&#39;s URL if it only has one URL; otherwise, the name must be specified when creating the deployment. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** |  | [optional] 
 **ServedThing** | **string** |  | 
 **ServedThingType** | **string** |  | 

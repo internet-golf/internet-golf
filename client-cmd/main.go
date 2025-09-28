@@ -60,7 +60,7 @@ func createDeploymentCommand() *cobra.Command {
 			client := createClient()
 			fmt.Printf("created client with config %+v\n", client.GetConfig())
 
-			body, resp, respError := client.
+			body, _, respError := client.
 				DefaultAPI.PostDeployNew(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Urls:               []golfsdk.Url{{Domain: args[0]}},
@@ -73,8 +73,7 @@ func createDeploymentCommand() *cobra.Command {
 			if respError != nil {
 				panic(respError.Error())
 			}
-			fmt.Printf("status: %v\n", resp.Status)
-			fmt.Printf("response body: %+v\n", body)
+			fmt.Println(body.Message)
 		},
 	}
 
@@ -92,13 +91,12 @@ func createDeploymentCommand() *cobra.Command {
 }
 
 func deployContentCommand() *cobra.Command {
-	var name string
 	var files string
 
 	deployContent := cobra.Command{
 		Use:   "deploy-content",
 		Short: "Deploys content",
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.TODO()
 			fileTree, err := archives.FilesFromDisk(ctx, nil, map[string]string{
@@ -126,27 +124,21 @@ func deployContentCommand() *cobra.Command {
 
 			client := createClient()
 
-			body, resp, respError := client.
+			body, _, respError := client.
 				DefaultAPI.PutDeployFiles(context.TODO()).
-				Name(name).
+				Name(args[0]).
 				Contents(tempFile).
 				Execute()
 
 			if respError != nil {
 				panic(respError.Error())
 			}
-			fmt.Printf("status: %v\n", resp.Status)
-			fmt.Printf("response body: %+v\n", body)
+			fmt.Println(body.Message)
 			if body == nil || !body.Success {
 				panic("Did not get success status back from server")
 			}
 		},
 	}
-
-	deployContent.Flags().StringVar(
-		&name, "name", "",
-		"Specify the name of the deployment you wish to update.",
-	)
 
 	deployContent.Flags().StringVar(
 		&files, "files", "",

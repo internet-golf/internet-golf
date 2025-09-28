@@ -5,13 +5,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schema** | Pointer to **string** | A URL to the JSON Schema for this object. | [optional] [readonly] 
+**Message** | **string** |  | 
 **Success** | **bool** |  | 
 
 ## Methods
 
 ### NewSuccessOutputBody
 
-`func NewSuccessOutputBody(success bool, ) *SuccessOutputBody`
+`func NewSuccessOutputBody(message string, success bool, ) *SuccessOutputBody`
 
 NewSuccessOutputBody instantiates a new SuccessOutputBody object
 This constructor will assign default values to properties that have it defined,
@@ -50,6 +51,26 @@ SetSchema sets Schema field to given value.
 `func (o *SuccessOutputBody) HasSchema() bool`
 
 HasSchema returns a boolean if a field has been set.
+
+### GetMessage
+
+`func (o *SuccessOutputBody) GetMessage() string`
+
+GetMessage returns the Message field if non-nil, zero value otherwise.
+
+### GetMessageOk
+
+`func (o *SuccessOutputBody) GetMessageOk() (*string, bool)`
+
+GetMessageOk returns a tuple with the Message field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMessage
+
+`func (o *SuccessOutputBody) SetMessage(v string)`
+
+SetMessage sets Message field to given value.
+
 
 ### GetSuccess
 

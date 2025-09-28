@@ -35,12 +35,13 @@ type Storage interface {
 // in 5 years. i guess it's fine???
 type StormStorage struct {
 	Settings StorageSettings
+	dbFile   string
 }
 
 func (s *StormStorage) Init() error {
-	deploymentsFile := path.Join(s.Settings.DataDirectory, "deployments.db")
+	s.dbFile = path.Join(s.Settings.DataDirectory, "internet.db")
 
-	db, dbOpenErr := storm.Open(deploymentsFile)
+	db, dbOpenErr := storm.Open(s.dbFile)
 	if dbOpenErr != nil {
 		return dbOpenErr
 	}
@@ -55,9 +56,7 @@ func (s *StormStorage) Init() error {
 }
 
 func (s *StormStorage) GetDeployments() ([]Deployment, error) {
-	deploymentsFile := path.Join(s.Settings.DataDirectory, "deployments.db")
-
-	db, dbOpenErr := storm.Open(deploymentsFile)
+	db, dbOpenErr := storm.Open(s.dbFile)
 	if dbOpenErr != nil {
 		return nil, dbOpenErr
 	}
@@ -72,9 +71,7 @@ func (s *StormStorage) GetDeployments() ([]Deployment, error) {
 }
 
 func (s *StormStorage) SaveDeployments(d []Deployment) error {
-	deploymentsFile := path.Join(s.Settings.DataDirectory, "deployments.db")
-
-	db, dbOpenErr := storm.Open(deploymentsFile)
+	db, dbOpenErr := storm.Open(s.dbFile)
 	if dbOpenErr != nil {
 		return dbOpenErr
 	}
@@ -96,7 +93,8 @@ func (s *StormStorage) SaveDeployments(d []Deployment) error {
 }
 
 // receives a dataDirectoryPath; translates "$HOME" to the user's home
-// directory; creates a directory at the path if it doesn't already exist
+// directory; creates a directory at the path if it doesn't already exist.
+// why is this a separate function ???
 func getDataDirectory(dataDirectoryPath string) (string, error) {
 	if strings.Index(dataDirectoryPath, "$HOME") != -1 {
 		homeDir, err := os.UserHomeDir()

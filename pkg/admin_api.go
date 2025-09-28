@@ -55,7 +55,8 @@ type DeployContainerInput struct {
 
 type SuccessOutput struct {
 	Body struct {
-		Success bool `json:"success"`
+		Success bool   `json:"success"`
+		Message string `json:"message"`
 	}
 }
 
@@ -91,7 +92,13 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
 		if len(input.Body.Name) == 0 {
-			input.Body.Name = (input.Body.Urls[0].Domain + input.Body.Urls[0].Path)
+			if len(input.Body.Urls) == 1 {
+				input.Body.Name = (input.Body.Urls[0].Domain + input.Body.Urls[0].Path)
+			} else {
+				return nil, huma.Error400BadRequest(
+					"Specifying a name is required unless there is exactly one URL to use as a name",
+				)
+			}
 		}
 		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
@@ -100,6 +107,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		}
 		var output SuccessOutput
 		output.Body.Success = true
+		output.Body.Message = "Created deployment with name " + input.Body.Name
 		return &output, nil
 	})
 
@@ -208,6 +216,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			output := SuccessOutput{}
 			output.Body.Success = true
+			output.Body.Message = "Updated content for the deployment called \"" + formData.Name + "\""
 			return &output, nil
 		})
 

@@ -26,6 +26,7 @@ type GetDeploymentOutputBody struct {
 	ExternalSource *string `json:"externalSource,omitempty"`
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
 	HasContent bool `json:"hasContent"`
+	// The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment.
 	Name *string `json:"name,omitempty"`
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	ServedThing string `json:"servedThing"`

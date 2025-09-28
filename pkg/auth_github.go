@@ -12,6 +12,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
+// implements the interface `Permissions`
 type GithubAuthChecker struct {
 	oidcToken GitHubOIDCToken
 }

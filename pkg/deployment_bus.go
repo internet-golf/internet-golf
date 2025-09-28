@@ -1,8 +1,10 @@
 package internetgolf
 
 import (
+	"errors"
 	"fmt"
 	"slices"
+	"strings"
 )
 
 type ServedThingType string
@@ -28,16 +30,17 @@ type Url struct {
 
 // TODO: since this is used by the Huma API, it probably should have more docs
 // and stuff in the struct tags
+
 type DeploymentMetadata struct {
 	// this has omitempty so that the name doesn't have to be specified when
-	// POSTing an object of this type to the API. this is also the ID field that
-	// storm uses when saving deployments
-	Name string `json:"name,omitempty" storm:"id"`
+	// POSTing an object of this type to the API
+	Name string `json:"name,omitempty" storm:"id" doc:"The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment."`
 	Urls []Url  `json:"urls"`
 
 	// assuming that there won't be multiple external sources...
 
-	// for github repos, this is repoOwner/repoName or repoOwner/repoName#branch-name
+	// for github repos, the ExternalSource has the format "repoOwner/repoName"
+	// or "repoOwner/repoName#branch-name"
 	ExternalSource     string             `json:"externalSource,omitempty"`
 	ExternalSourceType ExternalSourceType `json:"externalSourceType,omitempty"`
 
@@ -83,6 +86,10 @@ type DeploymentBus struct {
 // brings any persisted deployments back to life and initializes the
 // DeploymentBus' Server with them
 func (bus *DeploymentBus) Init() {
+	dbInitErr := bus.Db.Init()
+	if dbInitErr != nil {
+		panic(dbInitErr)
+	}
 	deployments, err := bus.Db.GetDeployments()
 	if err != nil {
 		panic(err)
@@ -103,6 +110,14 @@ func (bus *DeploymentBus) persistDeployments() error {
 // metadata already exists, update its metadata
 func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	fmt.Printf("adding deployment %+v\n", metadata)
+
+	if len(strings.Trim(metadata.Name, " \t\n")) == 0 {
+		return errors.New("Name must have content")
+	}
+
+	// TODO: make sure its URLs do not overlap with any existing deployments
+	// (except the one it is replacing)
+
 	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
 		return d.Name == metadata.Name
 	})

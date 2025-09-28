@@ -23,6 +23,7 @@ var _ MappedNullable = &SuccessOutputBody{}
 type SuccessOutputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty"`
+	Message string `json:"message"`
 	Success bool `json:"success"`
 }
 
@@ -32,8 +33,9 @@ type _SuccessOutputBody SuccessOutputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSuccessOutputBody(success bool) *SuccessOutputBody {
+func NewSuccessOutputBody(message string, success bool) *SuccessOutputBody {
 	this := SuccessOutputBody{}
+	this.Message = message
 	this.Success = success
 	return &this
 }
@@ -78,6 +80,30 @@ func (o *SuccessOutputBody) SetSchema(v string) {
 	o.Schema = &v
 }
 
+// GetMessage returns the Message field value
+func (o *SuccessOutputBody) GetMessage() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Message
+}
+
+// GetMessageOk returns a tuple with the Message field value
+// and a boolean to check if the value has been set.
+func (o *SuccessOutputBody) GetMessageOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Message, true
+}
+
+// SetMessage sets field value
+func (o *SuccessOutputBody) SetMessage(v string) {
+	o.Message = v
+}
+
 // GetSuccess returns the Success field value
 func (o *SuccessOutputBody) GetSuccess() bool {
 	if o == nil {
@@ -115,6 +141,7 @@ func (o SuccessOutputBody) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Schema) {
 		toSerialize["$schema"] = o.Schema
 	}
+	toSerialize["message"] = o.Message
 	toSerialize["success"] = o.Success
 	return toSerialize, nil
 }
@@ -124,6 +151,7 @@ func (o *SuccessOutputBody) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
+		"message",
 		"success",
 	}
 

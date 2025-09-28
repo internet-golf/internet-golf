@@ -66,11 +66,11 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 	{
 		CliApiTestCase: CliApiTestCase{
 			name:       "Create basic deployment",
-			cliCommand: "create-deployment --name example-com example.com",
+			cliCommand: "create-deployment example.com",
 			apiPath:    "/deploy/new",
 			apiMethod:  "POST",
 			deploymentTest: func(t *testing.T) {
-				output, _, _ := client.DefaultAPI.GetDeploymentByName(context.TODO(), "example-com").Execute()
+				output, _, _ := client.DefaultAPI.GetDeploymentByName(context.TODO(), "example.com").Execute()
 				if output.Urls[0].Domain != "example.com" {
 					t.Fail()
 				}
@@ -81,7 +81,30 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 				internetgolf.DeploymentMetadata
 			}{
 				DeploymentMetadata: internetgolf.DeploymentMetadata{
-					Name: "example-com",
+					Urls: []internetgolf.Url{{Domain: "example.com", Path: ""}},
+				},
+			},
+		},
+	},
+	{
+		CliApiTestCase: CliApiTestCase{
+			name:       "Create basic deployment",
+			cliCommand: "create-deployment --name \"custom name\" example.com",
+			apiPath:    "/deploy/new",
+			apiMethod:  "POST",
+			deploymentTest: func(t *testing.T) {
+				output, _, _ := client.DefaultAPI.GetDeploymentByName(context.TODO(), "custom name").Execute()
+				if output.Urls[0].Domain != "example.com" {
+					t.Fail()
+				}
+			},
+		},
+		apiBody: internetgolf.DeploymentCreateInput{
+			Body: struct {
+				internetgolf.DeploymentMetadata
+			}{
+				DeploymentMetadata: internetgolf.DeploymentMetadata{
+					Name: "custom name",
 					Urls: []internetgolf.Url{{Domain: "example.com", Path: ""}},
 				},
 			},
@@ -98,8 +121,8 @@ var deployFilesTestCases = []DeployFilesTestCase{
 	{
 		CliApiTestCase: CliApiTestCase{
 			name:          "Upload some files",
-			setupCommands: []string{"create-deployment --name golf-test-1 internet-golf-test.local"},
-			cliCommand:    "deploy-content --name golf-test-1 --files ./fixtures/static-site",
+			setupCommands: []string{"create-deployment internet-golf-test.local"},
+			cliCommand:    "deploy-content internet-golf-test.local --files ./fixtures/static-site",
 			apiPath:       "/deploy/files",
 			apiMethod:     "PUT",
 			deploymentTest: func(t *testing.T) {
@@ -196,12 +219,28 @@ func (m *MockApiServer) Stop() {
 	}
 }
 
+// runs the client cli. TODO: return stdout so it can be inspected
 func runClientCliCommand(command string, apiPort string, t *testing.T) {
+	fullCommand := "run ../client-cmd --apiUrl http://localhost:" + apiPort + " " + command
+	commandSplitOnQuotes := strings.Split(fullCommand, "\"")
+	commandParts := []string{}
+	for i, quotePart := range commandSplitOnQuotes {
+		if i%2 == 0 {
+			// we are outside of the quotes
+			partSplitOnSpaces := strings.Split(quotePart, " ")
+			for _, spacePart := range partSplitOnSpaces {
+				if len(spacePart) > 0 {
+					commandParts = append(commandParts, spacePart)
+				}
+			}
+		} else {
+			// we are inside the quotes
+			commandParts = append(commandParts, quotePart)
+		}
+	}
 	cmd := exec.Command(
 		"go",
-		strings.Split(
-			"run ../client-cmd --apiUrl http://localhost:"+apiPort+" "+command, " ",
-		)...,
+		commandParts...,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
