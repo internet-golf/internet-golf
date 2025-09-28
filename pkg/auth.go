@@ -6,9 +6,9 @@ import (
 )
 
 type ExternalUser struct {
-	externalSource  ExternalSourceType
-	externalId      string `storm:"id"`
-	fullPermissions bool
+	ExternalId      string `storm:"id"`
+	ExternalSource  ExternalSourceType
+	FullPermissions bool
 	// TODO: implement granular permissions, like this:
 	// deploymentsTheyHaveAccessTo []string
 }

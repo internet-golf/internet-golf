@@ -53,7 +53,7 @@ func (g *GithubAuthChecker) userHasFullPermissions() bool {
 	if err != nil {
 		return false
 	}
-	return externalUser.fullPermissions
+	return externalUser.FullPermissions
 }
 
 func (g *GithubAuthChecker) canCreateDeployment() bool {

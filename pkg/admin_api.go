@@ -288,10 +288,10 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		}
 
 		a.Auth.registerExternalUser(ExternalUser{
-			externalSource: input.Body.ExternalUserSource,
-			externalId:     input.Body.ExternalUserId,
+			ExternalSource: input.Body.ExternalUserSource,
+			ExternalId:     input.Body.ExternalUserId,
 			// defaulting to full permissions until more granular permissions are added
-			fullPermissions: true,
+			FullPermissions: true,
 		})
 
 		var output SuccessOutput

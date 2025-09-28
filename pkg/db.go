@@ -53,12 +53,12 @@ func (s *StormDb) Init(settings StorageSettings) error {
 
 	deploymentBucketErr := db.Init(&Deployment{})
 	if deploymentBucketErr != nil {
-		return deploymentBucketErr
+		return fmt.Errorf("Error creating deployment bucket: %+v", deploymentBucketErr)
 	}
 
 	usersBucketErr := db.Init(&ExternalUser{})
 	if usersBucketErr != nil {
-		return usersBucketErr
+		return fmt.Errorf("Error creating users bucket: %+v", usersBucketErr)
 	}
 
 	return nil
