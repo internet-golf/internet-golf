@@ -180,9 +180,22 @@ func registerExternalUserCommand() *cobra.Command {
 }
 
 func main() {
-	rootCmd.AddCommand(createDeploymentCommand())
-	rootCmd.AddCommand(deployContentCommand())
-	rootCmd.AddCommand(registerExternalUserCommand())
+	// group the real commands away from the help commands - i think it looks
+	// better that way
+	golfGroup := cobra.Group{
+		Title: "Main Commands:",
+		ID:    "IG",
+	}
+	rootCmd.AddGroup(&golfGroup)
+
+	golfCmds := [](*cobra.Command){
+		createDeploymentCommand(), deployContentCommand(), registerExternalUserCommand(),
+	}
+	for _, cmd := range golfCmds {
+		cmd.GroupID = "IG"
+		rootCmd.AddCommand(cmd)
+	}
+
 	// TODO: the default should actually depend on the passed-in url arg(s).
 	// also, the /internet--golf--admin path should be added for non-local
 	// requests
