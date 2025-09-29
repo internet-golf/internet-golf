@@ -28,7 +28,8 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 			// if no auth setting is specified, assume localhost
 			resolvedApiUrl = "http://localhost:8888"
 		} else if len(hostToTry) > 0 {
-			resolvedApiUrl = "https://" + hostToTry + "/_golf"
+			// TODO: will this automatically upgrade to https where possible??
+			resolvedApiUrl = "http://" + hostToTry + "/_golf"
 		} else {
 			panic("could not resolve API URL")
 		}
@@ -89,7 +90,6 @@ func createDeploymentCommand() *cobra.Command {
 			}
 
 			client := createClient(args[0])
-			fmt.Printf("created client with config %+v\n", client.GetConfig())
 
 			var urls []golfsdk.Url
 			for _, arg := range args {
@@ -160,19 +160,24 @@ func deployContentCommand() *cobra.Command {
 
 			client := createClient(args[0])
 
-			body, _, respError := client.
+			body, resp, respError := client.
 				DefaultAPI.PutDeployFiles(context.TODO()).
 				Url(args[0]).
 				Contents(tempFile).
 				Execute()
 
+			// TODO: handle responses uniformly across commands
 			if respError != nil {
 				panic(respError.Error())
 			}
-			fmt.Println(body.Message)
-			if body == nil || !body.Success {
-				panic("Did not get success status back from server")
+			if resp.StatusCode != 200 {
+				body, _ := io.ReadAll(resp.Body)
+				panic(body)
 			}
+			if body == nil || !body.Success {
+				panic("Did not get success status back from server. Request was to " + resp.Request.URL.String())
+			}
+			fmt.Println(body.Message)
 		},
 	}
 

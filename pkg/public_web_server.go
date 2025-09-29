@@ -3,7 +3,6 @@ package internetgolf
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"slices"
 	"strconv"
 	"strings"
@@ -49,7 +48,7 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
-func urlToMatcher(url Url, requireDomain bool) (caddy.ModuleMap, error) {
+func urlToMatcher(url Url, requireDomain bool, makePathCatchAll bool) (caddy.ModuleMap, error) {
 	if (len(url.Domain) == 0 || !strings.Contains(url.Domain, ".")) && requireDomain {
 		return caddy.ModuleMap{}, fmt.Errorf(
 			"\"%v\" is not a valid URL: does not start with valid host",
@@ -61,6 +60,9 @@ func urlToMatcher(url Url, requireDomain bool) (caddy.ModuleMap, error) {
 		matcher["host"] = jsonOrPanic([]string{url.Domain})
 	}
 	if url.Path != "" {
+		if makePathCatchAll {
+			url.Path += "*"
+		}
 		matcher["path"] = jsonOrPanic([]string{url.Path})
 	}
 
@@ -79,7 +81,8 @@ func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 
 	var routes []caddyhttp.Route
 
-	matcher, matcherErr := urlToMatcher(d.Url, true)
+	// TODO: control the "makePathCatchAll" argument with setting on deployment
+	matcher, matcherErr := urlToMatcher(d.Url, true, true)
 	if matcherErr != nil {
 		return nil, matcherErr
 	}
@@ -169,7 +172,7 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 	}
 
 	// not requiring a host here bc this deployment type is for meta-deployments
-	matcher, matcherErr := urlToMatcher(d.Url, false)
+	matcher, matcherErr := urlToMatcher(d.Url, false, true)
 
 	if matcherErr != nil {
 		return []caddyhttp.Route{}, matcherErr
@@ -217,13 +220,12 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 			getCaddyRoute = getCaddyStaticRoutes
 		case ReverseProxy:
 			getCaddyRoute = getCaddyReverseProxyRoute
-		// TODO: more cases
 		default:
 			fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
 		}
 
 		if routes, err := getCaddyRoute(deployment); err != nil {
-			log.Printf("encountered error: %v", err)
+			fmt.Printf("encountered error: %v", err)
 		} else {
 			httpApp.Servers[httpAppServerName].Routes = append(
 				httpApp.Servers[httpAppServerName].Routes,
@@ -240,6 +242,14 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	slices.SortFunc(
 		httpApp.Servers[httpAppServerName].Routes,
 		func(a caddyhttp.Route, b caddyhttp.Route) int {
+			// TODO: make sure admin API route is always first, somehow.
+			// terrible hack:
+			if string(a.MatcherSetsRaw[0]["path"]) == "/_golf*" {
+				return -1
+			} else if string(b.MatcherSetsRaw[0]["path"]) == "/_golf*" {
+				return 1
+			}
+
 			// these routes are guaranteed to have only one matcher set because of
 			// how urlsToRoutes works
 			if len(a.MatcherSetsRaw[0]["path"]) == 0 && len(b.MatcherSetsRaw[0]["path"]) == 0 {

@@ -208,6 +208,7 @@ func (m *MockApiServer) Stop() {
 func startFullServer(port string) func() {
 	deploymentServer := internetgolf.CaddyServer{}
 	deploymentServer.Settings.LocalOnly = true
+	// deploymentServer.Settings.Verbose = true
 
 	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
 	if tempDirError != nil {
@@ -226,10 +227,24 @@ func startFullServer(port string) func() {
 	}
 	deploymentBus.Init()
 	adminApi := internetgolf.AdminApi{
-		Web:  deploymentBus,
+		Web:  &deploymentBus,
 		Auth: internetgolf.AuthManager{Db: &db},
 		Port: port,
 	}
+
+	// TODO: this default admin API path needs to be a global constant somewhere
+	adminApiUrl := internetgolf.Url{Path: "/_golf"}
+	deploymentBus.SetupDeployment(
+		internetgolf.DeploymentMetadata{
+			Url:         adminApiUrl,
+			DontPersist: true,
+		})
+	deploymentBus.PutDeploymentContentByUrl(
+		adminApiUrl,
+		internetgolf.DeploymentContent{
+			ServedThingType: internetgolf.ReverseProxy,
+			ServedThing:     "127.0.0.1:" + port,
+		})
 
 	server := adminApi.CreateServer()
 	listener, err := net.Listen("tcp", server.Addr)

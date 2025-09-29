@@ -110,7 +110,7 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web  DeploymentBus
+	Web  *DeploymentBus
 	Auth AuthManager
 	Port string
 }

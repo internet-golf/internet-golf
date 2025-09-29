@@ -70,6 +70,8 @@ type DeploymentMetadata struct {
 	DontPersist bool `json:"-"`
 }
 
+// TODO: create struct just for API that does not have "hasContent" (since it's
+// an internal value)
 type DeploymentContent struct {
 	// this is false if no actual content has been added to the deployment (yet)
 	HasContent bool `json:"hasContent"`
@@ -113,8 +115,6 @@ func (bus *DeploymentBus) persistDeployments() error {
 // create a deployment or, if a deployment with the same name as the input
 // metadata already exists, update its metadata
 func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
-	fmt.Printf("adding deployment %+v\n", metadata)
-
 	// TODO: make sure its URL does not overlap with any existing deployments
 	// (except the one it is replacing), and that at least the domain is present
 	// and a valid domain name?
@@ -157,7 +157,6 @@ func (bus *DeploymentBus) GetDeploymentByUrl(url *Url) (Deployment, error) {
 func (bus *DeploymentBus) PutDeploymentContentByUrl(
 	url Url, content DeploymentContent,
 ) error {
-	fmt.Printf("updating deployment content %+v\n", content)
 	existingIndex := bus.getDeploymentIndexByUrl(&url)
 	if existingIndex == -1 {
 		return fmt.Errorf(

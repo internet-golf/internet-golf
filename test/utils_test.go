@@ -75,8 +75,17 @@ func execWithTeedOutput(cmd *exec.Cmd) (string, error) {
 
 // runs the client cli. return the standard output of the command so it can be
 // inspected.
+//
+// if apiPort is a non-empty string, localhost:[apiPort] will be specified as
+// the api url; otherwise, if apiPort is empty, no api url will be automatically
+// specified by this function.
 func runClientCliCommand(command string, apiPort string, t *testing.T) string {
-	fullCommand := "run ../client-cmd --api-url http://localhost:" + apiPort + " " + command
+	var fullCommand string
+	if len(apiPort) > 0 {
+		fullCommand = "run ../client-cmd --api-url http://localhost:" + apiPort + " " + command
+	} else {
+		fullCommand = "run ../client-cmd " + command
+	}
 	commandSplitOnQuotes := strings.Split(fullCommand, "\"")
 	commandParts := []string{}
 	for i, quotePart := range commandSplitOnQuotes {
@@ -94,7 +103,7 @@ func runClientCliCommand(command string, apiPort string, t *testing.T) string {
 		}
 	}
 	cmd := exec.Command("go", commandParts...)
-
+	fmt.Printf("Running client command: %s\n", cmd.String())
 	output, err := execWithTeedOutput(cmd)
 	if err != nil {
 		t.Fatal(err)

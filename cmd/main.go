@@ -21,6 +21,8 @@ func main() {
 		Long: "An instance of Internet Golf that you can use to deploy websites. " +
 			"You probably don't need to worry about the CLI flags.",
 		Args: cobra.NoArgs,
+		// TODO: can this function be pulled out to use in tests? there's a
+		// re-implementation of it in utils_test.go
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// the core architecture of this app consists of these top-level actors:
@@ -49,7 +51,7 @@ func main() {
 			// 3. api server that receives admin API requests and updates the active
 			// deployments in response to them
 			adminApi := internetgolf.AdminApi{
-				Web:  deploymentBus,
+				Web:  &deploymentBus,
 				Auth: internetgolf.AuthManager{Db: &db},
 				Port: adminApiPort,
 			}
@@ -62,15 +64,14 @@ func main() {
 
 			deploymentBus.SetupDeployment(
 				internetgolf.DeploymentMetadata{
-					Url: adminApiUrl,
-
+					Url:         adminApiUrl,
 					DontPersist: true,
 				})
 			deploymentBus.PutDeploymentContentByUrl(
 				adminApiUrl,
 				internetgolf.DeploymentContent{
 					ServedThingType: internetgolf.ReverseProxy,
-					ServedThing:     "localhost:" + adminApiPort,
+					ServedThing:     "127.0.0.1:" + adminApiPort,
 				})
 
 			// start the admin api
