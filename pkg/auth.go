@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// this type can be used by any external identity provider-based authentication
+// methods
 type ExternalUser struct {
 	ExternalId      string `storm:"id"`
 	ExternalSource  ExternalSourceType

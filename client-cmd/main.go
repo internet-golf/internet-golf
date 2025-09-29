@@ -76,7 +76,7 @@ func createDeploymentCommand() *cobra.Command {
 			body, _, respError := client.
 				DefaultAPI.PostDeployNew(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
-					Url:                golfsdk.Url{Domain: args[0]},
+					Url:                args[0],
 					ExternalSourceType: &externalSourceType,
 					ExternalSource:     &externalSource,
 				}).

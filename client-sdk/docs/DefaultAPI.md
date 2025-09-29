@@ -158,7 +158,7 @@ import (
 )
 
 func main() {
-	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody(*openapiclient.NewUrl("Domain_example")) // DeploymentCreateInputBody | 
+	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody("Url_example") // DeploymentCreateInputBody | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)

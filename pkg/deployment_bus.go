@@ -50,7 +50,7 @@ func urlFromString(url string) Url {
 // and stuff in the struct tags
 
 type DeploymentMetadata struct {
-	Url Url `json:"url" storm:"id"`
+	Url Url `json:"" storm:"id"`
 
 	// assuming that there won't be multiple external sources...
 	// TODO: probably move this to the auth section?
@@ -115,7 +115,7 @@ func (bus *DeploymentBus) persistDeployments() error {
 func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	fmt.Printf("adding deployment %+v\n", metadata)
 
-	// TODO: make sure its URLs do not overlap with any existing deployments
+	// TODO: make sure its URL does not overlap with any existing deployments
 	// (except the one it is replacing), and that at least the domain is present
 	// and a valid domain name?
 

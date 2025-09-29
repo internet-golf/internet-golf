@@ -157,9 +157,7 @@ components:
         $schema: https://openapi-generator.tech
         externalSourceType: externalSourceType
         preserveExternalPath: true
-        url:
-          path: path
-          domain: domain
+        url: url
         externalSource: externalSource
         tags:
         - tags
@@ -182,7 +180,7 @@ components:
           nullable: true
           type: array
         url:
-          $ref: "#/components/schemas/Url"
+          type: string
       required:
       - url
     ErrorDetail:
@@ -239,7 +237,7 @@ components:
         externalSourceType: externalSourceType
         preserveExternalPath: true
         servedThing: servedThing
-        url:
+        Url:
           path: path
           domain: domain
         externalSource: externalSource
@@ -253,6 +251,8 @@ components:
           format: uri
           readOnly: true
           type: string
+        Url:
+          $ref: "#/components/schemas/Url"
         externalSource:
           type: string
         externalSourceType:
@@ -270,13 +270,11 @@ components:
             type: string
           nullable: true
           type: array
-        url:
-          $ref: "#/components/schemas/Url"
       required:
+      - Url
       - hasContent
       - servedThing
       - servedThingType
-      - url
     HealthCheckOutputBody:
       additionalProperties: false
       example:

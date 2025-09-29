@@ -23,6 +23,7 @@ var _ MappedNullable = &GetDeploymentOutputBody{}
 type GetDeploymentOutputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty"`
+	Url Url `json:"Url"`
 	ExternalSource *string `json:"externalSource,omitempty"`
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
 	HasContent bool `json:"hasContent"`
@@ -30,7 +31,6 @@ type GetDeploymentOutputBody struct {
 	ServedThing string `json:"servedThing"`
 	ServedThingType string `json:"servedThingType"`
 	Tags []string `json:"tags,omitempty"`
-	Url Url `json:"url"`
 }
 
 type _GetDeploymentOutputBody GetDeploymentOutputBody
@@ -39,12 +39,12 @@ type _GetDeploymentOutputBody GetDeploymentOutputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetDeploymentOutputBody(hasContent bool, servedThing string, servedThingType string, url Url) *GetDeploymentOutputBody {
+func NewGetDeploymentOutputBody(url Url, hasContent bool, servedThing string, servedThingType string) *GetDeploymentOutputBody {
 	this := GetDeploymentOutputBody{}
+	this.Url = url
 	this.HasContent = hasContent
 	this.ServedThing = servedThing
 	this.ServedThingType = servedThingType
-	this.Url = url
 	return &this
 }
 
@@ -86,6 +86,30 @@ func (o *GetDeploymentOutputBody) HasSchema() bool {
 // SetSchema gets a reference to the given string and assigns it to the Schema field.
 func (o *GetDeploymentOutputBody) SetSchema(v string) {
 	o.Schema = &v
+}
+
+// GetUrl returns the Url field value
+func (o *GetDeploymentOutputBody) GetUrl() Url {
+	if o == nil {
+		var ret Url
+		return ret
+	}
+
+	return o.Url
+}
+
+// GetUrlOk returns a tuple with the Url field value
+// and a boolean to check if the value has been set.
+func (o *GetDeploymentOutputBody) GetUrlOk() (*Url, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Url, true
+}
+
+// SetUrl sets field value
+func (o *GetDeploymentOutputBody) SetUrl(v Url) {
+	o.Url = v
 }
 
 // GetExternalSource returns the ExternalSource field value if set, zero value otherwise.
@@ -289,30 +313,6 @@ func (o *GetDeploymentOutputBody) SetTags(v []string) {
 	o.Tags = v
 }
 
-// GetUrl returns the Url field value
-func (o *GetDeploymentOutputBody) GetUrl() Url {
-	if o == nil {
-		var ret Url
-		return ret
-	}
-
-	return o.Url
-}
-
-// GetUrlOk returns a tuple with the Url field value
-// and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetUrlOk() (*Url, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Url, true
-}
-
-// SetUrl sets field value
-func (o *GetDeploymentOutputBody) SetUrl(v Url) {
-	o.Url = v
-}
-
 func (o GetDeploymentOutputBody) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -326,6 +326,7 @@ func (o GetDeploymentOutputBody) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Schema) {
 		toSerialize["$schema"] = o.Schema
 	}
+	toSerialize["Url"] = o.Url
 	if !IsNil(o.ExternalSource) {
 		toSerialize["externalSource"] = o.ExternalSource
 	}
@@ -341,7 +342,6 @@ func (o GetDeploymentOutputBody) ToMap() (map[string]interface{}, error) {
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
 	}
-	toSerialize["url"] = o.Url
 	return toSerialize, nil
 }
 
@@ -350,10 +350,10 @@ func (o *GetDeploymentOutputBody) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
+		"Url",
 		"hasContent",
 		"servedThing",
 		"servedThingType",
-		"url",
 	}
 
 	allProperties := make(map[string]interface{})

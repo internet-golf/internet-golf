@@ -61,7 +61,7 @@ type NewDeploymentTestCase struct {
 	CliApiTestCase
 	// expected body for the API request that the client CLI will make to the
 	// server
-	apiBody internetgolf.DeploymentMetadata
+	apiBody internetgolf.DeploymentCreateBody
 }
 
 var deploymentCreateTestCases = []NewDeploymentTestCase{
@@ -78,11 +78,11 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 				}
 			},
 		},
-		apiBody: internetgolf.DeploymentMetadata{
-			Url: internetgolf.Url{Domain: "example.com", Path: ""},
+		apiBody: internetgolf.DeploymentCreateBody{
+			Url: "example.com",
 		},
 	},
-	// TODO: multiple URLs, URLs with paths, other settings
+	// TODO: URLs with paths, other settings
 }
 
 type UserAddTestCase struct {
@@ -327,7 +327,7 @@ func TestClientCli(t *testing.T) {
 				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
 			}
 
-			var contents internetgolf.DeploymentMetadata
+			var contents internetgolf.DeploymentCreateBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())

@@ -27,7 +27,7 @@ type DeploymentCreateInputBody struct {
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	Tags []string `json:"tags,omitempty"`
-	Url Url `json:"url"`
+	Url string `json:"url"`
 }
 
 type _DeploymentCreateInputBody DeploymentCreateInputBody
@@ -36,7 +36,7 @@ type _DeploymentCreateInputBody DeploymentCreateInputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeploymentCreateInputBody(url Url) *DeploymentCreateInputBody {
+func NewDeploymentCreateInputBody(url string) *DeploymentCreateInputBody {
 	this := DeploymentCreateInputBody{}
 	this.Url = url
 	return &this
@@ -212,9 +212,9 @@ func (o *DeploymentCreateInputBody) SetTags(v []string) {
 }
 
 // GetUrl returns the Url field value
-func (o *DeploymentCreateInputBody) GetUrl() Url {
+func (o *DeploymentCreateInputBody) GetUrl() string {
 	if o == nil {
-		var ret Url
+		var ret string
 		return ret
 	}
 
@@ -223,7 +223,7 @@ func (o *DeploymentCreateInputBody) GetUrl() Url {
 
 // GetUrlOk returns a tuple with the Url field value
 // and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetUrlOk() (*Url, bool) {
+func (o *DeploymentCreateInputBody) GetUrlOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -231,7 +231,7 @@ func (o *DeploymentCreateInputBody) GetUrlOk() (*Url, bool) {
 }
 
 // SetUrl sets field value
-func (o *DeploymentCreateInputBody) SetUrl(v Url) {
+func (o *DeploymentCreateInputBody) SetUrl(v string) {
 	o.Url = v
 }
 

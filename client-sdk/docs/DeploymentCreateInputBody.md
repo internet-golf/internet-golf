@@ -9,13 +9,13 @@ Name | Type | Description | Notes
 **ExternalSourceType** | Pointer to **string** |  | [optional] 
 **PreserveExternalPath** | Pointer to **bool** |  | [optional] 
 **Tags** | Pointer to **[]string** |  | [optional] 
-**Url** | [**Url**](Url.md) |  | 
+**Url** | **string** |  | 
 
 ## Methods
 
 ### NewDeploymentCreateInputBody
 
-`func NewDeploymentCreateInputBody(url Url, ) *DeploymentCreateInputBody`
+`func NewDeploymentCreateInputBody(url string, ) *DeploymentCreateInputBody`
 
 NewDeploymentCreateInputBody instantiates a new DeploymentCreateInputBody object
 This constructor will assign default values to properties that have it defined,
@@ -167,20 +167,20 @@ HasTags returns a boolean if a field has been set.
 UnsetTags ensures that no value is present for Tags, not even an explicit nil
 ### GetUrl
 
-`func (o *DeploymentCreateInputBody) GetUrl() Url`
+`func (o *DeploymentCreateInputBody) GetUrl() string`
 
 GetUrl returns the Url field if non-nil, zero value otherwise.
 
 ### GetUrlOk
 
-`func (o *DeploymentCreateInputBody) GetUrlOk() (*Url, bool)`
+`func (o *DeploymentCreateInputBody) GetUrlOk() (*string, bool)`
 
 GetUrlOk returns a tuple with the Url field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetUrl
 
-`func (o *DeploymentCreateInputBody) SetUrl(v Url)`
+`func (o *DeploymentCreateInputBody) SetUrl(v string)`
 
 SetUrl sets Url field to given value.
 

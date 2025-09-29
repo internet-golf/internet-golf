@@ -31,7 +31,19 @@ func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bo
 	return true
 }
 
+func (g *GithubAuthChecker) userHasFullPermissions() bool {
+	externalUserId := g.oidcToken.ActorID
+	externalUser, err := g.Db.GetExternalUser(externalUserId)
+	if err != nil {
+		return false
+	}
+	return externalUser.FullPermissions
+}
+
 func (g *GithubAuthChecker) canModifyDeployment(d *Deployment) bool {
+	if g.userHasFullPermissions() {
+		return true
+	}
 	if d.ExternalSourceType != Github {
 		return false
 	}
@@ -45,15 +57,6 @@ func (g *GithubAuthChecker) canModifyDeployment(d *Deployment) bool {
 	}
 
 	return (d.ExternalSource == repo || d.ExternalSource == repo+"#"+branch)
-}
-
-func (g *GithubAuthChecker) userHasFullPermissions() bool {
-	externalUserId := g.oidcToken.ActorID
-	externalUser, err := g.Db.GetExternalUser(externalUserId)
-	if err != nil {
-		return false
-	}
-	return externalUser.FullPermissions
 }
 
 func (g *GithubAuthChecker) canCreateDeployment() bool {

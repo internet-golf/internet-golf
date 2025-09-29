@@ -29,9 +29,17 @@ func readAuth(api huma.API, authManager AuthManager) func(huma.Context, func(hum
 	}
 }
 
+type DeploymentCreateBody struct {
+	DeploymentMetadata
+	// the DeploymentMetadata type already has a Url field, but that uses
+	// the internal Url type. this just receives a string so that the
+	// internal Url type is hidden from the outside world
+	Url string `json:"url"`
+}
+
 type DeploymentCreateInput struct {
 	Body struct {
-		DeploymentMetadata
+		DeploymentCreateBody
 	}
 }
 
@@ -111,6 +119,8 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		if !permissions.canCreateDeployment() {
 			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
 		}
+
+		input.Body.DeploymentMetadata.Url = urlFromString(input.Body.Url)
 
 		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)

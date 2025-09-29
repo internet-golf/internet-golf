@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schema** | Pointer to **string** | A URL to the JSON Schema for this object. | [optional] [readonly] 
+**Url** | [**Url**](Url.md) |  | 
 **ExternalSource** | Pointer to **string** |  | [optional] 
 **ExternalSourceType** | Pointer to **string** |  | [optional] 
 **HasContent** | **bool** |  | 
@@ -12,13 +13,12 @@ Name | Type | Description | Notes
 **ServedThing** | **string** |  | 
 **ServedThingType** | **string** |  | 
 **Tags** | Pointer to **[]string** |  | [optional] 
-**Url** | [**Url**](Url.md) |  | 
 
 ## Methods
 
 ### NewGetDeploymentOutputBody
 
-`func NewGetDeploymentOutputBody(hasContent bool, servedThing string, servedThingType string, url Url, ) *GetDeploymentOutputBody`
+`func NewGetDeploymentOutputBody(url Url, hasContent bool, servedThing string, servedThingType string, ) *GetDeploymentOutputBody`
 
 NewGetDeploymentOutputBody instantiates a new GetDeploymentOutputBody object
 This constructor will assign default values to properties that have it defined,
@@ -57,6 +57,26 @@ SetSchema sets Schema field to given value.
 `func (o *GetDeploymentOutputBody) HasSchema() bool`
 
 HasSchema returns a boolean if a field has been set.
+
+### GetUrl
+
+`func (o *GetDeploymentOutputBody) GetUrl() Url`
+
+GetUrl returns the Url field if non-nil, zero value otherwise.
+
+### GetUrlOk
+
+`func (o *GetDeploymentOutputBody) GetUrlOk() (*Url, bool)`
+
+GetUrlOk returns a tuple with the Url field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUrl
+
+`func (o *GetDeploymentOutputBody) SetUrl(v Url)`
+
+SetUrl sets Url field to given value.
+
 
 ### GetExternalSource
 
@@ -228,26 +248,6 @@ HasTags returns a boolean if a field has been set.
 `func (o *GetDeploymentOutputBody) UnsetTags()`
 
 UnsetTags ensures that no value is present for Tags, not even an explicit nil
-### GetUrl
-
-`func (o *GetDeploymentOutputBody) GetUrl() Url`
-
-GetUrl returns the Url field if non-nil, zero value otherwise.
-
-### GetUrlOk
-
-`func (o *GetDeploymentOutputBody) GetUrlOk() (*Url, bool)`
-
-GetUrlOk returns a tuple with the Url field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetUrl
-
-`func (o *GetDeploymentOutputBody) SetUrl(v Url)`
-
-SetUrl sets Url field to given value.
-
-
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
