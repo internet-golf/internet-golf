@@ -79,7 +79,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultAPI* | [**GetAlive**](docs/DefaultAPI.md#getalive) | **Get** /alive | Get alive
-*DefaultAPI* | [**GetDeploymentByName**](docs/DefaultAPI.md#getdeploymentbyname) | **Get** /deployment/{name} | Get deployment by name
+*DefaultAPI* | [**GetDeploymentByUrl**](docs/DefaultAPI.md#getdeploymentbyurl) | **Get** /deployment/{url} | Get deployment by URL
 *DefaultAPI* | [**PostDeployNew**](docs/DefaultAPI.md#postdeploynew) | **Post** /deploy/new | Post deploy new
 *DefaultAPI* | [**PutDeployFiles**](docs/DefaultAPI.md#putdeployfiles) | **Put** /deploy/files | Put deploy files
 *DefaultAPI* | [**PutUserRegister**](docs/DefaultAPI.md#putuserregister) | **Put** /user/register | Put user register

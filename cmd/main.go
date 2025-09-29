@@ -58,17 +58,16 @@ func main() {
 
 			// create a deployment for the admin api (slightly premature, but
 			// that's fine as long as the health check endpoint is used)
-			adminApiName := "__internet__golf__admin__"
+			adminApiUrl := internetgolf.Url{Path: adminApiUrl}
+
 			deploymentBus.SetupDeployment(
 				internetgolf.DeploymentMetadata{
-					Name: adminApiName,
-					Urls: []internetgolf.Url{
-						internetgolf.Url{Path: adminApiUrl},
-					},
+					Url: adminApiUrl,
+
 					DontPersist: true,
 				})
-			deploymentBus.PutDeploymentContentByName(
-				adminApiName,
+			deploymentBus.PutDeploymentContentByUrl(
+				adminApiUrl,
 				internetgolf.DeploymentContent{
 					ServedThingType: internetgolf.ReverseProxy,
 					ServedThing:     "localhost:" + adminApiPort,
@@ -96,7 +95,7 @@ func main() {
 		"Run in local-only mode, so that deployments are only available at localhost:80.",
 	)
 	rootCmd.Flags().StringVar(
-		&adminApiUrl, "admin-api-path", "/internet--golf--admin",
+		&adminApiUrl, "admin-api-path", "/_golf",
 		"Path prefix for the Admin API endpoints.",
 	)
 	rootCmd.Flags().StringVar(

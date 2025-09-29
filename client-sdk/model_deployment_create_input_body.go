@@ -25,11 +25,9 @@ type DeploymentCreateInputBody struct {
 	Schema *string `json:"$schema,omitempty"`
 	ExternalSource *string `json:"externalSource,omitempty"`
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
-	// The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment.
-	Name *string `json:"name,omitempty"`
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	Tags []string `json:"tags,omitempty"`
-	Urls []Url `json:"urls"`
+	Url Url `json:"url"`
 }
 
 type _DeploymentCreateInputBody DeploymentCreateInputBody
@@ -38,9 +36,9 @@ type _DeploymentCreateInputBody DeploymentCreateInputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeploymentCreateInputBody(urls []Url) *DeploymentCreateInputBody {
+func NewDeploymentCreateInputBody(url Url) *DeploymentCreateInputBody {
 	this := DeploymentCreateInputBody{}
-	this.Urls = urls
+	this.Url = url
 	return &this
 }
 
@@ -148,38 +146,6 @@ func (o *DeploymentCreateInputBody) SetExternalSourceType(v string) {
 	o.ExternalSourceType = &v
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
-func (o *DeploymentCreateInputBody) GetName() string {
-	if o == nil || IsNil(o.Name) {
-		var ret string
-		return ret
-	}
-	return *o.Name
-}
-
-// GetNameOk returns a tuple with the Name field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetNameOk() (*string, bool) {
-	if o == nil || IsNil(o.Name) {
-		return nil, false
-	}
-	return o.Name, true
-}
-
-// HasName returns a boolean if a field has been set.
-func (o *DeploymentCreateInputBody) HasName() bool {
-	if o != nil && !IsNil(o.Name) {
-		return true
-	}
-
-	return false
-}
-
-// SetName gets a reference to the given string and assigns it to the Name field.
-func (o *DeploymentCreateInputBody) SetName(v string) {
-	o.Name = &v
-}
-
 // GetPreserveExternalPath returns the PreserveExternalPath field value if set, zero value otherwise.
 func (o *DeploymentCreateInputBody) GetPreserveExternalPath() bool {
 	if o == nil || IsNil(o.PreserveExternalPath) {
@@ -245,30 +211,28 @@ func (o *DeploymentCreateInputBody) SetTags(v []string) {
 	o.Tags = v
 }
 
-// GetUrls returns the Urls field value
-// If the value is explicit nil, the zero value for []Url will be returned
-func (o *DeploymentCreateInputBody) GetUrls() []Url {
+// GetUrl returns the Url field value
+func (o *DeploymentCreateInputBody) GetUrl() Url {
 	if o == nil {
-		var ret []Url
+		var ret Url
 		return ret
 	}
 
-	return o.Urls
+	return o.Url
 }
 
-// GetUrlsOk returns a tuple with the Urls field value
+// GetUrlOk returns a tuple with the Url field value
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *DeploymentCreateInputBody) GetUrlsOk() ([]Url, bool) {
-	if o == nil || IsNil(o.Urls) {
+func (o *DeploymentCreateInputBody) GetUrlOk() (*Url, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Urls, true
+	return &o.Url, true
 }
 
-// SetUrls sets field value
-func (o *DeploymentCreateInputBody) SetUrls(v []Url) {
-	o.Urls = v
+// SetUrl sets field value
+func (o *DeploymentCreateInputBody) SetUrl(v Url) {
+	o.Url = v
 }
 
 func (o DeploymentCreateInputBody) MarshalJSON() ([]byte, error) {
@@ -290,18 +254,13 @@ func (o DeploymentCreateInputBody) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.ExternalSourceType) {
 		toSerialize["externalSourceType"] = o.ExternalSourceType
 	}
-	if !IsNil(o.Name) {
-		toSerialize["name"] = o.Name
-	}
 	if !IsNil(o.PreserveExternalPath) {
 		toSerialize["preserveExternalPath"] = o.PreserveExternalPath
 	}
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
 	}
-	if o.Urls != nil {
-		toSerialize["urls"] = o.Urls
-	}
+	toSerialize["url"] = o.Url
 	return toSerialize, nil
 }
 
@@ -310,7 +269,7 @@ func (o *DeploymentCreateInputBody) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"urls",
+		"url",
 	}
 
 	allProperties := make(map[string]interface{})

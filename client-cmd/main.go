@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mholt/archives"
 	"github.com/spf13/cobra"
@@ -15,16 +16,26 @@ var rootCmd = &cobra.Command{
 	Short: "Deploy stuff to a server",
 }
 
-// TODO: should all the subcommands run the health check and wait for it to work
-// for a few seconds?
-
 var apiUrl string
+var auth string
 
-func createClient() *golfsdk.APIClient {
+func createClient(hostToTry string) *golfsdk.APIClient {
+	resolvedApiUrl := apiUrl
+	if len(resolvedApiUrl) == 0 {
+		if len(auth) == 0 {
+			// if no auth setting is specified, assume localhost
+			resolvedApiUrl = "http://localhost:8888"
+		} else if len(hostToTry) > 0 {
+			resolvedApiUrl = "https://" + hostToTry + "/internet--golf--admin"
+		} else {
+			panic("could not resolve API URL")
+		}
+	}
+	// TODO: run health check, wait for it to pass
 	return golfsdk.NewAPIClient(&golfsdk.Configuration{
 		UserAgent: "InternetGolfClient",
 		Servers: golfsdk.ServerConfigurations{
-			{URL: apiUrl},
+			{URL: resolvedApiUrl},
 		},
 	})
 }
@@ -32,17 +43,12 @@ func createClient() *golfsdk.APIClient {
 func createDeploymentCommand() *cobra.Command {
 
 	var github string
-	var path string
-	var name string
 
 	createDeployment := cobra.Command{
 		Use:     "create-deployment domain",
 		Example: "create-deployment example.com --github repoOwner/repoName",
 		Short:   "Creates a deployment",
-		// TODO: actually, allow multiple domains to be specified (but then how
-		// to give them paths? maybe the format should be example.com/path for
-		// the args)
-		Args: cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var externalSourceType string
 			var externalSource string
@@ -53,16 +59,26 @@ func createDeploymentCommand() *cobra.Command {
 				externalSource = github
 			}
 
-			client := createClient()
+			client := createClient(args[0])
 			fmt.Printf("created client with config %+v\n", client.GetConfig())
+
+			var urls []golfsdk.Url
+			for _, arg := range args {
+				firstSlash := strings.Index(arg, "/")
+				if firstSlash == -1 {
+					urls = append(urls, golfsdk.Url{Domain: arg})
+				} else {
+					path := arg[firstSlash:]
+					urls = append(urls, golfsdk.Url{Domain: arg[0:firstSlash], Path: &path})
+				}
+			}
 
 			body, _, respError := client.
 				DefaultAPI.PostDeployNew(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
-					Urls:               []golfsdk.Url{{Domain: args[0]}},
+					Url:                golfsdk.Url{Domain: args[0]},
 					ExternalSourceType: &externalSourceType,
 					ExternalSource:     &externalSource,
-					Name:               &name,
 				}).
 				Execute()
 
@@ -76,12 +92,6 @@ func createDeploymentCommand() *cobra.Command {
 	createDeployment.Flags().StringVar(
 		&github, "github", "", "Specify a Github Repo: repoOwner/repoName",
 	)
-	createDeployment.Flags().StringVar(
-		&path, "path", "", "Specify a path, like \"/my-page\"",
-	)
-	createDeployment.Flags().StringVar(
-		&name, "name", "", "Specify a name for the deployment.",
-	)
 
 	return &createDeployment
 }
@@ -90,9 +100,10 @@ func deployContentCommand() *cobra.Command {
 	var files string
 
 	deployContent := cobra.Command{
-		Use:   "deploy-content",
-		Short: "Deploys content",
-		Args:  cobra.ExactArgs(1),
+		Use:     "deploy-content [deployment-name]",
+		Example: "deploy-content thing.net --files ./dist",
+		Short:   "Deploys content",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.TODO()
 			fileTree, err := archives.FilesFromDisk(ctx, nil, map[string]string{
@@ -118,11 +129,11 @@ func deployContentCommand() *cobra.Command {
 
 			tempFile.Seek(0, 0)
 
-			client := createClient()
+			client := createClient(args[0])
 
 			body, _, respError := client.
 				DefaultAPI.PutDeployFiles(context.TODO()).
-				Name(args[0]).
+				Url(args[0]).
 				Contents(tempFile).
 				Execute()
 
@@ -154,7 +165,7 @@ func registerExternalUserCommand() *cobra.Command {
 		Short: "Registers an external user from (currently, only) Github",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			client := createClient()
+			client := createClient("")
 			body, _, respError := client.DefaultAPI.
 				PutUserRegister(context.TODO()).
 				AddExternalUserInputBody(golfsdk.AddExternalUserInputBody{
@@ -200,7 +211,10 @@ func main() {
 	// also, the /internet--golf--admin path should be added for non-local
 	// requests
 	rootCmd.PersistentFlags().StringVar(
-		&apiUrl, "apiUrl", "http://localhost:8888", "Specify the API URL",
+		&apiUrl, "apiUrl", "", "Specify the API URL. Will be smartly guessed if not present.",
+	)
+	rootCmd.PersistentFlags().StringVar(
+		&auth, "auth", "", "Specify an auth source, like \"github-oidc\"",
 	)
 
 	if err := rootCmd.Execute(); err != nil {

@@ -129,34 +129,34 @@ func (a *DefaultAPIService) GetAliveExecute(r ApiGetAliveRequest) (*HealthCheckO
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiGetDeploymentByNameRequest struct {
+type ApiGetDeploymentByUrlRequest struct {
 	ctx context.Context
 	ApiService *DefaultAPIService
-	name string
+	url string
 }
 
-func (r ApiGetDeploymentByNameRequest) Execute() (*GetDeploymentOutputBody, *http.Response, error) {
-	return r.ApiService.GetDeploymentByNameExecute(r)
+func (r ApiGetDeploymentByUrlRequest) Execute() (*GetDeploymentOutputBody, *http.Response, error) {
+	return r.ApiService.GetDeploymentByUrlExecute(r)
 }
 
 /*
-GetDeploymentByName Get deployment by name
+GetDeploymentByUrl Get deployment by URL
 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param name
- @return ApiGetDeploymentByNameRequest
+ @param url
+ @return ApiGetDeploymentByUrlRequest
 */
-func (a *DefaultAPIService) GetDeploymentByName(ctx context.Context, name string) ApiGetDeploymentByNameRequest {
-	return ApiGetDeploymentByNameRequest{
+func (a *DefaultAPIService) GetDeploymentByUrl(ctx context.Context, url string) ApiGetDeploymentByUrlRequest {
+	return ApiGetDeploymentByUrlRequest{
 		ApiService: a,
 		ctx: ctx,
-		name: name,
+		url: url,
 	}
 }
 
 // Execute executes the request
 //  @return GetDeploymentOutputBody
-func (a *DefaultAPIService) GetDeploymentByNameExecute(r ApiGetDeploymentByNameRequest) (*GetDeploymentOutputBody, *http.Response, error) {
+func (a *DefaultAPIService) GetDeploymentByUrlExecute(r ApiGetDeploymentByUrlRequest) (*GetDeploymentOutputBody, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -164,13 +164,13 @@ func (a *DefaultAPIService) GetDeploymentByNameExecute(r ApiGetDeploymentByNameR
 		localVarReturnValue  *GetDeploymentOutputBody
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.GetDeploymentByName")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.GetDeploymentByUrl")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/deployment/{name}"
-	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", url.PathEscape(parameterValueToString(r.name, "name")), -1)
+	localVarPath := localBasePath + "/deployment/{url}"
+	localVarPath = strings.Replace(localVarPath, "{"+"url"+"}", url.PathEscape(parameterValueToString(r.url, "url")), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -357,10 +357,15 @@ func (a *DefaultAPIService) PostDeployNewExecute(r ApiPostDeployNewRequest) (*Su
 type ApiPutDeployFilesRequest struct {
 	ctx context.Context
 	ApiService *DefaultAPIService
+	url *string
 	contents *os.File
 	keepLeadingDirectories *bool
-	name *string
 	preserveExistingFiles *bool
+}
+
+func (r ApiPutDeployFilesRequest) Url(url string) ApiPutDeployFilesRequest {
+	r.url = &url
+	return r
 }
 
 func (r ApiPutDeployFilesRequest) Contents(contents *os.File) ApiPutDeployFilesRequest {
@@ -370,11 +375,6 @@ func (r ApiPutDeployFilesRequest) Contents(contents *os.File) ApiPutDeployFilesR
 
 func (r ApiPutDeployFilesRequest) KeepLeadingDirectories(keepLeadingDirectories bool) ApiPutDeployFilesRequest {
 	r.keepLeadingDirectories = &keepLeadingDirectories
-	return r
-}
-
-func (r ApiPutDeployFilesRequest) Name(name string) ApiPutDeployFilesRequest {
-	r.name = &name
 	return r
 }
 
@@ -420,6 +420,9 @@ func (a *DefaultAPIService) PutDeployFilesExecute(r ApiPutDeployFilesRequest) (*
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
+	if r.url == nil {
+		return localVarReturnValue, nil, reportError("url is required and must be specified")
+	}
 
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{"multipart/form-data"}
@@ -456,12 +459,10 @@ func (a *DefaultAPIService) PutDeployFilesExecute(r ApiPutDeployFilesRequest) (*
 	if r.keepLeadingDirectories != nil {
 		parameterAddToHeaderOrQuery(localVarFormParams, "keepLeadingDirectories", r.keepLeadingDirectories, "form", "")
 	}
-	if r.name != nil {
-		parameterAddToHeaderOrQuery(localVarFormParams, "name", r.name, "form", "")
-	}
 	if r.preserveExistingFiles != nil {
 		parameterAddToHeaderOrQuery(localVarFormParams, "preserveExistingFiles", r.preserveExistingFiles, "form", "")
 	}
+	parameterAddToHeaderOrQuery(localVarFormParams, "url", r.url, "form", "")
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

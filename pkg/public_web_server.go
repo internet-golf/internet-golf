@@ -72,64 +72,62 @@ func urlToMatcher(url Url, requireDomain bool) (caddy.ModuleMap, error) {
 func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 	if d.ServedThingType != StaticFiles {
 		return []caddyhttp.Route{}, fmt.Errorf(
-			"deployment with name %s passed to getCaddyStaticRoute despite having resource type %s",
-			d.Name, d.ServedThingType,
+			"deployment with URL %s passed to getCaddyStaticRoute despite having resource type %s",
+			d.Url, d.ServedThingType,
 		)
 	}
 
 	var routes []caddyhttp.Route
 
-	for _, url := range d.Urls {
-		matcher, matcherErr := urlToMatcher(url, true)
-		if matcherErr != nil {
-			return nil, matcherErr
-		}
+	matcher, matcherErr := urlToMatcher(d.Url, true)
+	if matcherErr != nil {
+		return nil, matcherErr
+	}
 
-		standardSubroute := jsonObj{
-			"handle": []jsonObj{
-				{
-					"handler": "vars",
-					"root":    d.ServedThing,
+	standardSubroute := jsonObj{
+		"handle": []jsonObj{
+			{
+				"handler": "vars",
+				"root":    d.ServedThing,
+			},
+			{
+				"handler": "encode",
+				"encodings": jsonObj{
+					"gzip": jsonObj{},
+					"zstd": jsonObj{},
 				},
-				{
-					"handler": "encode",
-					"encodings": jsonObj{
-						"gzip": jsonObj{},
-						"zstd": jsonObj{},
-					},
-					"prefer": []string{"zstd", "gzip"},
-				},
-				{
-					"handler": "file_server",
+				"prefer": []string{"zstd", "gzip"},
+			},
+			{
+				"handler": "file_server",
+			},
+		},
+	}
+
+	var initialSubroutes []jsonObj
+	if !d.DeploymentMetadata.PreserveExternalPath {
+		cleanPath, _ := strings.CutSuffix(d.Url.Path, "*")
+		initialSubroutes = append(initialSubroutes,
+			// TODO: does this work with asterisks?
+			jsonObj{
+				"handle": []jsonObj{
+					jsonObj{"handler": "rewrite", "strip_path_prefix": cleanPath},
 				},
 			},
-		}
-
-		var initialSubroutes []jsonObj
-		if !d.DeploymentMetadata.PreserveExternalPath {
-			cleanPath, _ := strings.CutSuffix(url.Path, "*")
-			initialSubroutes = append(initialSubroutes,
-				// TODO: does this work with asterisks?
-				jsonObj{
-					"handle": []jsonObj{
-						jsonObj{"handler": "rewrite", "strip_path_prefix": cleanPath},
-					},
-				},
-			)
-		}
-
-		handlers := []json.RawMessage{
-			jsonOrPanic(jsonObj{
-				"handler": "subroute",
-				"routes":  slices.Concat(initialSubroutes, []jsonObj{standardSubroute}),
-			}),
-		}
-
-		routes = append(routes, caddyhttp.Route{
-			MatcherSetsRaw: caddyhttp.RawMatcherSets{matcher},
-			HandlersRaw:    handlers,
-		})
+		)
 	}
+
+	handlers := []json.RawMessage{
+		jsonOrPanic(jsonObj{
+			"handler": "subroute",
+			"routes":  slices.Concat(initialSubroutes, []jsonObj{standardSubroute}),
+		}),
+	}
+
+	routes = append(routes, caddyhttp.Route{
+		MatcherSetsRaw: caddyhttp.RawMatcherSets{matcher},
+		HandlersRaw:    handlers,
+	})
 
 	return routes, nil
 }
@@ -140,12 +138,8 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 	if d.ServedThingType != ReverseProxy {
 		return []caddyhttp.Route{}, fmt.Errorf(
 			"deployment with name %s passed to getCaddyReverseProxyRoute despite having resource type %s",
-			d.Name, d.ServedThingType,
+			d.Url, d.ServedThingType,
 		)
-	}
-
-	if len(d.Urls) > 1 {
-		return []caddyhttp.Route{}, fmt.Errorf("multiple urls not implemented for getCaddyReverseProxyRoute")
 	}
 
 	handlers := []json.RawMessage{
@@ -154,7 +148,7 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 			"routes": []jsonObj{
 				{
 					"handle": []jsonObj{
-						{"handler": "rewrite", "strip_path_prefix": d.Urls[0].Path},
+						{"handler": "rewrite", "strip_path_prefix": d.Url.Path},
 						{
 							"handler": "reverse_proxy",
 							// TODO: someday, control this with a setting? maybe?
@@ -175,7 +169,7 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 	}
 
 	// not requiring a host here bc this deployment type is for meta-deployments
-	matcher, matcherErr := urlToMatcher(d.Urls[0], false)
+	matcher, matcherErr := urlToMatcher(d.Url, false)
 
 	if matcherErr != nil {
 		return []caddyhttp.Route{}, matcherErr

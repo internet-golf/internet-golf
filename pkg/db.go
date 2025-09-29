@@ -95,8 +95,8 @@ func (s *StormDb) SaveDeployments(d []Deployment) error {
 			saveErr := db.Save(&d)
 			if saveErr != nil {
 				fmt.Printf(
-					"could not save deployment with name %s: %+v\n",
-					d.Name, saveErr,
+					"could not save deployment %s: %+v\n",
+					d.Url, saveErr,
 				)
 			}
 		}

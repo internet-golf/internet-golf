@@ -7,16 +7,15 @@ Name | Type | Description | Notes
 **Schema** | Pointer to **string** | A URL to the JSON Schema for this object. | [optional] [readonly] 
 **ExternalSource** | Pointer to **string** |  | [optional] 
 **ExternalSourceType** | Pointer to **string** |  | [optional] 
-**Name** | Pointer to **string** | The primary identifier for the deployment. Defaults to the deployment&#39;s URL if it only has one URL; otherwise, the name must be specified when creating the deployment. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** |  | [optional] 
 **Tags** | Pointer to **[]string** |  | [optional] 
-**Urls** | [**[]Url**](Url.md) |  | 
+**Url** | [**Url**](Url.md) |  | 
 
 ## Methods
 
 ### NewDeploymentCreateInputBody
 
-`func NewDeploymentCreateInputBody(urls []Url, ) *DeploymentCreateInputBody`
+`func NewDeploymentCreateInputBody(url Url, ) *DeploymentCreateInputBody`
 
 NewDeploymentCreateInputBody instantiates a new DeploymentCreateInputBody object
 This constructor will assign default values to properties that have it defined,
@@ -106,31 +105,6 @@ SetExternalSourceType sets ExternalSourceType field to given value.
 
 HasExternalSourceType returns a boolean if a field has been set.
 
-### GetName
-
-`func (o *DeploymentCreateInputBody) GetName() string`
-
-GetName returns the Name field if non-nil, zero value otherwise.
-
-### GetNameOk
-
-`func (o *DeploymentCreateInputBody) GetNameOk() (*string, bool)`
-
-GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetName
-
-`func (o *DeploymentCreateInputBody) SetName(v string)`
-
-SetName sets Name field to given value.
-
-### HasName
-
-`func (o *DeploymentCreateInputBody) HasName() bool`
-
-HasName returns a boolean if a field has been set.
-
 ### GetPreserveExternalPath
 
 `func (o *DeploymentCreateInputBody) GetPreserveExternalPath() bool`
@@ -191,36 +165,26 @@ HasTags returns a boolean if a field has been set.
 `func (o *DeploymentCreateInputBody) UnsetTags()`
 
 UnsetTags ensures that no value is present for Tags, not even an explicit nil
-### GetUrls
+### GetUrl
 
-`func (o *DeploymentCreateInputBody) GetUrls() []Url`
+`func (o *DeploymentCreateInputBody) GetUrl() Url`
 
-GetUrls returns the Urls field if non-nil, zero value otherwise.
+GetUrl returns the Url field if non-nil, zero value otherwise.
 
-### GetUrlsOk
+### GetUrlOk
 
-`func (o *DeploymentCreateInputBody) GetUrlsOk() (*[]Url, bool)`
+`func (o *DeploymentCreateInputBody) GetUrlOk() (*Url, bool)`
 
-GetUrlsOk returns a tuple with the Urls field if it's non-nil, zero value otherwise
+GetUrlOk returns a tuple with the Url field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetUrls
+### SetUrl
 
-`func (o *DeploymentCreateInputBody) SetUrls(v []Url)`
+`func (o *DeploymentCreateInputBody) SetUrl(v Url)`
 
-SetUrls sets Urls field to given value.
+SetUrl sets Url field to given value.
 
 
-### SetUrlsNil
-
-`func (o *DeploymentCreateInputBody) SetUrlsNil(b bool)`
-
- SetUrlsNil sets the value for Urls to be an explicit nil
-
-### UnsetUrls
-`func (o *DeploymentCreateInputBody) UnsetUrls()`
-
-UnsetUrls ensures that no value is present for Urls, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

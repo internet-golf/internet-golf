@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
-[**GetDeploymentByName**](DefaultAPI.md#GetDeploymentByName) | **Get** /deployment/{name} | Get deployment by name
+[**GetDeploymentByUrl**](DefaultAPI.md#GetDeploymentByUrl) | **Get** /deployment/{url} | Get deployment by URL
 [**PostDeployNew**](DefaultAPI.md#PostDeployNew) | **Post** /deploy/new | Post deploy new
 [**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
 [**PutUserRegister**](DefaultAPI.md#PutUserRegister) | **Put** /user/register | Put user register
@@ -71,11 +71,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## GetDeploymentByName
+## GetDeploymentByUrl
 
-> GetDeploymentOutputBody GetDeploymentByName(ctx, name).Execute()
+> GetDeploymentOutputBody GetDeploymentByUrl(ctx, url).Execute()
 
-Get deployment by name
+Get deployment by URL
 
 ### Example
 
@@ -90,17 +90,17 @@ import (
 )
 
 func main() {
-	name := "name_example" // string | 
+	url := "url_example" // string | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.GetDeploymentByName(context.Background(), name).Execute()
+	resp, r, err := apiClient.DefaultAPI.GetDeploymentByUrl(context.Background(), url).Execute()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeploymentByName``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeploymentByUrl``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `GetDeploymentByName`: GetDeploymentOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeploymentByName`: %v\n", resp)
+	// response from `GetDeploymentByUrl`: GetDeploymentOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeploymentByUrl`: %v\n", resp)
 }
 ```
 
@@ -110,11 +110,11 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**name** | **string** |  | 
+**url** | **string** |  | 
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiGetDeploymentByNameRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiGetDeploymentByUrlRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -158,7 +158,7 @@ import (
 )
 
 func main() {
-	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody([]openapiclient.Url{*openapiclient.NewUrl("Domain_example")}) // DeploymentCreateInputBody | 
+	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody(*openapiclient.NewUrl("Domain_example")) // DeploymentCreateInputBody | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -205,7 +205,7 @@ No authorization required
 
 ## PutDeployFiles
 
-> SuccessOutputBody PutDeployFiles(ctx).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).Name(name).PreserveExistingFiles(preserveExistingFiles).Execute()
+> SuccessOutputBody PutDeployFiles(ctx).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
 
 Put deploy files
 
@@ -222,14 +222,14 @@ import (
 )
 
 func main() {
+	url := "url_example" // string | 
 	contents := os.NewFile(1234, "some_file") // *os.File |  (optional)
 	keepLeadingDirectories := true // bool |  (optional)
-	name := "name_example" // string |  (optional)
 	preserveExistingFiles := true // bool |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.PutDeployFiles(context.Background()).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).Name(name).PreserveExistingFiles(preserveExistingFiles).Execute()
+	resp, r, err := apiClient.DefaultAPI.PutDeployFiles(context.Background()).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutDeployFiles``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -250,9 +250,9 @@ Other parameters are passed through a pointer to a apiPutDeployFilesRequest stru
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **url** | **string** |  | 
  **contents** | ***os.File** |  | 
  **keepLeadingDirectories** | **bool** |  | 
- **name** | **string** |  | 
  **preserveExistingFiles** | **bool** |  | 
 
 ### Return type

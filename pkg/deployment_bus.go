@@ -1,7 +1,6 @@
 package internetgolf
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -28,17 +27,33 @@ type Url struct {
 	Path   string `json:"path,omitempty"`
 }
 
+func (u *Url) Equals(v *Url) bool {
+	return u.Domain == v.Domain && u.Path == v.Path
+}
+
+func (u Url) String() string {
+	return u.Domain + u.Path
+}
+
+func urlFromString(url string) Url {
+	// TODO: return an error if the domain is invalid or the path has, like, # or ?
+	firstSlash := strings.Index(url, "/")
+	if firstSlash == -1 {
+		return Url{Domain: url}
+	} else {
+		path := url[firstSlash:]
+		return Url{Domain: url[0:firstSlash], Path: path}
+	}
+}
+
 // TODO: since this is used by the Huma API, it probably should have more docs
 // and stuff in the struct tags
 
 type DeploymentMetadata struct {
-	// this has omitempty so that the name doesn't have to be specified when
-	// POSTing an object of this type to the API
-	Name string `json:"name,omitempty" storm:"id" doc:"The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment."`
-	Urls []Url  `json:"urls"`
+	Url Url `json:"url" storm:"id"`
 
 	// assuming that there won't be multiple external sources...
-
+	// TODO: probably move this to the auth section?
 	// for github repos, the ExternalSource has the format "repoOwner/repoName"
 	// or "repoOwner/repoName#branch-name"
 	ExternalSource     string             `json:"externalSource,omitempty"`
@@ -53,13 +68,6 @@ type DeploymentMetadata struct {
 
 	// this is `true` for internal deployments like the one for the admin API
 	DontPersist bool `json:"-"`
-}
-
-func (d *DeploymentMetadata) Equals(e *DeploymentMetadata) bool {
-	return (d.DontPersist == e.DontPersist && d.ExternalSource == e.ExternalSource &&
-		d.ExternalSourceType == e.ExternalSourceType && d.Name == e.Name &&
-		d.PreserveExternalPath == e.PreserveExternalPath && slices.Equal(d.Urls, e.Urls) &&
-		slices.Equal(d.Tags, e.Tags))
 }
 
 type DeploymentContent struct {
@@ -107,15 +115,12 @@ func (bus *DeploymentBus) persistDeployments() error {
 func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	fmt.Printf("adding deployment %+v\n", metadata)
 
-	if len(strings.Trim(metadata.Name, " \t\n")) == 0 {
-		return errors.New("Name must have content")
-	}
-
 	// TODO: make sure its URLs do not overlap with any existing deployments
-	// (except the one it is replacing)
+	// (except the one it is replacing), and that at least the domain is present
+	// and a valid domain name?
 
 	existingIndex := slices.IndexFunc(bus.deployments, func(d Deployment) bool {
-		return d.Name == metadata.Name
+		return d.Url.Equals(&metadata.Url)
 	})
 
 	if existingIndex == -1 {
@@ -133,31 +138,30 @@ func (bus *DeploymentBus) SetupDeployment(metadata DeploymentMetadata) error {
 	return bus.persistDeployments()
 }
 
-// TODO: method to rename existing deployment (will need to enforce that names
-// are unique, and aren't the empty string, etc)
+// TODO: method to change the URL of a deployment?
 
-func (bus *DeploymentBus) getDeploymentIndexByName(name string) int {
+func (bus *DeploymentBus) getDeploymentIndexByUrl(url *Url) int {
 	return slices.IndexFunc(bus.deployments, func(d Deployment) bool {
-		return d.Name == name
+		return d.Url.Equals(url)
 	})
 }
 
-func (bus *DeploymentBus) GetDeploymentByName(name string) (Deployment, error) {
-	index := bus.getDeploymentIndexByName(name)
+func (bus *DeploymentBus) GetDeploymentByUrl(url *Url) (Deployment, error) {
+	index := bus.getDeploymentIndexByUrl(url)
 	if index == -1 {
-		return Deployment{}, fmt.Errorf("Deployment with name %s not found", name)
+		return Deployment{}, fmt.Errorf("Deployment with URL \"%s\" not found", url)
 	}
 	return bus.deployments[index], nil
 }
 
-func (bus *DeploymentBus) PutDeploymentContentByName(
-	name string, content DeploymentContent,
+func (bus *DeploymentBus) PutDeploymentContentByUrl(
+	url Url, content DeploymentContent,
 ) error {
 	fmt.Printf("updating deployment content %+v\n", content)
-	existingIndex := bus.getDeploymentIndexByName(name)
+	existingIndex := bus.getDeploymentIndexByUrl(&url)
 	if existingIndex == -1 {
 		return fmt.Errorf(
-			"Could not find deployment with name \"%v\" to update content", name,
+			"Could not find deployment with url \"%s\" to update content", url,
 		)
 	}
 	return bus.updateDeploymentContentByIndex(existingIndex, content)
@@ -183,10 +187,10 @@ func (bus *DeploymentBus) updateDeploymentContentByIndex(
 // deletes the deployment from the given name, pushes the deployment set
 // (without the deleted one) to the public web server, and then saves the new
 // deployment set
-func (bus *DeploymentBus) DeleteDeployment(name string) error {
-	index := bus.getDeploymentIndexByName(name)
+func (bus *DeploymentBus) DeleteDeployment(url Url) error {
+	index := bus.getDeploymentIndexByUrl(&url)
 	if index == -1 {
-		return fmt.Errorf("could not find deployment with name \"%s\" to delete it", name)
+		return fmt.Errorf("could not find deployment with URL \"%s\" to delete it", url)
 	}
 
 	bus.deployments = slices.Delete(bus.deployments, index, index+1)

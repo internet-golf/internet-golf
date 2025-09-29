@@ -36,10 +36,7 @@ type DeploymentCreateInput struct {
 }
 
 type DeployFilesBody struct {
-	// Name is only required when the Authorization header does not imply a
-	// specific, single deployment with a token that is scoped to an
-	// externalSource and externalSourceType
-	Name                   string        `form:"name" required:"false"`
+	Url                    string        `form:"url" required:"true"`
 	Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
 	KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
 	PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
@@ -115,15 +112,6 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
 		}
 
-		if len(input.Body.Name) == 0 {
-			if len(input.Body.Urls) == 1 {
-				input.Body.Name = (input.Body.Urls[0].Domain + input.Body.Urls[0].Path)
-			} else {
-				return nil, huma.Error400BadRequest(
-					"Specifying a name is required unless there is exactly one URL to use as a name",
-				)
-			}
-		}
 		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
 		if putDeploymentErr != nil {
@@ -131,22 +119,24 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		}
 		var output SuccessOutput
 		output.Body.Success = true
-		output.Body.Message = "Created deployment with name " + input.Body.Name
+		output.Body.Message = fmt.Sprintf("Created deployment with url %s", input.Body.Url)
 		return &output, nil
 	})
 
-	huma.Get(api, "/deployment/{name}", func(ctx context.Context, input *struct {
-		Name string `path:"name"`
+	huma.Get(api, "/deployment/{url}", func(ctx context.Context, input *struct {
+		Url string `path:"url"`
 	}) (*GetDeploymentOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
 
-		deployment, err := a.Web.GetDeploymentByName(input.Name)
+		url := urlFromString(input.Url)
+
+		deployment, err := a.Web.GetDeploymentByUrl(&url)
 		if err != nil {
 			return nil, huma.Error404NotFound(
-				fmt.Sprintf("Could not find deployment called \"%s\"", input.Name),
+				fmt.Sprintf("Could not find deployment with URL \"%s\"", url),
 			)
 		}
 
@@ -154,7 +144,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return nil, huma.Error403Forbidden(
 				fmt.Sprintf(
 					"You are not authorized to view the deployment \"%s\"",
-					input.Name,
+					url,
 				),
 			)
 		}
@@ -179,16 +169,17 @@ func (a *AdminApi) addRoutes(api huma.API) {
 				return nil, fmt.Errorf("Auth check failed somehow")
 			}
 
-			deployment, findDeploymentError := a.Web.GetDeploymentByName(formData.Name)
+			url := urlFromString(formData.Url)
+			deployment, findDeploymentError := a.Web.GetDeploymentByUrl(&url)
 			if findDeploymentError != nil {
 				return nil, huma.Error404NotFound(
-					fmt.Sprintf("could not find deployment with name \"%s\"", formData.Name),
+					fmt.Sprintf("could not find deployment with URL \"%s\"", url),
 				)
 			}
 
 			if !permissions.canModifyDeployment(&deployment) {
 				return nil, huma.Error403Forbidden(
-					fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", formData.Name),
+					fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", url),
 				)
 			}
 
@@ -196,14 +187,14 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			hash, hashErr := hashStream(formData.Contents)
 			if hashErr != nil {
-				return nil, fmt.Errorf("could not hash files for %v", formData.Name)
+				return nil, fmt.Errorf("could not hash files for %s", url)
 			}
 			outDir := path.Join(
 				// this is kind of a hack and file storage should probably be
 				// encapsulated in its own interface instead of being handled by
 				// random utility functions here in the admin api route handler
 				a.Auth.Db.GetStorageDirectory(),
-				slug.Make(formData.Name),
+				slug.Make(formData.Url),
 				hash,
 			)
 			// weirdly, formData.Contents is a seekable stream, which i'm pretty
@@ -226,8 +217,8 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			// 3. send the content to the deployment bus using the function that
 			// was created in step 1
 
-			err := a.Web.PutDeploymentContentByName(
-				formData.Name,
+			err := a.Web.PutDeploymentContentByUrl(
+				url,
 				DeploymentContent{
 					ServedThingType: StaticFiles,
 					ServedThing:     outDir,
@@ -243,7 +234,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			output := SuccessOutput{}
 			output.Body.Success = true
-			output.Body.Message = "Updated content for the deployment called \"" + formData.Name + "\""
+			output.Body.Message = "Updated content for " + url.String()
 			return &output, nil
 		})
 

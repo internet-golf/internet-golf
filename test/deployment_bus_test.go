@@ -83,14 +83,15 @@ func TestBasicStaticDeployment(t *testing.T) {
 	assertUrlEmpty(url, t)
 
 	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
-		Urls: []internetgolf.Url{internetgolf.Url{Domain: BasicTestHost}},
-		Name: "test-1",
+		Url: internetgolf.Url{Domain: BasicTestHost},
 	})
 
-	deploymentBus.PutDeploymentContentByName("test-1", internetgolf.DeploymentContent{
-		ServedThingType: internetgolf.StaticFiles,
-		ServedThing:     getFixturePath("static-site"),
-	})
+	deploymentBus.PutDeploymentContentByUrl(
+		internetgolf.Url{Domain: BasicTestHost},
+		internetgolf.DeploymentContent{
+			ServedThingType: internetgolf.StaticFiles,
+			ServedThing:     getFixturePath("static-site"),
+		})
 
 	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff\n" {
@@ -104,14 +105,15 @@ func TestBasicStaticDeploymentPersistence(t *testing.T) {
 	url := "http://" + BasicTestHost
 
 	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
-		Urls: []internetgolf.Url{internetgolf.Url{Domain: BasicTestHost}},
-		Name: "test-1",
+		Url: internetgolf.Url{Domain: BasicTestHost},
 	})
 
-	deploymentBus.PutDeploymentContentByName("test-1", internetgolf.DeploymentContent{
-		ServedThingType: internetgolf.StaticFiles,
-		ServedThing:     getFixturePath("static-site"),
-	})
+	deploymentBus.PutDeploymentContentByUrl(
+		internetgolf.Url{Domain: BasicTestHost},
+		internetgolf.DeploymentContent{
+			ServedThingType: internetgolf.StaticFiles,
+			ServedThing:     getFixturePath("static-site"),
+		})
 
 	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff\n" {
@@ -139,15 +141,16 @@ func TestStaticDeploymentWithPath(t *testing.T) {
 	url := "http://" + BasicTestHost + "/stuff/"
 	assertUrlEmpty(url, t)
 
+	parsedUrl := internetgolf.Url{Domain: BasicTestHost, Path: "/stuff/*"}
+
 	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
 		// TODO: decide how asterisks work. are they implied? how would you turn
 		// them off? i feel like if your path ends in a slash, you almost
 		// definitely want an asterisk
-		Urls: []internetgolf.Url{internetgolf.Url{Domain: BasicTestHost, Path: "/stuff/*"}},
-		Name: "test-2",
+		Url: parsedUrl,
 	})
 
-	deploymentBus.PutDeploymentContentByName("test-2", internetgolf.DeploymentContent{
+	deploymentBus.PutDeploymentContentByUrl(parsedUrl, internetgolf.DeploymentContent{
 		ServedThingType: internetgolf.StaticFiles,
 		ServedThing:     getFixturePath("static-site-2"),
 	})
@@ -174,15 +177,14 @@ func TestStaticDeploymentWithPreservedPath(t *testing.T) {
 	url := "http://" + BasicTestHost + "/other-stuff/"
 	assertUrlEmpty(url, t)
 
+	parsedUrl := internetgolf.Url{Domain: BasicTestHost, Path: "/other-stuff/"}
+
 	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
-		Urls: []internetgolf.Url{
-			internetgolf.Url{Domain: BasicTestHost, Path: "/other-stuff/"},
-		},
-		Name:                 "test-3",
+		Url:                  parsedUrl,
 		PreserveExternalPath: true,
 	})
 
-	deploymentBus.PutDeploymentContentByName("test-3", internetgolf.DeploymentContent{
+	deploymentBus.PutDeploymentContentByUrl(parsedUrl, internetgolf.DeploymentContent{
 		ServedThingType: internetgolf.StaticFiles,
 		ServedThing:     getFixturePath("static-site-3"),
 	})

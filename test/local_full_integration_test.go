@@ -72,34 +72,17 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 			apiPath:    "/deploy/new",
 			apiMethod:  "POST",
 			deploymentTest: func(t *testing.T) {
-				output, _, _ := client.DefaultAPI.GetDeploymentByName(context.TODO(), "example.com").Execute()
-				if output.Urls[0].Domain != "example.com" {
+				output, _, _ := client.DefaultAPI.GetDeploymentByUrl(context.TODO(), "example.com").Execute()
+				if output.Url.Domain != "example.com" {
 					t.Fail()
 				}
 			},
 		},
 		apiBody: internetgolf.DeploymentMetadata{
-			Urls: []internetgolf.Url{{Domain: "example.com", Path: ""}},
+			Url: internetgolf.Url{Domain: "example.com", Path: ""},
 		},
 	},
-	{
-		CliApiTestCase: CliApiTestCase{
-			name:       "Create basic deployment",
-			cliCommand: "create-deployment --name \"custom name\" example.com",
-			apiPath:    "/deploy/new",
-			apiMethod:  "POST",
-			deploymentTest: func(t *testing.T) {
-				output, _, _ := client.DefaultAPI.GetDeploymentByName(context.TODO(), "custom name").Execute()
-				if output.Urls[0].Domain != "example.com" {
-					t.Fail()
-				}
-			},
-		},
-		apiBody: internetgolf.DeploymentMetadata{
-			Name: "custom name",
-			Urls: []internetgolf.Url{{Domain: "example.com", Path: ""}},
-		},
-	},
+	// TODO: multiple URLs, URLs with paths, other settings
 }
 
 type UserAddTestCase struct {
@@ -145,7 +128,7 @@ var deployFilesTestCases = []DeployFilesTestCase{
 			},
 		},
 		formData: map[string][]string{
-			"name": []string{"internet-golf-test.local"},
+			"url": []string{"internet-golf-test.local"},
 		},
 	},
 }

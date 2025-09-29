@@ -26,13 +26,11 @@ type GetDeploymentOutputBody struct {
 	ExternalSource *string `json:"externalSource,omitempty"`
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
 	HasContent bool `json:"hasContent"`
-	// The primary identifier for the deployment. Defaults to the deployment's URL if it only has one URL; otherwise, the name must be specified when creating the deployment.
-	Name *string `json:"name,omitempty"`
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	ServedThing string `json:"servedThing"`
 	ServedThingType string `json:"servedThingType"`
 	Tags []string `json:"tags,omitempty"`
-	Urls []Url `json:"urls"`
+	Url Url `json:"url"`
 }
 
 type _GetDeploymentOutputBody GetDeploymentOutputBody
@@ -41,12 +39,12 @@ type _GetDeploymentOutputBody GetDeploymentOutputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetDeploymentOutputBody(hasContent bool, servedThing string, servedThingType string, urls []Url) *GetDeploymentOutputBody {
+func NewGetDeploymentOutputBody(hasContent bool, servedThing string, servedThingType string, url Url) *GetDeploymentOutputBody {
 	this := GetDeploymentOutputBody{}
 	this.HasContent = hasContent
 	this.ServedThing = servedThing
 	this.ServedThingType = servedThingType
-	this.Urls = urls
+	this.Url = url
 	return &this
 }
 
@@ -178,38 +176,6 @@ func (o *GetDeploymentOutputBody) SetHasContent(v bool) {
 	o.HasContent = v
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
-func (o *GetDeploymentOutputBody) GetName() string {
-	if o == nil || IsNil(o.Name) {
-		var ret string
-		return ret
-	}
-	return *o.Name
-}
-
-// GetNameOk returns a tuple with the Name field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetNameOk() (*string, bool) {
-	if o == nil || IsNil(o.Name) {
-		return nil, false
-	}
-	return o.Name, true
-}
-
-// HasName returns a boolean if a field has been set.
-func (o *GetDeploymentOutputBody) HasName() bool {
-	if o != nil && !IsNil(o.Name) {
-		return true
-	}
-
-	return false
-}
-
-// SetName gets a reference to the given string and assigns it to the Name field.
-func (o *GetDeploymentOutputBody) SetName(v string) {
-	o.Name = &v
-}
-
 // GetPreserveExternalPath returns the PreserveExternalPath field value if set, zero value otherwise.
 func (o *GetDeploymentOutputBody) GetPreserveExternalPath() bool {
 	if o == nil || IsNil(o.PreserveExternalPath) {
@@ -323,30 +289,28 @@ func (o *GetDeploymentOutputBody) SetTags(v []string) {
 	o.Tags = v
 }
 
-// GetUrls returns the Urls field value
-// If the value is explicit nil, the zero value for []Url will be returned
-func (o *GetDeploymentOutputBody) GetUrls() []Url {
+// GetUrl returns the Url field value
+func (o *GetDeploymentOutputBody) GetUrl() Url {
 	if o == nil {
-		var ret []Url
+		var ret Url
 		return ret
 	}
 
-	return o.Urls
+	return o.Url
 }
 
-// GetUrlsOk returns a tuple with the Urls field value
+// GetUrlOk returns a tuple with the Url field value
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *GetDeploymentOutputBody) GetUrlsOk() ([]Url, bool) {
-	if o == nil || IsNil(o.Urls) {
+func (o *GetDeploymentOutputBody) GetUrlOk() (*Url, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Urls, true
+	return &o.Url, true
 }
 
-// SetUrls sets field value
-func (o *GetDeploymentOutputBody) SetUrls(v []Url) {
-	o.Urls = v
+// SetUrl sets field value
+func (o *GetDeploymentOutputBody) SetUrl(v Url) {
+	o.Url = v
 }
 
 func (o GetDeploymentOutputBody) MarshalJSON() ([]byte, error) {
@@ -369,9 +333,6 @@ func (o GetDeploymentOutputBody) ToMap() (map[string]interface{}, error) {
 		toSerialize["externalSourceType"] = o.ExternalSourceType
 	}
 	toSerialize["hasContent"] = o.HasContent
-	if !IsNil(o.Name) {
-		toSerialize["name"] = o.Name
-	}
 	if !IsNil(o.PreserveExternalPath) {
 		toSerialize["preserveExternalPath"] = o.PreserveExternalPath
 	}
@@ -380,9 +341,7 @@ func (o GetDeploymentOutputBody) ToMap() (map[string]interface{}, error) {
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
 	}
-	if o.Urls != nil {
-		toSerialize["urls"] = o.Urls
-	}
+	toSerialize["url"] = o.Url
 	return toSerialize, nil
 }
 
@@ -394,7 +353,7 @@ func (o *GetDeploymentOutputBody) UnmarshalJSON(data []byte) (err error) {
 		"hasContent",
 		"servedThing",
 		"servedThingType",
-		"urls",
+		"url",
 	}
 
 	allProperties := make(map[string]interface{})
