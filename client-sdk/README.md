@@ -81,6 +81,7 @@ Class | Method | HTTP request | Description
 *DefaultAPI* | [**GetAlive**](docs/DefaultAPI.md#getalive) | **Get** /alive | Get alive
 *DefaultAPI* | [**GetDeploymentByUrl**](docs/DefaultAPI.md#getdeploymentbyurl) | **Get** /deployment/{url} | Get deployment by URL
 *DefaultAPI* | [**PostDeployNew**](docs/DefaultAPI.md#postdeploynew) | **Post** /deploy/new | Post deploy new
+*DefaultAPI* | [**PostTokenGenerate**](docs/DefaultAPI.md#posttokengenerate) | **Post** /token/generate | Post token generate
 *DefaultAPI* | [**PutDeployFiles**](docs/DefaultAPI.md#putdeployfiles) | **Put** /deploy/files | Put deploy files
 *DefaultAPI* | [**PutUserRegister**](docs/DefaultAPI.md#putuserregister) | **Put** /user/register | Put user register
 
@@ -88,6 +89,8 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [AddExternalUserInputBody](docs/AddExternalUserInputBody.md)
+ - [CreateBearerTokenInputBody](docs/CreateBearerTokenInputBody.md)
+ - [CreateBearerTokenOutputBody](docs/CreateBearerTokenOutputBody.md)
  - [DeploymentCreateInputBody](docs/DeploymentCreateInputBody.md)
  - [ErrorDetail](docs/ErrorDetail.md)
  - [ErrorModel](docs/ErrorModel.md)

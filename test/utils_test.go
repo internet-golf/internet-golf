@@ -8,8 +8,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
+	"strings"
 	"testing"
 
+	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
 	"github.com/txn2/txeh"
 )
 
@@ -36,6 +39,67 @@ func urlToPageContent(url string, t *testing.T) string {
 	}
 	bodyStr := string(body)
 	return bodyStr
+}
+
+func createClient(url string) *golfsdk.APIClient {
+	return golfsdk.NewAPIClient(&golfsdk.Configuration{
+		UserAgent: "InternetGolfClient",
+		Servers: golfsdk.ServerConfigurations{
+			{URL: url},
+		},
+	})
+}
+
+type CmdTeeWriter struct {
+	savedOutput []byte
+}
+
+func (so *CmdTeeWriter) Write(p []byte) (n int, err error) {
+	so.savedOutput = append(so.savedOutput, p...)
+	return os.Stdout.Write(p)
+}
+
+// runs the provided command; its output is both sent to the terminal and
+// returned as a string
+func execWithTeedOutput(cmd *exec.Cmd) (string, error) {
+	// https://stackoverflow.com/a/72809770/3962267
+	var so CmdTeeWriter
+	cmd.Stdout = &so
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return "", err
+	} else {
+		return string(so.savedOutput), nil
+	}
+}
+
+// runs the client cli. return the standard output of the command so it can be
+// inspected.
+func runClientCliCommand(command string, apiPort string, t *testing.T) string {
+	fullCommand := "run ../client-cmd --api-url http://localhost:" + apiPort + " " + command
+	commandSplitOnQuotes := strings.Split(fullCommand, "\"")
+	commandParts := []string{}
+	for i, quotePart := range commandSplitOnQuotes {
+		if i%2 == 0 {
+			// we are outside of the quotes
+			partSplitOnSpaces := strings.Split(quotePart, " ")
+			for _, spacePart := range partSplitOnSpaces {
+				if len(spacePart) > 0 {
+					commandParts = append(commandParts, spacePart)
+				}
+			}
+		} else {
+			// we are inside the quotes
+			commandParts = append(commandParts, quotePart)
+		}
+	}
+	cmd := exec.Command("go", commandParts...)
+
+	output, err := execWithTeedOutput(cmd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return output
 }
 
 func setupHosts() {

@@ -31,6 +31,8 @@ type Db interface {
 	GetDeployments() ([]Deployment, error)
 	SaveExternalUser(u ExternalUser) error
 	GetExternalUser(externalId string) (ExternalUser, error)
+	SaveBearerToken(b BearerToken) error
+	GetBearerToken(string) (BearerToken, error)
 }
 
 // i found the database package "storm" on github and didn't realize until after
@@ -126,6 +128,32 @@ func (s *StormDb) GetExternalUser(externalId string) (ExternalUser, error) {
 	err := db.Get("ExternalUser", externalId, &result)
 	if err != nil {
 		return ExternalUser{}, err
+	}
+
+	return result, nil
+}
+
+func (s *StormDb) SaveBearerToken(token BearerToken) error {
+	db, dbOpenErr := storm.Open(s.dbFile)
+	if dbOpenErr != nil {
+		return dbOpenErr
+	}
+	defer db.Close()
+
+	return db.Save(&token)
+}
+
+func (s *StormDb) GetBearerToken(id string) (BearerToken, error) {
+	db, dbOpenErr := storm.Open(s.dbFile)
+	if dbOpenErr != nil {
+		return BearerToken{}, dbOpenErr
+	}
+	defer db.Close()
+
+	var result BearerToken
+	err := db.Get("BearerToken", id, &result)
+	if err != nil {
+		return BearerToken{}, err
 	}
 
 	return result, nil

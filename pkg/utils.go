@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/md5"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -13,6 +14,18 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+// returns two random strings; the first is expected to be a token and the
+// second is supposed to be a random ID for the token. (the point of that is
+// that the ID can be stored in plaintext and used to look up the token later,
+// while the token itself will be hashed)
+func getRandomToken() (string, string) {
+	id := make([]byte, 4)
+	b := make([]byte, 16)
+	rand.Read(b)
+	rand.Read(id)
+	return fmt.Sprintf("%x", b), fmt.Sprintf("%x", id)
+}
 
 func getLongestCommonPrefix(strings []string) string {
 	longestCommonPrefix := strings[0]

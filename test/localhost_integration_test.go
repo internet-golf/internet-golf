@@ -8,6 +8,9 @@
 // and a function is run to make sure that the deployment was created
 // accordingly.
 //
+// these tests lean on automatically authenticating requests by making them
+// through localhost. auth tests live in auth_integration_test.go.
+//
 // there's a lot of plumbing going on here. all you should really have to worry
 // about when creating new tests are the tests cases at the beginning.
 
@@ -24,7 +27,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"reflect"
 	"strconv"
 	"strings"
@@ -54,7 +56,7 @@ type CliApiTestCase struct {
 	apiMethod string
 	// function that should be run after the client cli is called to check the
 	// state of the server and verify that it was updated correctly
-	deploymentTest func(*testing.T)
+	deploymentTest func(*testing.T, *golfsdk.APIClient)
 }
 
 type NewDeploymentTestCase struct {
@@ -71,7 +73,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 			cliCommand: "create-deployment example.com",
 			apiPath:    "/deploy/new",
 			apiMethod:  "POST",
-			deploymentTest: func(t *testing.T) {
+			deploymentTest: func(t *testing.T, client *golfsdk.APIClient) {
 				output, _, _ := client.DefaultAPI.GetDeploymentByUrl(context.TODO(), "example.com").Execute()
 				if output.Url.Domain != "example.com" {
 					t.Fail()
@@ -118,7 +120,7 @@ var deployFilesTestCases = []DeployFilesTestCase{
 			cliCommand:    "deploy-content internet-golf-test.local --files ./fixtures/static-site",
 			apiPath:       "/deploy/files",
 			apiMethod:     "PUT",
-			deploymentTest: func(t *testing.T) {
+			deploymentTest: func(t *testing.T, _ *golfsdk.APIClient) {
 				if content := urlToPageContent("http://internet-golf-test.local", t); content != "stuff\n" {
 					t.Fatalf("expected stuff\\n, got %v", []byte(content))
 				}
@@ -134,15 +136,6 @@ var deployFilesTestCases = []DeployFilesTestCase{
 }
 
 // meaningless plumbing ==================================================
-
-func createClient(url string) *golfsdk.APIClient {
-	return golfsdk.NewAPIClient(&golfsdk.Configuration{
-		UserAgent: "InternetGolfClient",
-		Servers: golfsdk.ServerConfigurations{
-			{URL: url},
-		},
-	})
-}
 
 type InterceptedRequest struct {
 	Req  http.Request
@@ -212,40 +205,7 @@ func (m *MockApiServer) Stop() {
 	}
 }
 
-// runs the client cli. TODO: return stdout so it can be inspected
-func runClientCliCommand(command string, apiPort string, t *testing.T) {
-	fullCommand := "run ../client-cmd --apiUrl http://localhost:" + apiPort + " " + command
-	commandSplitOnQuotes := strings.Split(fullCommand, "\"")
-	commandParts := []string{}
-	for i, quotePart := range commandSplitOnQuotes {
-		if i%2 == 0 {
-			// we are outside of the quotes
-			partSplitOnSpaces := strings.Split(quotePart, " ")
-			for _, spacePart := range partSplitOnSpaces {
-				if len(spacePart) > 0 {
-					commandParts = append(commandParts, spacePart)
-				}
-			}
-		} else {
-			// we are inside the quotes
-			commandParts = append(commandParts, quotePart)
-		}
-	}
-	cmd := exec.Command(
-		"go",
-		commandParts...,
-	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		t.Fatal(err.Error())
-	}
-}
-
-var realServerPort = "9999"
-var client = createClient("http://127.0.0.1:" + realServerPort)
-
-func startRealServer() func() {
+func startFullServer(port string) func() {
 	deploymentServer := internetgolf.CaddyServer{}
 	deploymentServer.Settings.LocalOnly = true
 
@@ -268,7 +228,7 @@ func startRealServer() func() {
 	adminApi := internetgolf.AdminApi{
 		Web:  deploymentBus,
 		Auth: internetgolf.AuthManager{Db: &db},
-		Port: realServerPort,
+		Port: port,
 	}
 
 	server := adminApi.CreateServer()
@@ -296,8 +256,15 @@ func TestClientCli(t *testing.T) {
 	m.Init()
 	defer m.Stop()
 
+	realServerPortInt, portErr := internetgolf.GetFreePort()
+	if portErr != nil {
+		panic(portErr)
+	}
+	realServerPort := strconv.Itoa(realServerPortInt)
+	realClient := createClient("http://127.0.0.1:" + realServerPort)
+
 	// create real server
-	stopRealServer := startRealServer()
+	stopRealServer := startFullServer(realServerPort)
 	defer stopRealServer()
 
 	// TODO: deduplicate these two for loops somehow. some parts are the same
@@ -355,7 +322,7 @@ func TestClientCli(t *testing.T) {
 
 			// run the given deployment test function that should verify that
 			// the real server's state has been updated correctly
-			testCase.deploymentTest(t)
+			testCase.deploymentTest(t, realClient)
 		})
 	}
 
@@ -417,7 +384,7 @@ func TestClientCli(t *testing.T) {
 
 			// run the given deployment test function that should verify that
 			// the real server's state has been updated correctly
-			testCase.deploymentTest(t)
+			testCase.deploymentTest(t, realClient)
 		})
 	}
 
@@ -480,7 +447,7 @@ func TestClientCli(t *testing.T) {
 			// run the given deployment test function that should verify that
 			// the real server's state has been updated correctly
 			if testCase.deploymentTest != nil {
-				testCase.deploymentTest(t)
+				testCase.deploymentTest(t, realClient)
 			}
 		})
 	}

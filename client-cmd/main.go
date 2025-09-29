@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -26,14 +28,41 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 			// if no auth setting is specified, assume localhost
 			resolvedApiUrl = "http://localhost:8888"
 		} else if len(hostToTry) > 0 {
-			resolvedApiUrl = "https://" + hostToTry + "/internet--golf--admin"
+			resolvedApiUrl = "https://" + hostToTry + "/_golf"
 		} else {
 			panic("could not resolve API URL")
 		}
 	}
+	authHeader := ""
+	if auth == "github-oidc" {
+		reqUrl, found := os.LookupEnv("ACTIONS_ID_TOKEN_REQUEST_URL")
+		if !found {
+			panic("environment variable ACTIONS_ID_TOKEN_REQUEST_URL not found")
+		}
+		reqToken, found := os.LookupEnv("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+		if !found {
+			panic("environment variable ACTIONS_ID_TOKEN_REQUEST_TOKEN not found")
+		}
+		githubOidcReq, err := http.NewRequest("GET", reqUrl+"&audience=internet-golf", nil)
+		if err != nil {
+			panic(err)
+		}
+		githubOidcReq.Header["Authorization"] = []string{"Bearer " + reqToken}
+		resp, err := http.DefaultClient.Do(githubOidcReq)
+		if err != nil {
+			panic(err)
+		}
+		oidcToken, err := io.ReadAll(resp.Body)
+		authHeader = "GithubOIDC " + string(oidcToken)
+	} else if len(auth) > 0 {
+		authHeader = "Bearer " + auth
+	}
 	// TODO: run health check, wait for it to pass
 	return golfsdk.NewAPIClient(&golfsdk.Configuration{
 		UserAgent: "InternetGolfClient",
+		DefaultHeader: map[string]string{
+			"Authorization": authHeader,
+		},
 		Servers: golfsdk.ServerConfigurations{
 			{URL: resolvedApiUrl},
 		},
@@ -190,6 +219,30 @@ func registerExternalUserCommand() *cobra.Command {
 	return &registerUser
 }
 
+func createBearerTokenCommand() *cobra.Command {
+	createToken := cobra.Command{
+		Use:   "create-token",
+		Short: "Create a bearer token that can be used to authenticate API requests",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			client := createClient("")
+			body, _, err := client.DefaultAPI.
+				PostTokenGenerate(context.TODO()).
+				CreateBearerTokenInputBody(
+					// TODO: granular permissions
+					golfsdk.CreateBearerTokenInputBody{FullPermissions: true},
+				).Execute()
+			if err != nil || len(body.Token) == 0 {
+				panic(err)
+			}
+			fmt.Println("Generated token:")
+			fmt.Println(body.Token)
+		},
+	}
+
+	return &createToken
+}
+
 func main() {
 	// group the real commands away from the help commands - i think it looks
 	// better that way
@@ -200,21 +253,19 @@ func main() {
 	rootCmd.AddGroup(&golfGroup)
 
 	golfCmds := [](*cobra.Command){
-		createDeploymentCommand(), deployContentCommand(), registerExternalUserCommand(),
+		createDeploymentCommand(), deployContentCommand(),
+		registerExternalUserCommand(), createBearerTokenCommand(),
 	}
 	for _, cmd := range golfCmds {
 		cmd.GroupID = "IG"
 		rootCmd.AddCommand(cmd)
 	}
 
-	// TODO: the default should actually depend on the passed-in url arg(s).
-	// also, the /internet--golf--admin path should be added for non-local
-	// requests
 	rootCmd.PersistentFlags().StringVar(
-		&apiUrl, "apiUrl", "", "Specify the API URL. Will be smartly guessed if not present.",
+		&apiUrl, "api-url", "", "Specify the API URL. Will be smartly guessed if not present.",
 	)
 	rootCmd.PersistentFlags().StringVar(
-		&auth, "auth", "", "Specify an auth source, like \"github-oidc\"",
+		&auth, "auth", "", "Specify a bearer token or give the value \"github-oidc\".",
 	)
 
 	if err := rootCmd.Execute(); err != nil {

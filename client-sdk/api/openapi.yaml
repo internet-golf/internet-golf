@@ -105,6 +105,29 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get deployment by URL
+  /token/generate:
+    post:
+      operationId: post-token-generate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBearerTokenInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateBearerTokenOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Post token generate
   /user/register:
     put:
       operationId: put-user-register
@@ -151,6 +174,36 @@ components:
           type: string
       required:
       - externalUserSource
+    CreateBearerTokenInputBody:
+      additionalProperties: false
+      example:
+        $schema: https://openapi-generator.tech
+        fullPermissions: true
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        fullPermissions:
+          type: boolean
+      required:
+      - fullPermissions
+    CreateBearerTokenOutputBody:
+      additionalProperties: false
+      example:
+        $schema: https://openapi-generator.tech
+        token: token
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        token:
+          type: string
+      required:
+      - token
     DeploymentCreateInputBody:
       additionalProperties: false
       example:

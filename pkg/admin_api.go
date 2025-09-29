@@ -18,10 +18,10 @@ import (
 
 func readAuth(api huma.API, authManager AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-
 		remoteAddr := ctx.RemoteAddr()
 		authHeader := ctx.Header("Authorization")
 
+		// TODO: recover from any panics in getPermissionForRequest?
 		permissions, _ := authManager.getPermissionsForRequest(remoteAddr, authHeader)
 		ctx = huma.WithValue(ctx, "permissions", permissions)
 
@@ -61,6 +61,23 @@ type AddExternalUserBody struct {
 type AddExternalUserInput struct {
 	Body struct {
 		AddExternalUserBody
+	}
+}
+
+type CreateBearerTokenBody struct {
+	FullPermissions bool `json:"fullPermissions"`
+	// TODO: more granular permissions
+}
+
+type CreateBearerTokenInput struct {
+	Body struct {
+		CreateBearerTokenBody
+	}
+}
+
+type CreateBearerTokenOutput struct {
+	Body struct {
+		Token string `json:"token"`
 	}
 }
 
@@ -254,7 +271,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
 
-		if !permissions.canAddUser() {
+		if !permissions.canCreateCredentials() {
 			return nil, huma.Error401Unauthorized("You are not authorized to add a user")
 		}
 
@@ -304,6 +321,17 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	})
 
 	// TODO: get (all?) users endpoint
+
+	huma.Post(api, "/token/generate", func(ctx context.Context, input *CreateBearerTokenInput) (*CreateBearerTokenOutput, error) {
+		token, err := a.Auth.createBearerToken(input.Body.FullPermissions)
+		if err != nil {
+			return nil, huma.Error500InternalServerError("Could not generate token: " + err.Error())
+		}
+
+		var output CreateBearerTokenOutput
+		output.Body.Token = token
+		return &output, nil
+	})
 
 	// huma.Put(api, "/deploy/container", func(
 	// 	ctx context.Context, input *DeployContainerInput,

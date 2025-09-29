@@ -265,8 +265,9 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 		panic(err)
 	}
 
-	port, _ := GetFreePort()
-
+	// starting the caddy admin api at a random port that is only known within
+	// this program might make it slightly harder to reach and exploit 🤞
+	caddyAdminApiPort, _ := GetFreePort()
 	logLevel := "ERROR"
 	if c.Settings.Verbose {
 		logLevel = "DEBUG"
@@ -274,7 +275,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	caddyConfig := caddy.Config{
 		AppsRaw: caddy.ModuleMap{"http": httpJson},
 		Admin: &caddy.AdminConfig{
-			Listen: "localhost:" + strconv.Itoa(port),
+			Listen: "localhost:" + strconv.Itoa(caddyAdminApiPort),
 		},
 		Logging: &caddy.Logging{
 			Logs: map[string]*caddy.CustomLog{

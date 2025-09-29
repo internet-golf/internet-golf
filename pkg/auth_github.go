@@ -70,7 +70,7 @@ func (g *GithubAuthChecker) canViewDeployment(d *Deployment) bool {
 	return g.userHasFullPermissions()
 }
 
-func (g *GithubAuthChecker) canAddUser() bool {
+func (g *GithubAuthChecker) canCreateCredentials() bool {
 	return g.userHasFullPermissions()
 }
 

@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
 [**GetDeploymentByUrl**](DefaultAPI.md#GetDeploymentByUrl) | **Get** /deployment/{url} | Get deployment by URL
 [**PostDeployNew**](DefaultAPI.md#PostDeployNew) | **Post** /deploy/new | Post deploy new
+[**PostTokenGenerate**](DefaultAPI.md#PostTokenGenerate) | **Post** /token/generate | Post token generate
 [**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
 [**PutUserRegister**](DefaultAPI.md#PutUserRegister) | **Put** /user/register | Put user register
 
@@ -188,6 +189,70 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## PostTokenGenerate
+
+> CreateBearerTokenOutputBody PostTokenGenerate(ctx).CreateBearerTokenInputBody(createBearerTokenInputBody).Execute()
+
+Post token generate
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	createBearerTokenInputBody := *openapiclient.NewCreateBearerTokenInputBody(false) // CreateBearerTokenInputBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.PostTokenGenerate(context.Background()).CreateBearerTokenInputBody(createBearerTokenInputBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PostTokenGenerate``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PostTokenGenerate`: CreateBearerTokenOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PostTokenGenerate`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPostTokenGenerateRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **createBearerTokenInputBody** | [**CreateBearerTokenInputBody**](CreateBearerTokenInputBody.md) |  | 
+
+### Return type
+
+[**CreateBearerTokenOutputBody**](CreateBearerTokenOutputBody.md)
 
 ### Authorization
 
