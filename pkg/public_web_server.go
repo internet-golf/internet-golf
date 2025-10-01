@@ -238,7 +238,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 			httpAppServerName: {
 				Listen: listen,
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
-					Disabled: !c.Settings.LocalOnly,
+					Disabled: c.Settings.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{},
 			},
