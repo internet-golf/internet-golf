@@ -1,4 +1,4 @@
-package internetgolf
+package auth
 
 import (
 	"context"
@@ -11,12 +11,13 @@ import (
 
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"github.com/toBeOfUse/internet-golf/pkg/db"
 )
 
 // implements the interface `Permissions`
 type GithubAuthChecker struct {
 	oidcToken GitHubOIDCToken
-	Db        Db
+	Db        db.Db
 }
 
 func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bool {
@@ -24,7 +25,7 @@ func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bo
 	if len(headerComps) != 2 || headerComps[0] != "GithubOIDC" {
 		return false
 	}
-	tokenData, tokenError := ParseGithubOidcToken(headerComps[1])
+	tokenData, tokenError := parseGithubOidcToken(headerComps[1])
 	if tokenError != nil {
 		panic(tokenError)
 	}
@@ -32,7 +33,7 @@ func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bo
 	return true
 }
 
-func (g *GithubAuthChecker) userHasFullPermissions() bool {
+func (g *GithubAuthChecker) UserHasFullPermissions() bool {
 	externalUserId := g.oidcToken.ActorID
 	externalUser, err := g.Db.GetExternalUser(externalUserId)
 	if err != nil {
@@ -41,11 +42,11 @@ func (g *GithubAuthChecker) userHasFullPermissions() bool {
 	return externalUser.FullPermissions
 }
 
-func (g *GithubAuthChecker) canModifyDeployment(d *Deployment) bool {
-	if g.userHasFullPermissions() {
+func (g *GithubAuthChecker) CanModifyDeployment(d *db.Deployment) bool {
+	if g.UserHasFullPermissions() {
 		return true
 	}
-	if d.ExternalSourceType != Github {
+	if d.ExternalSourceType != db.Github {
 		return false
 	}
 	repo := g.oidcToken.Repository
@@ -60,19 +61,19 @@ func (g *GithubAuthChecker) canModifyDeployment(d *Deployment) bool {
 	return (d.ExternalSource == repo || d.ExternalSource == repo+"#"+branch)
 }
 
-func (g *GithubAuthChecker) canCreateDeployment() bool {
-	return g.userHasFullPermissions()
+func (g *GithubAuthChecker) CanCreateDeployment() bool {
+	return g.UserHasFullPermissions()
 }
 
-func (g *GithubAuthChecker) canViewDeployment(d *Deployment) bool {
-	if g.canModifyDeployment(d) {
+func (g *GithubAuthChecker) CanViewDeployment(d *db.Deployment) bool {
+	if g.CanModifyDeployment(d) {
 		return true
 	}
-	return g.userHasFullPermissions()
+	return g.UserHasFullPermissions()
 }
 
-func (g *GithubAuthChecker) canCreateCredentials() bool {
-	return g.userHasFullPermissions()
+func (g *GithubAuthChecker) CanCreateCredentials() bool {
+	return g.UserHasFullPermissions()
 }
 
 // example payload:
@@ -167,7 +168,7 @@ func newJWKSet(jwkUrl string) (jwk.Set, error) {
 	return jwk.NewCachedSet(jwkCache, jwkUrl), nil
 }
 
-func ParseGithubOidcToken(token string) (GitHubOIDCToken, error) {
+func parseGithubOidcToken(token string) (GitHubOIDCToken, error) {
 	fmt.Println("parsing token" + token)
 	keySet, keySetErr := newJWKSet("https://token.actions.githubusercontent.com/.well-known/jwks")
 	if keySetErr != nil {

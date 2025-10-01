@@ -33,7 +33,11 @@ import (
 	"testing"
 
 	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
-	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
+	"github.com/toBeOfUse/internet-golf/pkg/auth"
+	"github.com/toBeOfUse/internet-golf/pkg/content"
+	database "github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/toBeOfUse/internet-golf/pkg/web"
 )
 
 // test case stuff =======================================================
@@ -63,7 +67,7 @@ type NewDeploymentTestCase struct {
 	CliApiTestCase
 	// expected body for the API request that the client CLI will make to the
 	// server
-	apiBody internetgolf.DeploymentCreateBody
+	apiBody content.DeploymentCreateBody
 }
 
 var deploymentCreateTestCases = []NewDeploymentTestCase{
@@ -80,7 +84,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 				}
 			},
 		},
-		apiBody: internetgolf.DeploymentCreateBody{
+		apiBody: content.DeploymentCreateBody{
 			Url: "example.com",
 		},
 	},
@@ -89,7 +93,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 
 type UserAddTestCase struct {
 	CliApiTestCase
-	apiBody internetgolf.AddExternalUserBody
+	apiBody content.AddExternalUserBody
 }
 
 var addUserTestCases = []UserAddTestCase{
@@ -100,7 +104,7 @@ var addUserTestCases = []UserAddTestCase{
 			apiPath:    "/user/register",
 			apiMethod:  "PUT",
 		},
-		apiBody: internetgolf.AddExternalUserBody{
+		apiBody: content.AddExternalUserBody{
 			ExternalUserHandle: "toBeOfUse",
 			ExternalUserSource: "Github",
 		},
@@ -175,7 +179,7 @@ func (m *MockApiServer) Init() {
 		w.Header().Add("Content-Type", "application/json")
 		w.Write([]byte("{\"$schema\": \"whatever\", \"success\": true, \"message\": \"Request to mock API received\"}"))
 	})
-	port, err := internetgolf.GetFreePort()
+	port, err := utils.GetFreePort()
 	if err != nil {
 		panic(err)
 	}
@@ -212,37 +216,38 @@ func startFullServer(port string) func() {
 	}
 	tempDirs = append(tempDirs, tempDir)
 
-	settings := internetgolf.StorageSettings{}
+	settings := database.StorageSettings{}
 	settings.Init(tempDir)
 
-	deploymentServer := internetgolf.CaddyServer{StorageSettings: settings}
+	deploymentServer := web.CaddyServer{StorageSettings: settings}
 	deploymentServer.Settings.LocalOnly = true
 
-	db := internetgolf.StormDb{}
+	db := database.StormDb{}
 	db.Init(settings)
 
-	deploymentBus := internetgolf.DeploymentBus{
+	deploymentBus := content.DeploymentBus{
 		Server: &deploymentServer,
 		Db:     &db,
 	}
 	deploymentBus.Init()
-	adminApi := internetgolf.AdminApi{
-		Web:  &deploymentBus,
-		Auth: internetgolf.AuthManager{Db: &db},
-		Port: port,
+	adminApi := content.AdminApi{
+		Web:   &deploymentBus,
+		Auth:  auth.AuthManager{Db: &db},
+		Port:  port,
+		Files: content.FileManager{Settings: settings},
 	}
 
 	// TODO: this default admin API path needs to be a global constant somewhere
-	adminApiUrl := internetgolf.Url{Path: "/_golf"}
+	adminApiUrl := database.Url{Path: "/_golf"}
 	deploymentBus.SetupDeployment(
-		internetgolf.DeploymentMetadata{
+		database.DeploymentMetadata{
 			Url:         adminApiUrl,
 			DontPersist: true,
 		})
 	deploymentBus.PutDeploymentContentByUrl(
 		adminApiUrl,
-		internetgolf.DeploymentContent{
-			ServedThingType: internetgolf.ReverseProxy,
+		database.DeploymentContent{
+			ServedThingType: database.ReverseProxy,
 			ServedThing:     "127.0.0.1:" + port,
 		})
 
@@ -271,7 +276,7 @@ func TestClientCli(t *testing.T) {
 	m.Init()
 	defer m.Stop()
 
-	realServerPortInt, portErr := internetgolf.GetFreePort()
+	realServerPortInt, portErr := utils.GetFreePort()
 	if portErr != nil {
 		panic(portErr)
 	}
@@ -309,7 +314,7 @@ func TestClientCli(t *testing.T) {
 				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
 			}
 
-			var contents internetgolf.DeploymentCreateBody
+			var contents content.DeploymentCreateBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())
@@ -429,7 +434,7 @@ func TestClientCli(t *testing.T) {
 
 			fmt.Printf("intercepted body %v\n", string(intercepted.Body))
 
-			var contents internetgolf.AddExternalUserBody
+			var contents content.AddExternalUserBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())

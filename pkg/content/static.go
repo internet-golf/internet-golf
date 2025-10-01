@@ -1,66 +1,53 @@
-package internetgolf
+package content
 
 import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/md5"
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/gosimple/slug"
+	"github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/toBeOfUse/internet-golf/pkg/utils"
 )
 
-// returns two random strings; the first is expected to be a token and the
-// second is supposed to be a random ID for the token. (the point of that is
-// that the ID can be stored in plaintext and used to look up the token later,
-// while the token itself will be hashed)
-func getRandomToken() (string, string) {
-	id := make([]byte, 4)
-	b := make([]byte, 16)
-	rand.Read(b)
-	rand.Read(id)
-	return fmt.Sprintf("%x", b), fmt.Sprintf("%x", id)
-}
+type FileManager struct{ Settings db.StorageSettings }
 
-func getLongestCommonPrefix(strings []string) string {
-	longestCommonPrefix := strings[0]
-
-	for i := 1; i < len(strings) && len(longestCommonPrefix) > 0; i++ {
-		path := []rune(strings[i])
-		newLongestCommonPrefix := ""
-		for j, letter := range longestCommonPrefix {
-			if j > len(path)-1 {
-				break
-			}
-			if path[j] == letter {
-				newLongestCommonPrefix = newLongestCommonPrefix + string(letter)
-			} else {
-				break
-			}
-		}
-		longestCommonPrefix = newLongestCommonPrefix
+// receives a stream of a .tar.gz file, extracts its contents according to the
+// settings, returns the path of the contents
+func (f FileManager) TarGzToDeploymentFiles(
+	stream io.ReadSeeker, contentName string,
+	keepLeadingDirectories bool, _preserveFromPreviousPath string,
+) (string, error) {
+	hash, hashErr := hashStream(stream)
+	if hashErr != nil {
+		return "", fmt.Errorf("could not hash files for %s", contentName)
 	}
-	return longestCommonPrefix
-}
-
-// getFreePort asks the kernel for a free open port that is ready to use.
-// https://gist.github.com/sevkin/96bdae9274465b2d09191384f86ef39d
-// exported for use in tests :/
-func GetFreePort() (port int, err error) {
-	var a *net.TCPAddr
-	if a, err = net.ResolveTCPAddr("tcp", "localhost:0"); err == nil {
-		var l *net.TCPListener
-		if l, err = net.ListenTCP("tcp", a); err == nil {
-			defer l.Close()
-			return l.Addr().(*net.TCPAddr).Port, nil
-		}
+	outDir := path.Join(
+		f.Settings.DataDirectory,
+		slug.Make(contentName),
+		hash,
+	)
+	// weirdly, formData.Contents is a seekable stream, which i'm pretty
+	// sure means its entire contents must be being kept in memory so that
+	// they can be sought back to (unless it falls back to saving them
+	// to disk for large files?) this seems like an annoying limitation
+	if tarGzError := extractTarGz(
+		stream, outDir, !keepLeadingDirectories,
+	); tarGzError != nil {
+		return "", tarGzError
 	}
-	return
+
+	// TODO: if len(preserveFromPreviousPath) > 0, copy everything from that
+	// previous path over into the new directory
+
+	return outDir, nil
 }
 
 // turns the contents of a stream into an md5 hash. seeks the stream back to its
@@ -124,7 +111,7 @@ func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs b
 			}
 		}
 
-		longestCommonPrefix = getLongestCommonPrefix(filePaths)
+		longestCommonPrefix = utils.GetLongestCommonPrefix(filePaths)
 
 		lastSlash := strings.LastIndex(longestCommonPrefix, "/")
 		if lastSlash != -1 {

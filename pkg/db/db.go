@@ -1,4 +1,4 @@
-package internetgolf
+package db
 
 import (
 	"errors"
@@ -163,7 +163,7 @@ func (s *StormDb) GetBearerToken(id string) (BearerToken, error) {
 // directory; creates a directory at the path if it doesn't already exist.
 // why is this a separate function ???
 func getDataDirectory(dataDirectoryPath string) (string, error) {
-	if strings.Index(dataDirectoryPath, "$HOME") != -1 {
+	if strings.Contains(dataDirectoryPath, "$HOME") {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			return "", errors.New(

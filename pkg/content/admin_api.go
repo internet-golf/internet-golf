@@ -1,4 +1,4 @@
-package internetgolf
+package content
 
 import (
 	"context"
@@ -7,16 +7,16 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/gosimple/slug"
+	"github.com/toBeOfUse/internet-golf/pkg/auth"
+	"github.com/toBeOfUse/internet-golf/pkg/db"
 )
 
-func readAuth(api huma.API, authManager AuthManager) func(huma.Context, func(huma.Context)) {
+func readAuth(api huma.API, authManager auth.AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		// this header is set by the internal caddy reverse-proxy when it is
 		// forwarding a request - we don't want to mistake those for "true"
@@ -28,7 +28,7 @@ func readAuth(api huma.API, authManager AuthManager) func(huma.Context, func(hum
 		authHeader := ctx.Header("Authorization")
 
 		// TODO: recover from any panics in getPermissionForRequest?
-		permissions, _ := authManager.getPermissionsForRequest(remoteAddr, authHeader)
+		permissions, _ := authManager.GetPermissionsForRequest(remoteAddr, authHeader)
 		ctx = huma.WithValue(ctx, "permissions", permissions)
 
 		next(ctx)
@@ -36,7 +36,7 @@ func readAuth(api huma.API, authManager AuthManager) func(huma.Context, func(hum
 }
 
 type DeploymentCreateBody struct {
-	DeploymentMetadata
+	db.DeploymentMetadata
 	// the DeploymentMetadata type already has a Url field, but that uses
 	// the internal Url type. this just receives a string so that the
 	// internal Url type is hidden from the outside world
@@ -60,9 +60,9 @@ type DeployFilesInput struct {
 }
 
 type AddExternalUserBody struct {
-	ExternalUserHandle string             `json:"externalUserHandle,omitempty" docs:"A username, like \"toBeOfUse\" for Github user @toBeOfUse. Will be ignored if externalUserId is specified."`
-	ExternalUserId     string             `json:"externalUserId,omitempty" docs:"The ID that the user has in the external system. Not needed if externalUserHandle is specified."`
-	ExternalUserSource ExternalSourceType `json:"externalUserSource" docs:"The location of the external user. Currently only supports \"Github\"."`
+	ExternalUserHandle string                `json:"externalUserHandle,omitempty" docs:"A username, like \"toBeOfUse\" for Github user @toBeOfUse. Will be ignored if externalUserId is specified."`
+	ExternalUserId     string                `json:"externalUserId,omitempty" docs:"The ID that the user has in the external system. Not needed if externalUserHandle is specified."`
+	ExternalUserSource db.ExternalSourceType `json:"externalUserSource" docs:"The location of the external user. Currently only supports \"Github\"."`
 }
 type AddExternalUserInput struct {
 	Body struct {
@@ -111,14 +111,15 @@ type HealthCheckOutput struct {
 
 type GetDeploymentOutput struct {
 	Body struct {
-		Deployment
+		db.Deployment
 	}
 }
 
 type AdminApi struct {
-	Web  *DeploymentBus
-	Auth AuthManager
-	Port string
+	Web   *DeploymentBus
+	Auth  auth.AuthManager
+	Files FileManager
+	Port  string
 }
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
@@ -134,12 +135,12 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Post(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
 		if !permissionsOk {
 			return nil, huma.Error500InternalServerError("Auth check failed somehow")
 		}
 
-		if !permissions.canCreateDeployment() {
+		if !permissions.CanCreateDeployment() {
 			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
 		}
 
@@ -159,7 +160,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Get(api, "/deployment/{url}", func(ctx context.Context, input *struct {
 		Url string `path:"url"`
 	}) (*GetDeploymentOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
 		if !permissionsOk {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
@@ -173,7 +174,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			)
 		}
 
-		if !permissions.canViewDeployment(&deployment) {
+		if !permissions.CanViewDeployment(&deployment) {
 			return nil, huma.Error403Forbidden(
 				fmt.Sprintf(
 					"You are not authorized to view the deployment \"%s\"",
@@ -197,7 +198,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			formData := input.RawBody.Data()
 			fmt.Printf("received form data: %+v\n", formData)
 
-			permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+			permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
 			if !permissionsOk {
 				return nil, fmt.Errorf("Auth check failed somehow")
 			}
@@ -210,7 +211,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 				)
 			}
 
-			if !permissions.canModifyDeployment(&deployment) {
+			if !permissions.CanModifyDeployment(&deployment) {
 				return nil, huma.Error403Forbidden(
 					fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", url),
 				)
@@ -218,42 +219,30 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			// 2. actually create the deployment content locally
 
-			hash, hashErr := hashStream(formData.Contents)
-			if hashErr != nil {
-				return nil, fmt.Errorf("could not hash files for %s", url)
+			var previousPath string
+			if formData.PreserveExistingFiles {
+				previousContent, previousContentErr := a.Web.GetDeploymentByUrl(&url)
+				if previousContentErr == nil {
+					previousPath = previousContent.ServedThing
+				}
 			}
-			outDir := path.Join(
-				// this is kind of a hack and file storage should probably be
-				// encapsulated in its own interface instead of being handled by
-				// random utility functions here in the admin api route handler
-				a.Auth.Db.GetStorageDirectory(),
-				slug.Make(formData.Url),
-				hash,
+			outDir, extractionErr := a.Files.TarGzToDeploymentFiles(
+				formData.Contents, formData.Url,
+				formData.KeepLeadingDirectories, previousPath,
 			)
-			// weirdly, formData.Contents is a seekable stream, which i'm pretty
-			// sure means its entire contents must be being kept in memory so that
-			// they can be sought back to (unless it falls back to saving them
-			// to disk for large files?) this seems like an annoying limitation
-			if tarGzError := extractTarGz(
-				formData.Contents, outDir, !formData.KeepLeadingDirectories,
-			); tarGzError != nil {
-				return nil, tarGzError
+			if extractionErr != nil {
+				return nil, huma.Error500InternalServerError(
+					"Error occurred while unpacking uploaded files: " + extractionErr.Error(),
+				)
 			}
-
-			// TODO: if PreserveExistingFiles, find the existing deployment for
-			// this url and copy its files into the new directory (if they're
-			// not the same directory (i.e. if the hashes are unequal) (which
-			// will presumably require getting a reference to the existing
-			// deployment from the bus - maybe instead of creating deployContent
-			// we should be getting a cursor/active record))
 
 			// 3. send the content to the deployment bus using the function that
 			// was created in step 1
 
 			err := a.Web.PutDeploymentContentByUrl(
 				url,
-				DeploymentContent{
-					ServedThingType: StaticFiles,
+				db.DeploymentContent{
+					ServedThingType: db.StaticFiles,
 					ServedThing:     outDir,
 				},
 			)
@@ -272,12 +261,12 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		})
 
 	huma.Put(api, "/user/register", func(ctx context.Context, input *AddExternalUserInput) (*SuccessOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
 		if !permissionsOk {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
 
-		if !permissions.canCreateCredentials() {
+		if !permissions.CanCreateCredentials() {
 			return nil, huma.Error401Unauthorized("You are not authorized to add a user")
 		}
 
@@ -286,7 +275,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		}
 
 		if len(input.Body.ExternalUserId) == 0 {
-			if input.Body.ExternalUserSource == Github {
+			if input.Body.ExternalUserSource == db.Github {
 				// example api url: https://api.github.com/users/toBeOfUse
 				resp, err := http.Get(
 					"https://api.github.com/users/" + strings.TrimLeft(input.Body.ExternalUserHandle, "@"),
@@ -311,7 +300,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			}
 		}
 
-		a.Auth.registerExternalUser(ExternalUser{
+		a.Auth.RegisterExternalUser(db.ExternalUser{
 			ExternalSource: input.Body.ExternalUserSource,
 			ExternalId:     input.Body.ExternalUserId,
 			// defaulting to full permissions until more granular permissions are added
@@ -329,7 +318,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	// TODO: get (all?) users endpoint
 
 	huma.Post(api, "/token/generate", func(ctx context.Context, input *CreateBearerTokenInput) (*CreateBearerTokenOutput, error) {
-		token, err := a.Auth.createBearerToken(input.Body.FullPermissions)
+		token, err := a.Auth.CreateBearerToken(input.Body.FullPermissions)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Could not generate token: " + err.Error())
 		}
