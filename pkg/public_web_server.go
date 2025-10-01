@@ -292,7 +292,7 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 			if len(a.MatcherSetsRaw) == 0 {
 				return -1
 			}
-			if len(b.MatcherSets) == 0 {
+			if len(b.MatcherSetsRaw) == 0 {
 				return 1
 			}
 			// TODO: make sure admin API route is always first, somehow.
