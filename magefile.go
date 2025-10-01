@@ -11,9 +11,12 @@ import (
 	"runtime"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/magefile/mage/mg"
+	"github.com/moby/term"
 )
 
 // Default target to run when none is specified
@@ -55,13 +58,22 @@ func runOpenapiGenerator() error {
 		return cwdErr
 	}
 
-	// https://docs.docker.com/reference/api/engine/sdk/examples/#run-a-container
-
+	// https://stackoverflow.com/a/48579861/3962267
+	imageName := "openapitools/openapi-generator-cli:latest"
 	ctx := context.Background()
+	reader, err := cli.ImagePull(ctx, imageName, image.PullOptions{})
+	termFd, isTerm := term.GetFdInfo(os.Stderr)
+	pullErr := jsonmessage.DisplayJSONMessagesStream(reader, os.Stderr, termFd, isTerm, nil)
+	reader.Close()
+	if pullErr != nil {
+		panic(pullErr)
+	}
+
+	// https://docs.docker.com/reference/api/engine/sdk/examples/#run-a-container
 	cont, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image:        "openapitools/openapi-generator-cli:latest",
+			Image:        imageName,
 			AttachStdout: false,
 			AttachStderr: false,
 			Cmd: []string{

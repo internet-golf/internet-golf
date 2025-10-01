@@ -15,6 +15,7 @@ type AuthManager struct {
 
 func (a *AuthManager) GetPermissionsForRequest(remoteAddr string, authHeader string) (Permissions, error) {
 	if l := (LocalReqAuthChecker{}); l.setReqData(remoteAddr, authHeader) {
+		fmt.Println("automatically trusting request from " + remoteAddr)
 		return &l, nil
 	} else if g := (GithubAuthChecker{Db: a.Db}); g.setReqData(remoteAddr, authHeader) {
 		return &g, nil

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -28,8 +30,13 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 			// if no auth setting is specified, assume localhost
 			resolvedApiUrl = "http://localhost:8888"
 		} else if len(hostToTry) > 0 {
-			// TODO: will this automatically upgrade to https where possible??
-			resolvedApiUrl = "http://" + hostToTry + "/_golf"
+			protocol := "https"
+			ips, err := net.LookupIP(hostToTry)
+			if err == nil && ips[0].String() == "127.0.0.1" {
+				fmt.Fprintf(os.Stderr, "WARNING: connecting to local host %s Without HTTPS", hostToTry)
+				protocol = "http"
+			}
+			resolvedApiUrl = protocol + "://" + hostToTry + "/_golf"
 		} else {
 			panic("could not resolve API URL")
 		}
@@ -53,8 +60,12 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 		if err != nil {
 			panic(err)
 		}
-		oidcToken, err := io.ReadAll(resp.Body)
-		authHeader = "GithubOIDC " + string(oidcToken)
+		oidcTokenJson, err := io.ReadAll(resp.Body)
+		var oidcTokenData struct {
+			Value string `json:"value"`
+		}
+		json.Unmarshal(oidcTokenJson, &oidcTokenData)
+		authHeader = "GithubOIDC " + strings.Trim(string(oidcTokenData.Value), " \n\r")
 	} else if len(auth) > 0 {
 		authHeader = "Bearer " + auth
 	}
@@ -172,7 +183,7 @@ func deployContentCommand() *cobra.Command {
 			}
 			if resp.StatusCode != 200 {
 				body, _ := io.ReadAll(resp.Body)
-				panic(body)
+				panic("[error from server]: " + string(body))
 			}
 			if body == nil || !body.Success {
 				panic("Did not get success status back from server. Request was to " + resp.Request.URL.String())

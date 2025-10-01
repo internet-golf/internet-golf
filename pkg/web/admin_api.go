@@ -21,7 +21,13 @@ import (
 
 func readAuth(api huma.API, authManager auth.AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		remoteAddr := ctx.RemoteAddr()
+		// this header is set by the internal caddy reverse-proxy when it is
+		// forwarding a request - we don't want to mistake those for "true"
+		// localhost requests
+		remoteAddr := ctx.Header("X-Forwarded-For")
+		if len(remoteAddr) == 0 {
+			remoteAddr = ctx.RemoteAddr()
+		}
 		authHeader := ctx.Header("Authorization")
 
 		// TODO: recover from any panics in getPermissionForRequest?

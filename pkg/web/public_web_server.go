@@ -59,7 +59,7 @@ func (c *CaddyServer) Init() error {
 }
 
 // puts all the deployments on the public internet. prioritizes more specific
-// urls over less specific urls;
+// urls over less specific urls
 func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	var listen []string
 	if c.Settings.LocalOnly {
@@ -74,7 +74,20 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
 					Disabled: c.Settings.LocalOnly,
 				},
-				Routes: caddyhttp.RouteList{},
+				Routes: caddyhttp.RouteList{{
+					// match all
+					MatcherSetsRaw: caddyhttp.RawMatcherSets{},
+					HandlersRaw: []json.RawMessage{
+						utils.JsonOrPanic(utils.JsonObj{
+							"handler": "headers",
+							"response": map[string]any{
+								"add": map[string][]string{
+									"X-Deployed-By": []string{"Internet-Golf"},
+								},
+							},
+						}),
+					},
+				}},
 			},
 		},
 	}
@@ -131,7 +144,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 			if len(a.MatcherSetsRaw) == 0 {
 				return -1
 			}
-			if len(b.MatcherSets) == 0 {
+			if len(b.MatcherSetsRaw) == 0 {
 				return 1
 			}
 			// TODO: make sure admin API route is always first, somehow.
