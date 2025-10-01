@@ -19,10 +19,11 @@ import (
 
 type FileManager struct{ Settings db.StorageSettings }
 
-// receives a tar
+// receives a stream of a .tar.gz file, extracts its contents according to the
+// settings, returns the path of the contents
 func (f FileManager) TarGzToDeploymentFiles(
 	stream io.ReadSeeker, contentName string,
-	keepLeadingDirectories bool, _preserveExistingFiles bool,
+	keepLeadingDirectories bool, _preserveFromPreviousPath string,
 ) (string, error) {
 	hash, hashErr := hashStream(stream)
 	if hashErr != nil {
@@ -43,12 +44,8 @@ func (f FileManager) TarGzToDeploymentFiles(
 		return "", tarGzError
 	}
 
-	// TODO: if PreserveExistingFiles, find the existing deployment for
-	// this url and copy its files into the new directory (if they're
-	// not the same directory (i.e. if the hashes are unequal) (which
-	// will presumably require getting a reference to the existing
-	// deployment from the bus - maybe instead of creating deployContent
-	// we should be getting a cursor/active record))
+	// TODO: if len(preserveFromPreviousPath) > 0, copy everything from that
+	// previous path over into the new directory
 
 	return outDir, nil
 }

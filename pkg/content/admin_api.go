@@ -219,9 +219,16 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			// 2. actually create the deployment content locally
 
+			var previousPath string
+			if formData.PreserveExistingFiles {
+				previousContent, previousContentErr := a.Web.GetDeploymentByUrl(&url)
+				if previousContentErr == nil {
+					previousPath = previousContent.ServedThing
+				}
+			}
 			outDir, extractionErr := a.Files.TarGzToDeploymentFiles(
 				formData.Contents, formData.Url,
-				formData.KeepLeadingDirectories, formData.PreserveExistingFiles,
+				formData.KeepLeadingDirectories, previousPath,
 			)
 			if extractionErr != nil {
 				return nil, huma.Error500InternalServerError(
