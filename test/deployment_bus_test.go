@@ -128,7 +128,7 @@ func TestBasicStaticDeploymentPersistence(t *testing.T) {
 
 	bodyStr = urlToPageContent(url, t)
 	if bodyStr != "stuff\n" {
-		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
+		t.Fatalf("expected stuff\\n, got %s", bodyStr)
 	}
 }
 

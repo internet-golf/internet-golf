@@ -60,8 +60,10 @@ type DeploymentMetadata struct {
 
 type DeploymentContent struct {
 	// this is false if no actual content has been added to the deployment
-	// (yet). it's an internal value deliberately excluded from the json
-	HasContent bool
+	// (yet). TODO: exclude from API, but do not exclude from DB. (does this
+	// even need to exist? why not just use len(ServedThing) > 0, or build in a
+	// "NotSureYet" value for ServedThingType?)
+	HasContent bool `json:"hasContent"`
 	// for static files, this is the path to a local directory; for a docker
 	// container, this is a port number (?); for a redirect, this is a url or url
 	// path; for a reverse proxy, this is a host and port (probably "localhost:[port]")
