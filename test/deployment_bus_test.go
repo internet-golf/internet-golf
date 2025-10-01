@@ -29,7 +29,7 @@ func createBus() internetgolf.DeploymentBus {
 	db.Init(settings)
 
 	// interface to the web server that actually deploys the deployments
-	deploymentServer := internetgolf.CaddyServer{}
+	deploymentServer := internetgolf.CaddyServer{StorageSettings: settings}
 	deploymentServer.Settings.LocalOnly = true
 
 	// object that receives the active deployments and broadcasts

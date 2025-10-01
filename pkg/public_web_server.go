@@ -1,8 +1,11 @@
 package internetgolf
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -19,9 +22,11 @@ import (
 	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/fileserver"
 	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/headers"
 	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/reverseproxy"
+	_ "github.com/caddyserver/caddy/v2/modules/filestorage"
 )
 
 type PublicWebServer interface {
+	Init() error
 	DeployAll([]Deployment) error
 	Stop() error
 }
@@ -32,6 +37,8 @@ type CaddyServer struct {
 		LocalOnly bool
 		Verbose   bool
 	}
+	StorageSettings        StorageSettings
+	placeholderContentPath string
 }
 
 // this is apparently how you have to do this
@@ -48,6 +55,8 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
+// TODO: remove requireDomain argument; if enforced, that should be validated at
+// the api call level
 func urlToMatcher(url Url, requireDomain bool, makePathCatchAll bool) (caddy.ModuleMap, error) {
 	if (len(url.Domain) == 0 || !strings.Contains(url.Domain, ".")) && requireDomain {
 		return caddy.ModuleMap{}, fmt.Errorf(
@@ -82,7 +91,7 @@ func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 	var routes []caddyhttp.Route
 
 	// TODO: control the "makePathCatchAll" argument with setting on deployment
-	matcher, matcherErr := urlToMatcher(d.Url, true, true)
+	matcher, matcherErr := urlToMatcher(d.Url, false, true)
 	if matcherErr != nil {
 		return nil, matcherErr
 	}
@@ -187,6 +196,18 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 
 const httpAppServerName = "internetgolf"
 
+//go:embed content/placeholder.html
+var placeholderContent []byte
+
+func (c *CaddyServer) Init() error {
+	c.placeholderContentPath = path.Join(c.StorageSettings.DataDirectory, "placeholder-content")
+	os.MkdirAll(c.placeholderContentPath, 0644)
+
+	return os.WriteFile(path.Join(c.placeholderContentPath, "index.html"), placeholderContent, 0644)
+
+	// caddy seems to start itself?
+}
+
 // puts all the deployments on the public internet. prioritizes more specific
 // urls over less specific urls;
 func (c *CaddyServer) DeployAll(deployments []Deployment) error {
@@ -209,19 +230,31 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		if !deployment.DeploymentContent.HasContent {
-			continue
-		}
-
 		var getCaddyRoute func(Deployment) ([]caddyhttp.Route, error)
 
-		switch deployment.ServedThingType {
-		case StaticFiles:
-			getCaddyRoute = getCaddyStaticRoutes
-		case ReverseProxy:
-			getCaddyRoute = getCaddyReverseProxyRoute
-		default:
-			fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
+		if !deployment.DeploymentContent.HasContent {
+			getCaddyRoute = func(d Deployment) ([]caddyhttp.Route, error) {
+				return getCaddyStaticRoutes(
+					Deployment{
+						DeploymentMetadata: d.DeploymentMetadata,
+						DeploymentContent: DeploymentContent{
+							HasContent:      true,
+							ServedThingType: StaticFiles,
+							ServedThing:     c.placeholderContentPath,
+						},
+					},
+				)
+			}
+		} else {
+			switch deployment.ServedThingType {
+			case StaticFiles:
+				getCaddyRoute = getCaddyStaticRoutes
+			case ReverseProxy:
+				getCaddyRoute = getCaddyReverseProxyRoute
+			default:
+				fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
+				continue
+			}
 		}
 
 		if routes, err := getCaddyRoute(deployment); err != nil {
@@ -287,6 +320,11 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 		Admin: &caddy.AdminConfig{
 			Listen: "localhost:" + strconv.Itoa(caddyAdminApiPort),
 		},
+		// TODO: make subdirectory of internet golf storage
+		StorageRaw: jsonOrPanic(map[string]string{
+			"module": "file_system",
+			"root":   path.Join(c.StorageSettings.DataDirectory, "caddy"),
+		}),
 		Logging: &caddy.Logging{
 			Logs: map[string]*caddy.CustomLog{
 				"default": &caddy.CustomLog{

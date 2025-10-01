@@ -26,7 +26,7 @@ func TestBasicBearerTokenFlow(t *testing.T) {
 	if !strings.Contains(output, "Generated token:") {
 		t.Fatal()
 	}
-	token := strings.Split(output, "\n")[2]
+	token := strings.Split(output, "\n")[1]
 
 	runClientCliCommand("create-deployment internet-golf-test.local", port, t)
 

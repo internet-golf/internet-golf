@@ -36,7 +36,7 @@ func main() {
 			}
 
 			// 1. interface to the web server that actually deploys the deployments
-			deploymentServer := internetgolf.CaddyServer{}
+			deploymentServer := internetgolf.CaddyServer{StorageSettings: storageSettings}
 			deploymentServer.Settings.LocalOnly = localOnly
 			deploymentServer.Settings.Verbose = verbose
 

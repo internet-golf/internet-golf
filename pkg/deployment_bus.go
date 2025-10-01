@@ -1,6 +1,7 @@
 package internetgolf
 
 import (
+	_ "embed"
 	"fmt"
 	"slices"
 	"strings"
@@ -101,6 +102,10 @@ func (bus *DeploymentBus) Init() {
 		panic(err)
 	}
 	bus.deployments = deployments
+	serverErr := bus.Server.Init()
+	if serverErr != nil {
+		panic(serverErr)
+	}
 	bus.Server.DeployAll(bus.deployments)
 }
 

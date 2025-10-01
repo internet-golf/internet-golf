@@ -206,10 +206,6 @@ func (m *MockApiServer) Stop() {
 }
 
 func startFullServer(port string) func() {
-	deploymentServer := internetgolf.CaddyServer{}
-	deploymentServer.Settings.LocalOnly = true
-	// deploymentServer.Settings.Verbose = true
-
 	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
 	if tempDirError != nil {
 		panic(tempDirError)
@@ -218,6 +214,10 @@ func startFullServer(port string) func() {
 
 	settings := internetgolf.StorageSettings{}
 	settings.Init(tempDir)
+
+	deploymentServer := internetgolf.CaddyServer{StorageSettings: settings}
+	deploymentServer.Settings.LocalOnly = true
+
 	db := internetgolf.StormDb{}
 	db.Init(settings)
 
