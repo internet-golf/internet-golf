@@ -167,8 +167,8 @@ func getCaddyReverseProxyRoute(d Deployment) ([]caddyhttp.Route, error) {
 							"headers": jsonObj{
 								"request": jsonObj{
 									"set": jsonObj{
-										"Host":      []string{"{http.request.host}"},
-										"X-Real-Ip": []string{"{http.request.remote}"},
+										"Host":            []string{"{http.request.host}"},
+										"X-Forwarded-For": []string{"{http.request.remote}"},
 									},
 								},
 							},
@@ -225,9 +225,8 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 					Disabled: c.Settings.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{{
-					MatcherSetsRaw: caddyhttp.RawMatcherSets{
-						// {"host": jsonOrPanic([]string{""})},
-					},
+					// match all
+					MatcherSetsRaw: caddyhttp.RawMatcherSets{},
 					HandlersRaw: []json.RawMessage{
 						jsonOrPanic(jsonObj{
 							"handler": "headers",
