@@ -13,4 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      # this should provide module caching:
+      - uses: actions/setup-go@v6
       - run: go test ./... -json | go tool tparse -all
