@@ -54,7 +54,7 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 			panic(err)
 		}
 		oidcToken, err := io.ReadAll(resp.Body)
-		authHeader = "GithubOIDC " + string(oidcToken)
+		authHeader = "GithubOIDC " + strings.Trim(string(oidcToken), " \n\r")
 	} else if len(auth) > 0 {
 		authHeader = "Bearer " + auth
 	}
@@ -172,7 +172,7 @@ func deployContentCommand() *cobra.Command {
 			}
 			if resp.StatusCode != 200 {
 				body, _ := io.ReadAll(resp.Body)
-				panic(body)
+				panic("[error from server]: " + string(body))
 			}
 			if body == nil || !body.Success {
 				panic("Did not get success status back from server. Request was to " + resp.Request.URL.String())
