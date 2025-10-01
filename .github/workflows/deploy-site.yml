@@ -1,0 +1,17 @@
+name: Print and Post ID Token Variables
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          go run ./client-cmd --auth github-oidc internetgolf.stuffedanimal.family --files ./official-website
