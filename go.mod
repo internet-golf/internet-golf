@@ -11,6 +11,7 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.1.6
 	github.com/magefile/mage v1.15.0
 	github.com/mholt/archives v0.1.3
+	github.com/moby/term v0.5.2
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/spf13/cobra v1.9.1
 	github.com/txn2/txeh v1.5.5
@@ -24,6 +25,7 @@ require (
 	dario.cat/mergo v1.0.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/KimMachineGun/automemlimit v0.7.4 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -125,7 +127,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/sys/atomicwriter v0.1.0 // indirect
-	github.com/moby/term v0.5.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
