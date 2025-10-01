@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -59,8 +60,12 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 		if err != nil {
 			panic(err)
 		}
-		oidcToken, err := io.ReadAll(resp.Body)
-		authHeader = "GithubOIDC " + strings.Trim(string(oidcToken), " \n\r")
+		oidcTokenJson, err := io.ReadAll(resp.Body)
+		var oidcTokenData struct {
+			Value string `json:"value"`
+		}
+		json.Unmarshal(oidcTokenJson, &oidcTokenData)
+		authHeader = "GithubOIDC " + strings.Trim(string(oidcTokenData.Value), " \n\r")
 	} else if len(auth) > 0 {
 		authHeader = "Bearer " + auth
 	}
