@@ -21,23 +21,7 @@ func GetCaddyStaticRoutes(d db.Deployment) ([]caddyhttp.Route, error) {
 		)
 	}
 
-	routes := []caddyhttp.Route{
-		{
-			MatcherSetsRaw: caddyhttp.RawMatcherSets{
-				// {"host": jsonOrPanic([]string{""})},
-			},
-			HandlersRaw: []json.RawMessage{
-				utils.JsonOrPanic(utils.JsonObj{
-					"handler": "headers",
-					"response": map[string]any{
-						"add": map[string][]string{
-							"X-Deployed-By": []string{"Internet-Golf"},
-						},
-					},
-				}),
-			},
-		},
-	}
+	routes := []caddyhttp.Route{}
 
 	// TODO: control the "makePathCatchAll" argument with setting on deployment
 	matcher, matcherErr := urlToMatcher(d.Url, false, true)
@@ -69,7 +53,6 @@ func GetCaddyStaticRoutes(d db.Deployment) ([]caddyhttp.Route, error) {
 	if !d.DeploymentMetadata.PreserveExternalPath {
 		cleanPath, _ := strings.CutSuffix(d.Url.Path, "*")
 		initialSubroutes = append(initialSubroutes,
-			// TODO: does this work with asterisks?
 			utils.JsonObj{
 				"handle": []utils.JsonObj{
 					utils.JsonObj{"handler": "rewrite", "strip_path_prefix": cleanPath},

@@ -5,7 +5,8 @@ type ServedThingType string
 const (
 	StaticFiles     ServedThingType = "StaticFiles"
 	DockerContainer ServedThingType = "DockerContainer"
-	Redirect        ServedThingType = "Redirect"
+	// not implemented yet
+	Redirect ServedThingType = "Redirect"
 	// low-level deployment type; currently just used to expose the admin api
 	ReverseProxy ServedThingType = "ReverseProxy"
 )
@@ -57,11 +58,10 @@ type DeploymentMetadata struct {
 	DontPersist bool `json:"-"`
 }
 
-// TODO: create struct just for API that does not have "hasContent" (since it's
-// an internal value)
 type DeploymentContent struct {
-	// this is false if no actual content has been added to the deployment (yet)
-	HasContent bool `json:"hasContent"`
+	// this is false if no actual content has been added to the deployment
+	// (yet). it's an internal value deliberately excluded from the json
+	HasContent bool
 	// for static files, this is the path to a local directory; for a docker
 	// container, this is a port number (?); for a redirect, this is a url or url
 	// path; for a reverse proxy, this is a host and port (probably "localhost:[port]")

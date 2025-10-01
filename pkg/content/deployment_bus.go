@@ -21,6 +21,9 @@ func urlFromString(url string) db.Url {
 	}
 }
 
+// this struct provides access to the active set of deployments and also, more
+// importantly, sends those deployments to the PublicWebServer and the database
+// when necessary.
 type DeploymentBus struct {
 	deployments []db.Deployment
 	Server      web.PublicWebServer

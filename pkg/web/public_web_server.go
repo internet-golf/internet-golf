@@ -28,13 +28,15 @@ import (
 	_ "github.com/caddyserver/caddy/v2/modules/filestorage"
 )
 
+// the primary interface for this whole package
 type PublicWebServer interface {
 	Init() error
 	DeployAll([]db.Deployment) error
 	Stop() error
 }
 
-// implements the PublicWebServer interface
+// implements the PublicWebServer interface. the primary struct for this whole
+// package
 type CaddyServer struct {
 	Settings struct {
 		LocalOnly bool
@@ -75,7 +77,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 					Disabled: c.Settings.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{{
-					// match all
+					// this matches everything (apparently)
 					MatcherSetsRaw: caddyhttp.RawMatcherSets{},
 					HandlersRaw: []json.RawMessage{
 						utils.JsonOrPanic(utils.JsonObj{
@@ -96,6 +98,11 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		var getCaddyRoute Handler
 
 		if !deployment.DeploymentContent.HasContent {
+			// if the deployment has no content, substitute in this placeholder
+			// content. this is actually load-bearing, since caddy will not
+			// generate an https cert for this url until it's serving
+			// *something*, and until it sets up https, we can't deploy actual
+			// content to this url from non-localhost places
 			getCaddyRoute = func(d db.Deployment) ([]caddyhttp.Route, error) {
 				return GetCaddyStaticRoutes(
 					db.Deployment{
