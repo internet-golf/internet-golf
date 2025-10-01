@@ -1,4 +1,4 @@
-package internetgolf
+package web
 
 import (
 	"context"
@@ -16,7 +16,6 @@ import (
 	"github.com/gosimple/slug"
 	"github.com/toBeOfUse/internet-golf/pkg/auth"
 	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/deployment"
 	"github.com/toBeOfUse/internet-golf/pkg/utils"
 )
 
@@ -114,7 +113,7 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web  *deployment.DeploymentBus
+	Web  *DeploymentBus
 	Auth auth.AuthManager
 	Port string
 }
@@ -141,7 +140,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
 		}
 
-		input.Body.DeploymentMetadata.Url = deployment.UrlFromString(input.Body.Url)
+		input.Body.DeploymentMetadata.Url = UrlFromString(input.Body.Url)
 
 		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
@@ -162,7 +161,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
 
-		url := deployment.UrlFromString(input.Url)
+		url := UrlFromString(input.Url)
 
 		deployment, err := a.Web.GetDeploymentByUrl(&url)
 		if err != nil {
@@ -200,7 +199,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 				return nil, fmt.Errorf("Auth check failed somehow")
 			}
 
-			url := deployment.UrlFromString(formData.Url)
+			url := UrlFromString(formData.Url)
 			deployment, findDeploymentError := a.Web.GetDeploymentByUrl(&url)
 			if findDeploymentError != nil {
 				return nil, huma.Error404NotFound(

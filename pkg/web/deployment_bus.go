@@ -1,4 +1,4 @@
-package deployment
+package web
 
 import (
 	_ "embed"

@@ -33,11 +33,10 @@ import (
 	"testing"
 
 	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
-	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
 	"github.com/toBeOfUse/internet-golf/pkg/auth"
 	database "github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/deployment"
 	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/toBeOfUse/internet-golf/pkg/web"
 )
 
 // test case stuff =======================================================
@@ -67,7 +66,7 @@ type NewDeploymentTestCase struct {
 	CliApiTestCase
 	// expected body for the API request that the client CLI will make to the
 	// server
-	apiBody internetgolf.DeploymentCreateBody
+	apiBody web.DeploymentCreateBody
 }
 
 var deploymentCreateTestCases = []NewDeploymentTestCase{
@@ -84,7 +83,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 				}
 			},
 		},
-		apiBody: internetgolf.DeploymentCreateBody{
+		apiBody: web.DeploymentCreateBody{
 			Url: "example.com",
 		},
 	},
@@ -93,7 +92,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 
 type UserAddTestCase struct {
 	CliApiTestCase
-	apiBody internetgolf.AddExternalUserBody
+	apiBody web.AddExternalUserBody
 }
 
 var addUserTestCases = []UserAddTestCase{
@@ -104,7 +103,7 @@ var addUserTestCases = []UserAddTestCase{
 			apiPath:    "/user/register",
 			apiMethod:  "PUT",
 		},
-		apiBody: internetgolf.AddExternalUserBody{
+		apiBody: web.AddExternalUserBody{
 			ExternalUserHandle: "toBeOfUse",
 			ExternalUserSource: "Github",
 		},
@@ -219,18 +218,18 @@ func startFullServer(port string) func() {
 	settings := database.StorageSettings{}
 	settings.Init(tempDir)
 
-	deploymentServer := deployment.CaddyServer{StorageSettings: settings}
+	deploymentServer := web.CaddyServer{StorageSettings: settings}
 	deploymentServer.Settings.LocalOnly = true
 
 	db := database.StormDb{}
 	db.Init(settings)
 
-	deploymentBus := deployment.DeploymentBus{
+	deploymentBus := web.DeploymentBus{
 		Server: &deploymentServer,
 		Db:     &db,
 	}
 	deploymentBus.Init()
-	adminApi := internetgolf.AdminApi{
+	adminApi := web.AdminApi{
 		Web:  &deploymentBus,
 		Auth: auth.AuthManager{Db: &db},
 		Port: port,
@@ -313,7 +312,7 @@ func TestClientCli(t *testing.T) {
 				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
 			}
 
-			var contents internetgolf.DeploymentCreateBody
+			var contents web.DeploymentCreateBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())
@@ -433,7 +432,7 @@ func TestClientCli(t *testing.T) {
 
 			fmt.Printf("intercepted body %v\n", string(intercepted.Body))
 
-			var contents internetgolf.AddExternalUserBody
+			var contents web.AddExternalUserBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())

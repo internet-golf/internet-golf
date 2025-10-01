@@ -5,11 +5,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
 	"github.com/toBeOfUse/internet-golf/pkg/auth"
 	"github.com/toBeOfUse/internet-golf/pkg/db"
 	database "github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/deployment"
+	"github.com/toBeOfUse/internet-golf/pkg/web"
 )
 
 func main() {
@@ -40,13 +39,13 @@ func main() {
 			}
 
 			// 1. interface to the web server that actually deploys the deployments
-			deploymentServer := deployment.CaddyServer{StorageSettings: storageSettings}
+			deploymentServer := web.CaddyServer{StorageSettings: storageSettings}
 			deploymentServer.Settings.LocalOnly = localOnly
 			deploymentServer.Settings.Verbose = verbose
 
 			// 2. object that receives the active deployments and broadcasts
 			// them to the deploymentServer when necessary
-			deploymentBus := deployment.DeploymentBus{
+			deploymentBus := web.DeploymentBus{
 				Server: &deploymentServer,
 				Db:     &db,
 			}
@@ -54,7 +53,7 @@ func main() {
 
 			// 3. api server that receives admin API requests and updates the active
 			// deployments in response to them
-			adminApi := internetgolf.AdminApi{
+			adminApi := web.AdminApi{
 				Web:  &deploymentBus,
 				Auth: auth.AuthManager{Db: &db},
 				Port: adminApiPort,
@@ -119,7 +118,7 @@ func main() {
 		Use:  "openapi",
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			adminApi := internetgolf.AdminApi{}
+			adminApi := web.AdminApi{}
 			adminApi.OutputOpenApiSpec(openapiOutputPath)
 		},
 	}
