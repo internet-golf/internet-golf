@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -28,8 +29,13 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 			// if no auth setting is specified, assume localhost
 			resolvedApiUrl = "http://localhost:8888"
 		} else if len(hostToTry) > 0 {
-			// TODO: will this automatically upgrade to https where possible??
-			resolvedApiUrl = "http://" + hostToTry + "/_golf"
+			protocol := "https"
+			ips, err := net.LookupIP(hostToTry)
+			if err == nil && ips[0].String() == "127.0.0.1" {
+				fmt.Fprintf(os.Stderr, "WARNING: connecting to local host %s Without HTTPS", hostToTry)
+				protocol = "http"
+			}
+			resolvedApiUrl = protocol + "://" + hostToTry + "/_golf"
 		} else {
 			panic("could not resolve API URL")
 		}
