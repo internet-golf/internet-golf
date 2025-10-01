@@ -1,4 +1,4 @@
-name: Print and Post ID Token Variables
+name: Deploy Official Site
 
 on:
   push:
