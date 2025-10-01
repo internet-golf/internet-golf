@@ -55,8 +55,8 @@ func jsonOrPanic(v any) []byte {
 	return result
 }
 
-// TODO: remove requireDomain argument; if enforced, that should be validated at
-// the api call level
+// TODO: remove requireDomain argument. if enforced, that should be validated at
+// the api call/deployment creation level
 func urlToMatcher(url Url, requireDomain bool, makePathCatchAll bool) (caddy.ModuleMap, error) {
 	if (len(url.Domain) == 0 || !strings.Contains(url.Domain, ".")) && requireDomain {
 		return caddy.ModuleMap{}, fmt.Errorf(
@@ -88,7 +88,23 @@ func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 		)
 	}
 
-	var routes []caddyhttp.Route
+	routes := []caddyhttp.Route{
+		{
+			MatcherSetsRaw: caddyhttp.RawMatcherSets{
+				// {"host": jsonOrPanic([]string{""})},
+			},
+			HandlersRaw: []json.RawMessage{
+				jsonOrPanic(jsonObj{
+					"handler": "headers",
+					"response": map[string]any{
+						"add": map[string][]string{
+							"X-Deployed-By": []string{"Internet-Golf"},
+						},
+					},
+				}),
+			},
+		},
+	}
 
 	// TODO: control the "makePathCatchAll" argument with setting on deployment
 	matcher, matcherErr := urlToMatcher(d.Url, false, true)
@@ -275,6 +291,13 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	slices.SortFunc(
 		httpApp.Servers[httpAppServerName].Routes,
 		func(a caddyhttp.Route, b caddyhttp.Route) int {
+			// catch-all "middleware"
+			if len(a.MatcherSetsRaw) == 0 {
+				return -1
+			}
+			if len(b.MatcherSets) == 0 {
+				return 1
+			}
 			// TODO: make sure admin API route is always first, somehow.
 			// terrible hack:
 			if string(a.MatcherSetsRaw[0]["path"]) == "/_golf*" {
@@ -320,7 +343,6 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 		Admin: &caddy.AdminConfig{
 			Listen: "localhost:" + strconv.Itoa(caddyAdminApiPort),
 		},
-		// TODO: make subdirectory of internet golf storage
 		StorageRaw: jsonOrPanic(map[string]string{
 			"module": "file_system",
 			"root":   path.Join(c.StorageSettings.DataDirectory, "caddy"),
