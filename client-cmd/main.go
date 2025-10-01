@@ -23,6 +23,25 @@ var rootCmd = &cobra.Command{
 var apiUrl string
 var auth string
 
+// TODO: standard response handling function that does roughly this instead of
+// ever panicking
+
+// if body == nil || respError != nil {
+// // failure:
+// if respError != nil {
+// 	fmt.Println(respError.Error())
+// }
+// responseBody, responseBodyErr := io.ReadAll(resp.Body)
+// if responseBodyErr != nil || len(responseBody) == 0 {
+// 	fmt.Println("ERROR: Could not get response body")
+// } else {
+// 	fmt.Println(string(responseBody))
+// }
+// } else {
+// // success:
+// fmt.Println(body.Message)
+// }
+
 func createClient(hostToTry string) *golfsdk.APIClient {
 	resolvedApiUrl := apiUrl
 	if len(resolvedApiUrl) == 0 {
