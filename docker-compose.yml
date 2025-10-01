@@ -1,0 +1,15 @@
+services:
+  server:
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8888:8888"
+    volumes:
+      - "content:/root/.internetgolf"
+  worker:
+    build: .
+    command: ["./golf"]
+
+volumes:
+  content:
