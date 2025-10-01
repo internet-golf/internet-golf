@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -157,6 +158,7 @@ func newJWKSet(jwkUrl string) (jwk.Set, error) {
 	defer cancel()
 
 	// fetch once on application startup
+	fmt.Println("refreshing jwk cache")
 	_, err = jwkCache.Refresh(ctx, jwkUrl)
 	if err != nil {
 		return nil, err
@@ -166,10 +168,12 @@ func newJWKSet(jwkUrl string) (jwk.Set, error) {
 }
 
 func ParseGithubOidcToken(token string) (GitHubOIDCToken, error) {
+	fmt.Println("parsing token" + token)
 	keySet, keySetErr := newJWKSet("https://token.actions.githubusercontent.com/.well-known/jwks")
 	if keySetErr != nil {
 		return GitHubOIDCToken{}, keySetErr
 	}
+	fmt.Println("key set created")
 
 	_, err := jwt.ParseString(token,
 		jwt.WithKeySet(keySet),
