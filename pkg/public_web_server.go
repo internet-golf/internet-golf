@@ -88,23 +88,7 @@ func getCaddyStaticRoutes(d Deployment) ([]caddyhttp.Route, error) {
 		)
 	}
 
-	routes := []caddyhttp.Route{
-		{
-			MatcherSetsRaw: caddyhttp.RawMatcherSets{
-				// {"host": jsonOrPanic([]string{""})},
-			},
-			HandlersRaw: []json.RawMessage{
-				jsonOrPanic(jsonObj{
-					"handler": "headers",
-					"response": map[string]any{
-						"add": map[string][]string{
-							"X-Deployed-By": []string{"Internet-Golf"},
-						},
-					},
-				}),
-			},
-		},
-	}
+	routes := []caddyhttp.Route{}
 
 	// TODO: control the "makePathCatchAll" argument with setting on deployment
 	matcher, matcherErr := urlToMatcher(d.Url, false, true)
@@ -225,7 +209,7 @@ func (c *CaddyServer) Init() error {
 }
 
 // puts all the deployments on the public internet. prioritizes more specific
-// urls over less specific urls;
+// urls over less specific urls
 func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 	var listen []string
 	if c.Settings.LocalOnly {
@@ -240,7 +224,21 @@ func (c *CaddyServer) DeployAll(deployments []Deployment) error {
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
 					Disabled: c.Settings.LocalOnly,
 				},
-				Routes: caddyhttp.RouteList{},
+				Routes: caddyhttp.RouteList{{
+					MatcherSetsRaw: caddyhttp.RawMatcherSets{
+						// {"host": jsonOrPanic([]string{""})},
+					},
+					HandlersRaw: []json.RawMessage{
+						jsonOrPanic(jsonObj{
+							"handler": "headers",
+							"response": map[string]any{
+								"add": map[string][]string{
+									"X-Deployed-By": []string{"Internet-Golf"},
+								},
+							},
+						}),
+					},
+				}},
 			},
 		},
 	}
