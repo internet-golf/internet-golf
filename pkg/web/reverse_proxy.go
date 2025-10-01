@@ -30,8 +30,8 @@ func GetCaddyReverseProxyRoute(d db.Deployment) ([]caddyhttp.Route, error) {
 							"headers": utils.JsonObj{
 								"request": utils.JsonObj{
 									"set": utils.JsonObj{
-										"Host":      []string{"{http.request.host}"},
-										"X-Real-Ip": []string{"{http.request.remote}"},
+										"Host":            []string{"{http.request.host}"},
+										"X-Forwarded-For": []string{"{http.request.remote}"},
 									},
 								},
 							},
