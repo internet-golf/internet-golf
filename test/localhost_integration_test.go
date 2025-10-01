@@ -231,10 +231,11 @@ func startFullServer(port string) func() {
 	}
 	deploymentBus.Init()
 	adminApi := content.AdminApi{
-		Web:   &deploymentBus,
-		Auth:  auth.AuthManager{Db: &db},
-		Port:  port,
-		Files: content.FileManager{Settings: settings},
+		Web:       &deploymentBus,
+		Auth:      auth.AuthManager{Db: &db},
+		Port:      port,
+		Files:     content.FileManager{Settings: settings},
+		LocalOnly: true,
 	}
 
 	// TODO: this default admin API path needs to be a global constant somewhere

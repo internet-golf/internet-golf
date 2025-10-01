@@ -116,10 +116,11 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web   *DeploymentBus
-	Auth  auth.AuthManager
-	Files FileManager
-	Port  string
+	Web       *DeploymentBus
+	Auth      auth.AuthManager
+	Files     FileManager
+	Port      string
+	LocalOnly bool
 }
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
@@ -363,8 +364,10 @@ func (a *AdminApi) CreateServer() *http.Server {
 	a.addRoutes(api)
 
 	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
-	// TODO: bind to more addresses? i guess not bc this is exposed via a caddy
-	// reverse proxy
-	server := http.Server{Addr: "127.0.0.1:" + a.Port, Handler: router}
+	address := "0.0.0.0"
+	if a.LocalOnly {
+		address = "127.0.0.1"
+	}
+	server := http.Server{Addr: address + ":" + a.Port, Handler: router}
 	return &server
 }

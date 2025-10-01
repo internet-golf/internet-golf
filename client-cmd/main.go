@@ -113,7 +113,7 @@ func createDeploymentCommand() *cobra.Command {
 				}
 			}
 
-			body, _, respError := client.
+			body, resp, respError := client.
 				DefaultAPI.PostDeployNew(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Url:                args[0],
@@ -124,6 +124,15 @@ func createDeploymentCommand() *cobra.Command {
 
 			if respError != nil {
 				panic(respError.Error())
+			}
+			if body == nil {
+				responseBody, responseBodyErr := io.ReadAll(resp.Body)
+				if responseBodyErr != nil || len(responseBody) == 0 {
+					fmt.Println("ERROR: Could not get response body")
+					return
+				}
+				fmt.Println(string(responseBody))
+				return
 			}
 			fmt.Println(body.Message)
 		},
