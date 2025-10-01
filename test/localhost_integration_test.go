@@ -34,6 +34,10 @@ import (
 
 	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
 	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
+	"github.com/toBeOfUse/internet-golf/pkg/auth"
+	database "github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/toBeOfUse/internet-golf/pkg/deployment"
+	"github.com/toBeOfUse/internet-golf/pkg/utils"
 )
 
 // test case stuff =======================================================
@@ -175,7 +179,7 @@ func (m *MockApiServer) Init() {
 		w.Header().Add("Content-Type", "application/json")
 		w.Write([]byte("{\"$schema\": \"whatever\", \"success\": true, \"message\": \"Request to mock API received\"}"))
 	})
-	port, err := internetgolf.GetFreePort()
+	port, err := utils.GetFreePort()
 	if err != nil {
 		panic(err)
 	}
@@ -212,37 +216,37 @@ func startFullServer(port string) func() {
 	}
 	tempDirs = append(tempDirs, tempDir)
 
-	settings := internetgolf.StorageSettings{}
+	settings := database.StorageSettings{}
 	settings.Init(tempDir)
 
-	deploymentServer := internetgolf.CaddyServer{StorageSettings: settings}
+	deploymentServer := deployment.CaddyServer{StorageSettings: settings}
 	deploymentServer.Settings.LocalOnly = true
 
-	db := internetgolf.StormDb{}
+	db := database.StormDb{}
 	db.Init(settings)
 
-	deploymentBus := internetgolf.DeploymentBus{
+	deploymentBus := deployment.DeploymentBus{
 		Server: &deploymentServer,
 		Db:     &db,
 	}
 	deploymentBus.Init()
 	adminApi := internetgolf.AdminApi{
 		Web:  &deploymentBus,
-		Auth: internetgolf.AuthManager{Db: &db},
+		Auth: auth.AuthManager{Db: &db},
 		Port: port,
 	}
 
 	// TODO: this default admin API path needs to be a global constant somewhere
-	adminApiUrl := internetgolf.Url{Path: "/_golf"}
+	adminApiUrl := database.Url{Path: "/_golf"}
 	deploymentBus.SetupDeployment(
-		internetgolf.DeploymentMetadata{
+		database.DeploymentMetadata{
 			Url:         adminApiUrl,
 			DontPersist: true,
 		})
 	deploymentBus.PutDeploymentContentByUrl(
 		adminApiUrl,
-		internetgolf.DeploymentContent{
-			ServedThingType: internetgolf.ReverseProxy,
+		database.DeploymentContent{
+			ServedThingType: database.ReverseProxy,
 			ServedThing:     "127.0.0.1:" + port,
 		})
 
@@ -271,7 +275,7 @@ func TestClientCli(t *testing.T) {
 	m.Init()
 	defer m.Stop()
 
-	realServerPortInt, portErr := internetgolf.GetFreePort()
+	realServerPortInt, portErr := utils.GetFreePort()
 	if portErr != nil {
 		panic(portErr)
 	}

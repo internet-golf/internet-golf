@@ -6,6 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
+	"github.com/toBeOfUse/internet-golf/pkg/auth"
+	"github.com/toBeOfUse/internet-golf/pkg/db"
+	database "github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/toBeOfUse/internet-golf/pkg/deployment"
 )
 
 func main() {
@@ -28,21 +32,21 @@ func main() {
 			// the core architecture of this app consists of these top-level actors:
 
 			// 0. the db module
-			storageSettings := internetgolf.StorageSettings{}
+			storageSettings := db.StorageSettings{}
 			storageSettings.Init(dataDirectory)
-			db := internetgolf.StormDb{}
+			db := db.StormDb{}
 			if err := db.Init(storageSettings); err != nil {
 				panic(err)
 			}
 
 			// 1. interface to the web server that actually deploys the deployments
-			deploymentServer := internetgolf.CaddyServer{StorageSettings: storageSettings}
+			deploymentServer := deployment.CaddyServer{StorageSettings: storageSettings}
 			deploymentServer.Settings.LocalOnly = localOnly
 			deploymentServer.Settings.Verbose = verbose
 
 			// 2. object that receives the active deployments and broadcasts
 			// them to the deploymentServer when necessary
-			deploymentBus := internetgolf.DeploymentBus{
+			deploymentBus := deployment.DeploymentBus{
 				Server: &deploymentServer,
 				Db:     &db,
 			}
@@ -52,7 +56,7 @@ func main() {
 			// deployments in response to them
 			adminApi := internetgolf.AdminApi{
 				Web:  &deploymentBus,
-				Auth: internetgolf.AuthManager{Db: &db},
+				Auth: auth.AuthManager{Db: &db},
 				Port: adminApiPort,
 			}
 
@@ -60,17 +64,17 @@ func main() {
 
 			// create a deployment for the admin api (slightly premature, but
 			// that's fine as long as the health check endpoint is used)
-			adminApiUrl := internetgolf.Url{Path: adminApiUrl}
+			adminApiUrl := database.Url{Path: adminApiUrl}
 
 			deploymentBus.SetupDeployment(
-				internetgolf.DeploymentMetadata{
+				database.DeploymentMetadata{
 					Url:         adminApiUrl,
 					DontPersist: true,
 				})
 			deploymentBus.PutDeploymentContentByUrl(
 				adminApiUrl,
-				internetgolf.DeploymentContent{
-					ServedThingType: internetgolf.ReverseProxy,
+				database.DeploymentContent{
+					ServedThingType: database.ReverseProxy,
 					ServedThing:     "127.0.0.1:" + adminApiPort,
 				})
 

@@ -10,12 +10,13 @@ import (
 	"strings"
 	"testing"
 
-	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
+	"github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/toBeOfUse/internet-golf/pkg/deployment"
 )
 
 var tempDirs []string
 
-func createBus() internetgolf.DeploymentBus {
+func createBus() deployment.DeploymentBus {
 
 	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
 	if tempDirError != nil {
@@ -23,18 +24,18 @@ func createBus() internetgolf.DeploymentBus {
 	}
 	tempDirs = append(tempDirs, tempDir)
 
-	settings := internetgolf.StorageSettings{}
+	settings := db.StorageSettings{}
 	settings.Init(tempDir)
-	db := internetgolf.StormDb{}
+	db := db.StormDb{}
 	db.Init(settings)
 
 	// interface to the web server that actually deploys the deployments
-	deploymentServer := internetgolf.CaddyServer{StorageSettings: settings}
+	deploymentServer := deployment.CaddyServer{StorageSettings: settings}
 	deploymentServer.Settings.LocalOnly = true
 
 	// object that receives the active deployments and broadcasts
 	// them to the deploymentServer when necessary
-	deploymentBus := internetgolf.DeploymentBus{
+	deploymentBus := deployment.DeploymentBus{
 		Server: &deploymentServer,
 		Db:     &db,
 	}
@@ -82,14 +83,14 @@ func TestBasicStaticDeployment(t *testing.T) {
 	url := "http://" + BasicTestHost
 	assertUrlEmpty(url, t)
 
-	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
-		Url: internetgolf.Url{Domain: BasicTestHost},
+	deploymentBus.SetupDeployment(db.DeploymentMetadata{
+		Url: db.Url{Domain: BasicTestHost},
 	})
 
 	deploymentBus.PutDeploymentContentByUrl(
-		internetgolf.Url{Domain: BasicTestHost},
-		internetgolf.DeploymentContent{
-			ServedThingType: internetgolf.StaticFiles,
+		db.Url{Domain: BasicTestHost},
+		db.DeploymentContent{
+			ServedThingType: db.StaticFiles,
 			ServedThing:     getFixturePath("static-site"),
 		})
 
@@ -104,14 +105,14 @@ func TestBasicStaticDeploymentPersistence(t *testing.T) {
 
 	url := "http://" + BasicTestHost
 
-	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
-		Url: internetgolf.Url{Domain: BasicTestHost},
+	deploymentBus.SetupDeployment(db.DeploymentMetadata{
+		Url: db.Url{Domain: BasicTestHost},
 	})
 
 	deploymentBus.PutDeploymentContentByUrl(
-		internetgolf.Url{Domain: BasicTestHost},
-		internetgolf.DeploymentContent{
-			ServedThingType: internetgolf.StaticFiles,
+		db.Url{Domain: BasicTestHost},
+		db.DeploymentContent{
+			ServedThingType: db.StaticFiles,
 			ServedThing:     getFixturePath("static-site"),
 		})
 
@@ -141,17 +142,17 @@ func TestStaticDeploymentWithPath(t *testing.T) {
 	url := "http://" + BasicTestHost + "/stuff/"
 	assertUrlEmpty(url, t)
 
-	parsedUrl := internetgolf.Url{Domain: BasicTestHost, Path: "/stuff/*"}
+	parsedUrl := db.Url{Domain: BasicTestHost, Path: "/stuff/*"}
 
-	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
+	deploymentBus.SetupDeployment(db.DeploymentMetadata{
 		// TODO: decide how asterisks work. are they implied? how would you turn
 		// them off? i feel like if your path ends in a slash, you almost
 		// definitely want an asterisk
 		Url: parsedUrl,
 	})
 
-	deploymentBus.PutDeploymentContentByUrl(parsedUrl, internetgolf.DeploymentContent{
-		ServedThingType: internetgolf.StaticFiles,
+	deploymentBus.PutDeploymentContentByUrl(parsedUrl, db.DeploymentContent{
+		ServedThingType: db.StaticFiles,
 		ServedThing:     getFixturePath("static-site-2"),
 	})
 
@@ -177,15 +178,15 @@ func TestStaticDeploymentWithPreservedPath(t *testing.T) {
 	url := "http://" + BasicTestHost + "/other-stuff/"
 	assertUrlEmpty(url, t)
 
-	parsedUrl := internetgolf.Url{Domain: BasicTestHost, Path: "/other-stuff/"}
+	parsedUrl := db.Url{Domain: BasicTestHost, Path: "/other-stuff/"}
 
-	deploymentBus.SetupDeployment(internetgolf.DeploymentMetadata{
+	deploymentBus.SetupDeployment(db.DeploymentMetadata{
 		Url:                  parsedUrl,
 		PreserveExternalPath: true,
 	})
 
-	deploymentBus.PutDeploymentContentByUrl(parsedUrl, internetgolf.DeploymentContent{
-		ServedThingType: internetgolf.StaticFiles,
+	deploymentBus.PutDeploymentContentByUrl(parsedUrl, db.DeploymentContent{
+		ServedThingType: db.StaticFiles,
 		ServedThing:     getFixturePath("static-site-3"),
 	})
 

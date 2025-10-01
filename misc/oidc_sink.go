@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"os"
 
-	golf "github.com/toBeOfUse/internet-golf/pkg"
+	"github.com/toBeOfUse/internet-golf/pkg/auth"
 )
 
 func main() {
 	oidcArg := os.Args[1]
-	result, err := golf.ParseGithubOidcToken(oidcArg)
+	result, err := auth.ParseGithubOidcToken(oidcArg)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 	} else {

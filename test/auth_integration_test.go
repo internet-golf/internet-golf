@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	internetgolf "github.com/toBeOfUse/internet-golf/pkg"
+	"github.com/toBeOfUse/internet-golf/pkg/utils"
 )
 
 func TestBasicBearerTokenFlow(t *testing.T) {
 	// 1. start server
-	portInt, portErr := internetgolf.GetFreePort()
+	portInt, portErr := utils.GetFreePort()
 	if portErr != nil {
 		panic(portErr)
 	}

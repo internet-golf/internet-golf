@@ -1,4 +1,4 @@
-package internetgolf
+package db
 
 import (
 	"errors"

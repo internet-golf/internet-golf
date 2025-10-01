@@ -1,4 +1,4 @@
-package internetgolf
+package utils
 
 import (
 	"archive/tar"
@@ -19,7 +19,7 @@ import (
 // second is supposed to be a random ID for the token. (the point of that is
 // that the ID can be stored in plaintext and used to look up the token later,
 // while the token itself will be hashed)
-func getRandomToken() (string, string) {
+func GetRandomToken() (string, string) {
 	id := make([]byte, 4)
 	b := make([]byte, 16)
 	rand.Read(b)
@@ -65,7 +65,7 @@ func GetFreePort() (port int, err error) {
 
 // turns the contents of a stream into an md5 hash. seeks the stream back to its
 // start before and after computing the hash.
-func hashStream(stream io.ReadSeeker) (string, error) {
+func HashStream(stream io.ReadSeeker) (string, error) {
 	hashWriter := md5.New()
 	stream.Seek(0, 0)
 	defer stream.Seek(0, 0)
@@ -93,7 +93,7 @@ func hashStream(stream io.ReadSeeker) (string, error) {
 //
 // TODO: would probably be easier with
 // https://github.com/mholt/archives?tab=readme-ov-file#extract-archive
-func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs bool) error {
+func ExtractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs bool) error {
 	os.MkdirAll(baseOutDir, 0750)
 
 	uncompressedStream, err := gzip.NewReader(gzipStream)
