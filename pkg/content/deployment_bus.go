@@ -1,4 +1,4 @@
-package web
+package content
 
 import (
 	_ "embed"
@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/toBeOfUse/internet-golf/pkg/web"
 )
 
-func UrlFromString(url string) db.Url {
+func urlFromString(url string) db.Url {
 	// TODO: return an error if the domain is invalid or the path has, like, # or ?
 	firstSlash := strings.Index(url, "/")
 	if firstSlash == -1 {
@@ -20,9 +21,12 @@ func UrlFromString(url string) db.Url {
 	}
 }
 
+// this struct provides access to the active set of deployments and also, more
+// importantly, sends those deployments to the PublicWebServer and the database
+// when necessary.
 type DeploymentBus struct {
 	deployments []db.Deployment
-	Server      PublicWebServer
+	Server      web.PublicWebServer
 	Db          db.Db
 }
 

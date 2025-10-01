@@ -1,4 +1,4 @@
-package handlers
+package web
 
 import (
 	"encoding/json"
@@ -9,8 +9,6 @@ import (
 	"github.com/toBeOfUse/internet-golf/pkg/utils"
 )
 
-// low-level internal deployment type that probably should only be used for the
-// admin api
 func GetCaddyReverseProxyRoute(d db.Deployment) ([]caddyhttp.Route, error) {
 	if d.ServedThingType != db.ReverseProxy {
 		return []caddyhttp.Route{}, fmt.Errorf(
@@ -45,7 +43,6 @@ func GetCaddyReverseProxyRoute(d db.Deployment) ([]caddyhttp.Route, error) {
 		}),
 	}
 
-	// not requiring a host here bc this deployment type is for meta-deployments
 	matcher, matcherErr := urlToMatcher(d.Url, false, true)
 
 	if matcherErr != nil {

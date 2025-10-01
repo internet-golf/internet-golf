@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/toBeOfUse/internet-golf/pkg/auth"
+	"github.com/toBeOfUse/internet-golf/pkg/content"
 	"github.com/toBeOfUse/internet-golf/pkg/db"
 	database "github.com/toBeOfUse/internet-golf/pkg/db"
 	"github.com/toBeOfUse/internet-golf/pkg/web"
@@ -45,7 +46,7 @@ func main() {
 
 			// 2. object that receives the active deployments and broadcasts
 			// them to the deploymentServer when necessary
-			deploymentBus := web.DeploymentBus{
+			deploymentBus := content.DeploymentBus{
 				Server: &deploymentServer,
 				Db:     &db,
 			}
@@ -53,10 +54,11 @@ func main() {
 
 			// 3. api server that receives admin API requests and updates the active
 			// deployments in response to them
-			adminApi := web.AdminApi{
-				Web:  &deploymentBus,
-				Auth: auth.AuthManager{Db: &db},
-				Port: adminApiPort,
+			adminApi := content.AdminApi{
+				Web:   &deploymentBus,
+				Auth:  auth.AuthManager{Db: &db},
+				Port:  adminApiPort,
+				Files: content.FileManager{Settings: storageSettings},
 			}
 
 			// putting the pieces together:
@@ -118,7 +120,7 @@ func main() {
 		Use:  "openapi",
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			adminApi := web.AdminApi{}
+			adminApi := content.AdminApi{}
 			adminApi.OutputOpenApiSpec(openapiOutputPath)
 		},
 	}

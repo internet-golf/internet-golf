@@ -25,7 +25,7 @@ func (g *GithubAuthChecker) setReqData(_remoteAddr string, authHeader string) bo
 	if len(headerComps) != 2 || headerComps[0] != "GithubOIDC" {
 		return false
 	}
-	tokenData, tokenError := ParseGithubOidcToken(headerComps[1])
+	tokenData, tokenError := parseGithubOidcToken(headerComps[1])
 	if tokenError != nil {
 		panic(tokenError)
 	}
@@ -168,7 +168,7 @@ func newJWKSet(jwkUrl string) (jwk.Set, error) {
 	return jwk.NewCachedSet(jwkCache, jwkUrl), nil
 }
 
-func ParseGithubOidcToken(token string) (GitHubOIDCToken, error) {
+func parseGithubOidcToken(token string) (GitHubOIDCToken, error) {
 	fmt.Println("parsing token" + token)
 	keySet, keySetErr := newJWKSet("https://token.actions.githubusercontent.com/.well-known/jwks")
 	if keySetErr != nil {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/handlers"
+
 	"github.com/toBeOfUse/internet-golf/pkg/utils"
 
 	// ??? these modules appear to register themselves with the main caddy
@@ -28,13 +28,15 @@ import (
 	_ "github.com/caddyserver/caddy/v2/modules/filestorage"
 )
 
+// the primary interface for this whole package
 type PublicWebServer interface {
 	Init() error
 	DeployAll([]db.Deployment) error
 	Stop() error
 }
 
-// implements the PublicWebServer interface
+// implements the PublicWebServer interface. the primary struct for this whole
+// package
 type CaddyServer struct {
 	Settings struct {
 		LocalOnly bool
@@ -46,7 +48,7 @@ type CaddyServer struct {
 
 const httpAppServerName = "internetgolf"
 
-//go:embed content/placeholder.html
+//go:embed dist/placeholder.html
 var placeholderContent []byte
 
 func (c *CaddyServer) Init() error {
@@ -75,7 +77,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 					Disabled: c.Settings.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{{
-					// match all
+					// this matches everything (apparently)
 					MatcherSetsRaw: caddyhttp.RawMatcherSets{},
 					HandlersRaw: []json.RawMessage{
 						utils.JsonOrPanic(utils.JsonObj{
@@ -93,11 +95,16 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		var getCaddyRoute handlers.Handler
+		var getCaddyRoute Handler
 
 		if !deployment.DeploymentContent.HasContent {
+			// if the deployment has no content, substitute in this placeholder
+			// content. this is actually load-bearing, since caddy will not
+			// generate an https cert for this url until it's serving
+			// *something*, and until it sets up https, we can't deploy actual
+			// content to this url from non-localhost places
 			getCaddyRoute = func(d db.Deployment) ([]caddyhttp.Route, error) {
-				return handlers.GetCaddyStaticRoutes(
+				return GetCaddyStaticRoutes(
 					db.Deployment{
 						DeploymentMetadata: d.DeploymentMetadata,
 						DeploymentContent: db.DeploymentContent{
@@ -111,11 +118,11 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		} else {
 			switch deployment.ServedThingType {
 			case db.StaticFiles:
-				getCaddyRoute = handlers.GetCaddyStaticRoutes
+				getCaddyRoute = GetCaddyStaticRoutes
 			case db.DockerContainer:
-				getCaddyRoute = handlers.GetCaddyContainerRoute
+				getCaddyRoute = GetCaddyContainerRoute
 			case db.ReverseProxy:
-				getCaddyRoute = handlers.GetCaddyReverseProxyRoute
+				getCaddyRoute = GetCaddyReverseProxyRoute
 			default:
 				fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
 				continue
