@@ -1,4 +1,4 @@
-package web
+package content
 
 import (
 	"context"
@@ -7,16 +7,13 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/gosimple/slug"
 	"github.com/toBeOfUse/internet-golf/pkg/auth"
 	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
 )
 
 func readAuth(api huma.API, authManager auth.AuthManager) func(huma.Context, func(huma.Context)) {
@@ -119,9 +116,10 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web  *DeploymentBus
-	Auth auth.AuthManager
-	Port string
+	Web   *DeploymentBus
+	Auth  auth.AuthManager
+	Files FileManager
+	Port  string
 }
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
@@ -146,7 +144,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
 		}
 
-		input.Body.DeploymentMetadata.Url = UrlFromString(input.Body.Url)
+		input.Body.DeploymentMetadata.Url = urlFromString(input.Body.Url)
 
 		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
@@ -167,7 +165,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
 
-		url := UrlFromString(input.Url)
+		url := urlFromString(input.Url)
 
 		deployment, err := a.Web.GetDeploymentByUrl(&url)
 		if err != nil {
@@ -205,7 +203,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 				return nil, fmt.Errorf("Auth check failed somehow")
 			}
 
-			url := UrlFromString(formData.Url)
+			url := urlFromString(formData.Url)
 			deployment, findDeploymentError := a.Web.GetDeploymentByUrl(&url)
 			if findDeploymentError != nil {
 				return nil, huma.Error404NotFound(
@@ -221,34 +219,15 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			// 2. actually create the deployment content locally
 
-			hash, hashErr := utils.HashStream(formData.Contents)
-			if hashErr != nil {
-				return nil, fmt.Errorf("could not hash files for %s", url)
-			}
-			outDir := path.Join(
-				// this is kind of a hack and file storage should probably be
-				// encapsulated in its own interface instead of being handled by
-				// random utility functions here in the admin api route handler
-				a.Auth.Db.GetStorageDirectory(),
-				slug.Make(formData.Url),
-				hash,
+			outDir, extractionErr := a.Files.TarGzToDeploymentFiles(
+				formData.Contents, formData.Url,
+				formData.KeepLeadingDirectories, formData.PreserveExistingFiles,
 			)
-			// weirdly, formData.Contents is a seekable stream, which i'm pretty
-			// sure means its entire contents must be being kept in memory so that
-			// they can be sought back to (unless it falls back to saving them
-			// to disk for large files?) this seems like an annoying limitation
-			if tarGzError := utils.ExtractTarGz(
-				formData.Contents, outDir, !formData.KeepLeadingDirectories,
-			); tarGzError != nil {
-				return nil, tarGzError
+			if extractionErr != nil {
+				return nil, huma.Error500InternalServerError(
+					"Error occurred while unpacking uploaded files: " + extractionErr.Error(),
+				)
 			}
-
-			// TODO: if PreserveExistingFiles, find the existing deployment for
-			// this url and copy its files into the new directory (if they're
-			// not the same directory (i.e. if the hashes are unequal) (which
-			// will presumably require getting a reference to the existing
-			// deployment from the bus - maybe instead of creating deployContent
-			// we should be getting a cursor/active record))
 
 			// 3. send the content to the deployment bus using the function that
 			// was created in step 1

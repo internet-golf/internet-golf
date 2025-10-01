@@ -10,13 +10,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/toBeOfUse/internet-golf/pkg/content"
 	"github.com/toBeOfUse/internet-golf/pkg/db"
 	"github.com/toBeOfUse/internet-golf/pkg/web"
 )
 
 var tempDirs []string
 
-func createBus() web.DeploymentBus {
+func createBus() content.DeploymentBus {
 
 	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
 	if tempDirError != nil {
@@ -35,7 +36,7 @@ func createBus() web.DeploymentBus {
 
 	// object that receives the active deployments and broadcasts
 	// them to the deploymentServer when necessary
-	deploymentBus := web.DeploymentBus{
+	deploymentBus := content.DeploymentBus{
 		Server: &deploymentServer,
 		Db:     &db,
 	}

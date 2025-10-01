@@ -1,4 +1,4 @@
-package handlers
+package web
 
 import (
 	"context"
@@ -34,6 +34,7 @@ func GetCaddyContainerRoute(d db.Deployment) ([]caddyhttp.Route, error) {
 		return []caddyhttp.Route{}, cwdErr
 	}
 
+	// TODO: move this kind of stuff to content/containers.go
 	ctx := context.Background()
 	cont, err := cli.ContainerCreate(
 		ctx,

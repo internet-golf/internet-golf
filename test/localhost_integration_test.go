@@ -34,6 +34,7 @@ import (
 
 	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
 	"github.com/toBeOfUse/internet-golf/pkg/auth"
+	"github.com/toBeOfUse/internet-golf/pkg/content"
 	database "github.com/toBeOfUse/internet-golf/pkg/db"
 	"github.com/toBeOfUse/internet-golf/pkg/utils"
 	"github.com/toBeOfUse/internet-golf/pkg/web"
@@ -66,7 +67,7 @@ type NewDeploymentTestCase struct {
 	CliApiTestCase
 	// expected body for the API request that the client CLI will make to the
 	// server
-	apiBody web.DeploymentCreateBody
+	apiBody content.DeploymentCreateBody
 }
 
 var deploymentCreateTestCases = []NewDeploymentTestCase{
@@ -83,7 +84,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 				}
 			},
 		},
-		apiBody: web.DeploymentCreateBody{
+		apiBody: content.DeploymentCreateBody{
 			Url: "example.com",
 		},
 	},
@@ -92,7 +93,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 
 type UserAddTestCase struct {
 	CliApiTestCase
-	apiBody web.AddExternalUserBody
+	apiBody content.AddExternalUserBody
 }
 
 var addUserTestCases = []UserAddTestCase{
@@ -103,7 +104,7 @@ var addUserTestCases = []UserAddTestCase{
 			apiPath:    "/user/register",
 			apiMethod:  "PUT",
 		},
-		apiBody: web.AddExternalUserBody{
+		apiBody: content.AddExternalUserBody{
 			ExternalUserHandle: "toBeOfUse",
 			ExternalUserSource: "Github",
 		},
@@ -224,15 +225,16 @@ func startFullServer(port string) func() {
 	db := database.StormDb{}
 	db.Init(settings)
 
-	deploymentBus := web.DeploymentBus{
+	deploymentBus := content.DeploymentBus{
 		Server: &deploymentServer,
 		Db:     &db,
 	}
 	deploymentBus.Init()
-	adminApi := web.AdminApi{
-		Web:  &deploymentBus,
-		Auth: auth.AuthManager{Db: &db},
-		Port: port,
+	adminApi := content.AdminApi{
+		Web:   &deploymentBus,
+		Auth:  auth.AuthManager{Db: &db},
+		Port:  port,
+		Files: content.FileManager{Settings: settings},
 	}
 
 	// TODO: this default admin API path needs to be a global constant somewhere
@@ -312,7 +314,7 @@ func TestClientCli(t *testing.T) {
 				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
 			}
 
-			var contents web.DeploymentCreateBody
+			var contents content.DeploymentCreateBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())
@@ -432,7 +434,7 @@ func TestClientCli(t *testing.T) {
 
 			fmt.Printf("intercepted body %v\n", string(intercepted.Body))
 
-			var contents web.AddExternalUserBody
+			var contents content.AddExternalUserBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())
