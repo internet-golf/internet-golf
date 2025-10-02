@@ -1,13 +1,15 @@
 services:
-  server:
+  golf-server:
+    restart: unless-stopped
     build: .
     ports:
       - "80:80"
       - "443:443"
-      - "8888:8888"
+      # needed for http/3:
+      - "443:443/udp"
     volumes:
       - "content:/root/.internetgolf"
-  worker:
+  client:
     build: .
     command: ["./golf"]
 
