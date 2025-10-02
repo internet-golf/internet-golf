@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/toBeOfUse/internet-golf/pkg/db"
@@ -54,7 +55,13 @@ type Permissions interface {
 type LocalReqAuthChecker struct{}
 
 func (l *LocalReqAuthChecker) setReqData(remoteAddr string, authHeader string) bool {
-	return remoteAddr == "127.0.0.1" || strings.HasPrefix(remoteAddr, "127.0.0.1:")
+	// this allows requests from localhost or from other entities that have the
+	// ability to give themselves the hostname "golf-client" on the local
+	// network (which pretty much just means docker containers in the same
+	// virtual network)
+	serverAddr, _ := net.LookupIP("golf-client")
+	return (remoteAddr == "127.0.0.1" || strings.HasPrefix(remoteAddr, "127.0.0.1:") ||
+		(len(serverAddr) > 0 && strings.HasPrefix(remoteAddr, serverAddr[0].String()+":")))
 }
 func (l *LocalReqAuthChecker) CanModifyDeployment(_ *db.Deployment) bool {
 	return true

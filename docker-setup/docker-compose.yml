@@ -1,0 +1,23 @@
+services:
+  golf-server:
+    restart: unless-stopped
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+      # needed for http/3:
+      - "443:443/udp"
+    volumes:
+      - "content:/root/.internetgolf"
+  client:
+    build: .
+    volumes:
+      - ".:/app/outer"
+    working_dir: "/app/outer"
+    command: ["../golf"]
+    # this makes it so `docker compose up` won't try to start the client by
+    # default:
+    profiles: ["not-long-running"]
+
+volumes:
+  content:

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"runtime"
 
 	"github.com/docker/docker/api/types/container"
@@ -16,6 +15,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 	"github.com/moby/term"
 )
 
@@ -42,8 +42,7 @@ func Build() {
 func BuildServer() error {
 	mg.Deps(SetExtension, InstallDeps)
 	fmt.Println("Building server...")
-	cmd := exec.Command("go", "build", "-o", "golf-server"+extension, "./cmd")
-	return cmd.Run()
+	return sh.Run("go", "build", "-o", "golf-server"+extension, "./cmd")
 }
 
 func runOpenapiGenerator() error {
@@ -127,8 +126,7 @@ func runOpenapiGenerator() error {
 func GenerateClientSdk() error {
 	mg.Deps(InstallDeps)
 	fmt.Println("Regenerating client code...")
-	openapiCmd := exec.Command("go", "run", "./cmd", "openapi")
-	if err := openapiCmd.Run(); err != nil {
+	if err := sh.Run("go", "run", "./cmd", "openapi"); err != nil {
 		return err
 	}
 	if openapiErr := runOpenapiGenerator(); openapiErr != nil {
@@ -153,8 +151,7 @@ func GenerateClientSdk() error {
 
 func BuildClientWithoutDeps() error {
 	fmt.Println("Building client...")
-	cmd := exec.Command("go", "build", "-o", "golf"+extension, "./client-cmd")
-	return cmd.Run()
+	return sh.Run("go", "build", "-o", "golf"+extension, "./client-cmd")
 }
 
 func BuildClient() error {
@@ -169,8 +166,7 @@ func BuildClientWithCodegen() error {
 
 func InstallDeps() error {
 	fmt.Println("Installing dependencies...")
-	cmd := exec.Command("go", "get", ".")
-	return cmd.Run()
+	return sh.Run("go", "get", ".")
 }
 
 func Clean() {
