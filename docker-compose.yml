@@ -11,7 +11,13 @@ services:
       - "content:/root/.internetgolf"
   client:
     build: .
-    command: ["./golf"]
+    volumes:
+      - ".:/app/outer"
+    working_dir: "/app/outer"
+    command: ["../golf"]
+    # this makes it so `docker compose up` won't try to start the client by
+    # default:
+    profiles: ["not-long-running"]
 
 volumes:
   content:
