@@ -4,7 +4,15 @@ This is a Go web server built on top of [Caddy](https://caddyserver.com/). Its p
 
 It does some interesting things, but is not finished yet.
 
-## Setup
+## Starting the Server with Docker
+
+Download the "docker-usage" folder from this repository. From that folder, run `docker compose up -d` to start the server. Then, use `./docker-client.sh [your args here]` (Linux) or `./docker-client.ps1 [your args here]` (Windows) to run Client CLI commands. Start with `./docker-client -h` to see the available commands.
+
+## Deploying Stuff from Github Actions
+
+This section under construction.
+
+## Development
 
 Install Go.
 
@@ -13,8 +21,6 @@ Install dependencies:
 ```
 go get .
 ```
-
-## Build
 
 The build is controlled by [Mage](https://magefile.org/).
 
@@ -53,7 +59,7 @@ go run ./client-cmd -h
 ## Tests
 
 > [!NOTE]  
-> The first time you run tests, you must either do it with sudo/the administrator terminal, or manually add the hosts from `test/utils_test.go` to your system's `hosts` file so that they point to 127.0.0.1. These hosts are used for integration tests.
+> The first time you run tests, you must either do it with sudo/admin rights, or manually add the hosts from `test/utils_test.go` to your system's `hosts` file so that they point to 127.0.0.1. These hosts are used for integration tests.
 
 Run tests:
 
