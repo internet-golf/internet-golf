@@ -1,7 +1,26 @@
 name: "setup-golf-client"
 runs:
-  using: "node24"
-  main: "action.js"
+  using: "composite"
+  steps:
+    - name: Download CLI Tool
+      id: script-step
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          // Get version of tool to be installed
+          const version = core.getInput('version');
+
+          const os = process.env.RUNNER_OS;
+          const exe = os === 'Windows' ? 'golf-windows-amd64.exe' : 'golf-linux-amd64';
+
+          // Download the specific version of the tool, e.g. as a tarball
+          const pathToCLI = await tc.downloadTool(
+              `https://github.com/toBeOfUse/internet-golf/releases/download/${version}/${exe}`
+          );
+
+          // Expose the tool by adding it to the PATH
+          core.addPath(pathToCLI)
 inputs:
   version:
     required: false
