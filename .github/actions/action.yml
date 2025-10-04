@@ -1,0 +1,9 @@
+name: "setup-golf-client"
+runs:
+  using: "node24"
+  main: ".github/actions/action.js"
+inputs:
+  version:
+    required: false
+    # TODO: update automatically in the release-binaries workflow???
+    default: "v0.1.3"
