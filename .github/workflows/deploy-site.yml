@@ -13,6 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: toBeOfUse/internet-golf@v0.1.3
+      - uses: toBeOfUse/internet-golf/.github/actions@v0.1.3
       - run: |
           golf deploy-content internetgolf.stuffedanimal.family --auth github-oidc --files ./official-website
