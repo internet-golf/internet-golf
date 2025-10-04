@@ -1,7 +1,7 @@
 name: "setup-golf-client"
 runs:
   using: "node24"
-  main: ".github/actions/action.js"
+  main: "action.js"
 inputs:
   version:
     required: false
