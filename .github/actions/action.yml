@@ -6,7 +6,6 @@ runs:
       id: script-step
       uses: actions/github-script@v7
       with:
-        github-token: ${{ inputs.github-token }}
         script: |
           // Get version of tool to be installed
           const version = core.getInput('version');
