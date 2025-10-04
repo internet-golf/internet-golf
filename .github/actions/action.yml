@@ -6,4 +6,4 @@ inputs:
   version:
     required: false
     # TODO: update automatically in the release-binaries workflow???
-    default: "v0.1.3"
+    default: "v0.1.4"
