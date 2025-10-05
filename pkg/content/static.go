@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	"github.com/gosimple/slug"
-	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 type FileManager struct{ Settings db.StorageSettings }

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
-	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 func GetCaddyReverseProxyRoute(d db.Deployment) ([]caddyhttp.Route, error) {
