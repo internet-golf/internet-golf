@@ -2,11 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - "v*" # Trigger on new tags starting with 'v' (e.g., v1.0.0)
 
 env:
   REGISTRY: ghcr.io
