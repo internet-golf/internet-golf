@@ -12,8 +12,8 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/toBeOfUse/internet-golf/pkg/auth"
-	"github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/auth"
+	"github.com/internet-golf/internet-golf/pkg/db"
 )
 
 func readAuth(api huma.API, authManager auth.AuthManager) func(huma.Context, func(huma.Context)) {
@@ -60,7 +60,7 @@ type DeployFilesInput struct {
 }
 
 type AddExternalUserBody struct {
-	ExternalUserHandle string                `json:"externalUserHandle,omitempty" docs:"A username, like \"toBeOfUse\" for Github user @toBeOfUse. Will be ignored if externalUserId is specified."`
+	ExternalUserHandle string                `json:"externalUserHandle,omitempty" docs:"A username, like \"internet-golf\" for Github user @internet-golf. Will be ignored if externalUserId is specified."`
 	ExternalUserId     string                `json:"externalUserId,omitempty" docs:"The ID that the user has in the external system. Not needed if externalUserHandle is specified."`
 	ExternalUserSource db.ExternalSourceType `json:"externalUserSource" docs:"The location of the external user. Currently only supports \"Github\"."`
 }
@@ -277,7 +277,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 		if len(input.Body.ExternalUserId) == 0 {
 			if input.Body.ExternalUserSource == db.Github {
-				// example api url: https://api.github.com/users/toBeOfUse
+				// example api url: https://api.github.com/users/internet-golf
 				resp, err := http.Get(
 					"https://api.github.com/users/" + strings.TrimLeft(input.Body.ExternalUserHandle, "@"),
 				)

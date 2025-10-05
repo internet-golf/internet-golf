@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/internet-golf/internet-golf/pkg/auth"
+	"github.com/internet-golf/internet-golf/pkg/content"
+	"github.com/internet-golf/internet-golf/pkg/db"
+	database "github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/web"
 	"github.com/spf13/cobra"
-	"github.com/toBeOfUse/internet-golf/pkg/auth"
-	"github.com/toBeOfUse/internet-golf/pkg/content"
-	"github.com/toBeOfUse/internet-golf/pkg/db"
-	database "github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/web"
 )
 
 func main() {

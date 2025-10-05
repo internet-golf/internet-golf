@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
+	golfsdk "github.com/internet-golf/internet-golf/client-sdk"
 	"github.com/txn2/txeh"
 )
 

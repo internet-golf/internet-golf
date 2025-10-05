@@ -32,12 +32,12 @@ import (
 	"strings"
 	"testing"
 
-	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
-	"github.com/toBeOfUse/internet-golf/pkg/auth"
-	"github.com/toBeOfUse/internet-golf/pkg/content"
-	database "github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
-	"github.com/toBeOfUse/internet-golf/pkg/web"
+	golfsdk "github.com/internet-golf/internet-golf/client-sdk"
+	"github.com/internet-golf/internet-golf/pkg/auth"
+	"github.com/internet-golf/internet-golf/pkg/content"
+	database "github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/utils"
+	"github.com/internet-golf/internet-golf/pkg/web"
 )
 
 // test case stuff =======================================================
@@ -100,12 +100,12 @@ var addUserTestCases = []UserAddTestCase{
 	{
 		CliApiTestCase: CliApiTestCase{
 			name:       "Register external user",
-			cliCommand: "register-user --handle toBeOfUse",
+			cliCommand: "register-user --handle internet-golf",
 			apiPath:    "/user/register",
 			apiMethod:  "PUT",
 		},
 		apiBody: content.AddExternalUserBody{
-			ExternalUserHandle: "toBeOfUse",
+			ExternalUserHandle: "internet-golf",
 			ExternalUserSource: "Github",
 		},
 	},

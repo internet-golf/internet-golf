@@ -1,4 +1,4 @@
-module github.com/toBeOfUse/internet-golf
+module github.com/internet-golf/internet-golf
 
 go 1.25
 

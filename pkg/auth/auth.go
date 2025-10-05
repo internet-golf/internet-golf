@@ -5,8 +5,8 @@ import (
 	"net"
 	"strings"
 
-	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 

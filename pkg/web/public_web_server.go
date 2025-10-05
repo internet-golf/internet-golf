@@ -10,9 +10,9 @@ import (
 	"strconv"
 
 	"github.com/caddyserver/caddy/v2"
-	"github.com/toBeOfUse/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/db"
 
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 
 	// ??? these modules appear to register themselves with the main caddy
 	// module as side effects of being imported. is there a better way to do

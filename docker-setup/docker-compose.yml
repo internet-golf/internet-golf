@@ -1,7 +1,7 @@
 services:
   golf-server:
     restart: unless-stopped
-    image: ghcr.io/tobeofuse/internet-golf:latest
+    image: ghcr.io/internet-golf/internet-golf:latest
     ports:
       - "80:80"
       - "443:443"
@@ -10,7 +10,7 @@ services:
     volumes:
       - "content:/root/.internetgolf"
   client:
-    image: ghcr.io/tobeofuse/internet-golf:latest
+    image: ghcr.io/internet-golf/internet-golf:latest
     volumes:
       - ".:/app/outer"
     working_dir: "/app/outer"

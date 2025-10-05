@@ -6,8 +6,8 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
-	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 // TODO: remove requireDomain argument. if enforced, that should be validated at

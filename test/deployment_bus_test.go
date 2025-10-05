@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/toBeOfUse/internet-golf/pkg/content"
-	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/web"
+	"github.com/internet-golf/internet-golf/pkg/content"
+	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/web"
 )
 
 var tempDirs []string

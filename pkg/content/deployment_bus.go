@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/toBeOfUse/internet-golf/pkg/db"
-	"github.com/toBeOfUse/internet-golf/pkg/web"
+	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/web"
 )
 
 func urlFromString(url string) db.Url {

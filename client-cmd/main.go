@@ -10,9 +10,9 @@ import (
 	"os"
 	"strings"
 
+	golfsdk "github.com/internet-golf/internet-golf/client-sdk"
 	"github.com/mholt/archives"
 	"github.com/spf13/cobra"
-	golfsdk "github.com/toBeOfUse/internet-golf/client-sdk"
 )
 
 var rootCmd = &cobra.Command{

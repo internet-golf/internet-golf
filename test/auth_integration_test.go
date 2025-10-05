@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/toBeOfUse/internet-golf/pkg/utils"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 func TestBasicBearerTokenFlow(t *testing.T) {
