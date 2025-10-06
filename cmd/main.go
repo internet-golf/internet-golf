@@ -55,11 +55,12 @@ func main() {
 			// 3. api server that receives admin API requests and updates the active
 			// deployments in response to them
 			adminApi := content.AdminApi{
-				Web:       &deploymentBus,
-				Auth:      auth.AuthManager{Db: &db},
-				Port:      adminApiPort,
-				Files:     content.FileManager{Settings: storageSettings},
-				LocalOnly: localOnly,
+				Web:        &deploymentBus,
+				Auth:       auth.AuthManager{Db: &db},
+				Port:       adminApiPort,
+				Files:      content.FileManager{Settings: storageSettings},
+				Containers: content.ContainerManager{},
+				LocalOnly:  localOnly,
 			}
 
 			// putting the pieces together:
