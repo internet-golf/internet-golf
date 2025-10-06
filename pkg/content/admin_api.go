@@ -116,11 +116,12 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web       *DeploymentBus
-	Auth      auth.AuthManager
-	Files     FileManager
-	Port      string
-	LocalOnly bool
+	Web        *DeploymentBus
+	Auth       auth.AuthManager
+	Files      FileManager
+	Containers ContainerManager
+	Port       string
+	LocalOnly  bool
 }
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
