@@ -7,8 +7,10 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	golfsdk "github.com/internet-golf/internet-golf/client-sdk"
 	"github.com/mholt/archives"
@@ -22,6 +24,11 @@ var rootCmd = &cobra.Command{
 
 var apiUrl string
 var auth string
+
+func exit1(message string) {
+	fmt.Fprintln(os.Stderr, message)
+	os.Exit(1)
+}
 
 // TODO: standard response handling function that does roughly this instead of
 // ever panicking
@@ -42,42 +49,49 @@ var auth string
 // fmt.Println(body.Message)
 // }
 
-func createClient(hostToTry string) *golfsdk.APIClient {
+func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
+	// determine the base URL of the API server:
+	// 1. If apiUrl is set by the command line option, use apiUrl
+	// 2. Alternatively, if no auth method is set, there's nothing that could
+	// work other than localhost, so use localhost with the default API port (8888)
+	// 3. otherwise, use the host that is passed into this function as targetHost,
+	// which is the hostname intended to be deployed to.
 	resolvedApiUrl := apiUrl
 	if len(resolvedApiUrl) == 0 {
 		if len(auth) == 0 {
 			// if no auth setting is specified, assume localhost
 			resolvedApiUrl = "http://localhost:8888"
-		} else if len(hostToTry) > 0 {
+		} else if len(hostnameFromTargetDeployment) > 0 {
 			protocol := "https"
-			ips, err := net.LookupIP(hostToTry)
+			ips, err := net.LookupIP(hostnameFromTargetDeployment)
 			if err == nil && ips[0].String() == "127.0.0.1" {
-				fmt.Fprintf(os.Stderr, "WARNING: connecting to local host %s Without HTTPS", hostToTry)
+				fmt.Fprintf(os.Stderr, "WARNING: connecting to local host %s Without HTTPS", hostnameFromTargetDeployment)
 				protocol = "http"
 			}
-			resolvedApiUrl = protocol + "://" + hostToTry + "/_golf"
+			resolvedApiUrl = protocol + "://" + hostnameFromTargetDeployment + "/_golf"
 		} else {
-			panic("could not resolve API URL")
+			exit1("could not resolve API URL")
 		}
 	}
+
 	authHeader := ""
 	if auth == "github-oidc" {
 		reqUrl, found := os.LookupEnv("ACTIONS_ID_TOKEN_REQUEST_URL")
 		if !found {
-			panic("environment variable ACTIONS_ID_TOKEN_REQUEST_URL not found")
+			exit1("environment variable ACTIONS_ID_TOKEN_REQUEST_URL not found")
 		}
 		reqToken, found := os.LookupEnv("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
 		if !found {
-			panic("environment variable ACTIONS_ID_TOKEN_REQUEST_TOKEN not found")
+			exit1("environment variable ACTIONS_ID_TOKEN_REQUEST_TOKEN not found")
 		}
 		githubOidcReq, err := http.NewRequest("GET", reqUrl+"&audience=internet-golf", nil)
 		if err != nil {
-			panic(err)
+			exit1(err.Error())
 		}
 		githubOidcReq.Header["Authorization"] = []string{"Bearer " + reqToken}
 		resp, err := http.DefaultClient.Do(githubOidcReq)
 		if err != nil {
-			panic(err)
+			exit1(err.Error())
 		}
 		oidcTokenJson, err := io.ReadAll(resp.Body)
 		var oidcTokenData struct {
@@ -88,8 +102,12 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 	} else if len(auth) > 0 {
 		authHeader = "Bearer " + auth
 	}
-	// TODO: run health check, wait for it to pass
-	return golfsdk.NewAPIClient(&golfsdk.Configuration{
+
+	parsedResolvedUrl, parseErr := url.Parse(resolvedApiUrl)
+	if parseErr != nil {
+		exit1("Could not parse URL: " + resolvedApiUrl + "\n" + parseErr.Error())
+	}
+	client := golfsdk.NewAPIClient(&golfsdk.Configuration{
 		UserAgent: "InternetGolfClient",
 		DefaultHeader: map[string]string{
 			"Authorization": authHeader,
@@ -98,6 +116,46 @@ func createClient(hostToTry string) *golfsdk.APIClient {
 			{URL: resolvedApiUrl},
 		},
 	})
+
+	// perform health check against the API URL that was determined above. (the
+	// auth header doesn't actually matter for this part). as part of this, try
+	// to tell the server to set up https if there is an https error. try 20
+	// times (with a half-second pause between tries) in case the server is just
+	// starting up or needs to initialize https
+	initReqSent := false
+	retries := 20
+	for i := range retries {
+		body, _, err := client.DefaultAPI.GetAlive(context.Background()).Execute()
+		if err != nil {
+			if strings.Contains(err.Error(), "tls: internal error") && !initReqSent {
+				// if there is a tls error, try to get the server to initialize
+				// https for this domain. repeat this until we get a success
+				// response, since the server might still be starting up
+				body, _, err := client.DefaultAPI.
+					PutDeployInitByDomain(context.Background(), parsedResolvedUrl.Host).
+					Execute()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Got error when initializing domain on server: %s\n", err.Error())
+				} else if !body.Success {
+					fmt.Fprintf(
+						os.Stderr,
+						"Did not get success response when initializing domain %s\n",
+						parsedResolvedUrl.Host,
+					)
+				} else {
+					initReqSent = true
+				}
+			}
+		}
+		if body.Ok {
+			break
+		}
+		if i == retries-1 {
+			exit1("Health check of " + resolvedApiUrl + " failed :(")
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	return client
 }
 
 func createDeploymentCommand() *cobra.Command {
@@ -133,7 +191,7 @@ func createDeploymentCommand() *cobra.Command {
 			}
 
 			body, resp, respError := client.
-				DefaultAPI.PostDeployNew(context.TODO()).
+				DefaultAPI.PutDeployNew(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Url:                args[0],
 					ExternalSourceType: &externalSourceType,

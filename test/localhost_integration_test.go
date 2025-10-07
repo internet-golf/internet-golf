@@ -76,7 +76,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 			name:       "Create basic deployment",
 			cliCommand: "create-deployment example.com",
 			apiPath:    "/deploy/new",
-			apiMethod:  "POST",
+			apiMethod:  "PUT",
 			deploymentTest: func(t *testing.T, client *golfsdk.APIClient) {
 				output, _, _ := client.DefaultAPI.GetDeploymentByUrl(context.TODO(), "example.com").Execute()
 				if output.Url.Domain != "example.com" {
@@ -163,6 +163,16 @@ func (m *MockApiServer) Init() {
 		// server automatically closes it; hence, reading it here and then
 		// sending it to the test function in an InterceptedRequest, instead of
 		// just sending `r` to the test runner
+
+		// we don't really care about health check requests here for testing
+		// purposes - i guess it would be nice to make sure they exist but it
+		// would certainly complicate things
+		if r.URL.Path == "/alive" {
+			w.Header().Add("Content-Type", "application/json")
+			w.Write([]byte("{\"$schema\": \"whatever\", \"ok\": true}"))
+			return
+		}
+
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			panic(err.Error())
