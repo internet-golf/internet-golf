@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -133,7 +134,78 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return resp, nil
 		})
 
-	huma.Post(api, "/deploy/new", func(
+	// unauthenticated endpoint that can just create a completely blank
+	// deployment with the given domain name. this is necessary to allow for setting up domains from remote machines; after this domain is created, subsequent operations can be done on the deployment
+	huma.Put(api, "/deploy/init/{domain}", func(ctx context.Context, input *struct {
+		Domain string `path:"domain"`
+	}) (*SuccessOutput, error) {
+
+		myIpResp, err := http.Get("https://ipv4.icanhazip.com/")
+		if err != nil {
+			return nil, fmt.Errorf("Could not access icanhazip to get own IP address: %s", err.Error())
+		}
+		myIpBody, err := io.ReadAll(myIpResp.Body)
+		myIp := strings.Trim(string(myIpBody), " \n\r")
+		if err != nil || len(myIp) == 0 {
+			var errorMessage string
+			if err != nil {
+				errorMessage = " " + err.Error()
+			}
+			return nil, fmt.Errorf("Could not read own IP address from icanhazip response.%s", errorMessage)
+		}
+		myParsedIp := net.ParseIP(myIp)
+
+		domainIpAddresses, err := net.LookupIP(input.Domain)
+		if err != nil || len(domainIpAddresses) == 0 {
+			return nil, fmt.Errorf("Could not lookup IP address for domain %s", input.Domain)
+		}
+
+		match := false
+		for _, ip := range domainIpAddresses {
+			if ip.Equal(myParsedIp) {
+				match = true
+				break
+			}
+		}
+
+		if !match {
+			return nil, fmt.Errorf(
+				"Could not find server's IP address (%s) in addresses of \"%s\" (%+v)",
+				myParsedIp, input.Domain, domainIpAddresses,
+			)
+		}
+
+		_, err = a.Web.GetDeploymentByUrl(&db.Url{Domain: input.Domain})
+		if err != nil && strings.Contains(err.Error(), "not found") {
+			var output SuccessOutput
+			output.Body.Success = true
+			output.Body.Message = "Domain already exists: " + input.Domain
+			return &output, nil
+		} else if err != nil {
+			return nil, fmt.Errorf(
+				"Unexpected error when checking for existing deployment: %s",
+				err.Error(),
+			)
+		}
+
+		putDeploymentErr := a.Web.SetupDeployment(
+			db.DeploymentMetadata{
+				Url: db.Url{Domain: input.Domain},
+			},
+		)
+
+		if putDeploymentErr != nil {
+			return nil, putDeploymentErr
+		}
+
+		var output SuccessOutput
+		output.Body.Success = true
+		output.Body.Message = "Initialized domain " + input.Domain
+
+		return &output, nil
+	})
+
+	huma.Put(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
