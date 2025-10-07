@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -103,10 +102,6 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 		authHeader = "Bearer " + auth
 	}
 
-	parsedResolvedUrl, parseErr := url.Parse(resolvedApiUrl)
-	if parseErr != nil {
-		exit1("Could not parse URL: " + resolvedApiUrl + "\n" + parseErr.Error())
-	}
 	client := golfsdk.NewAPIClient(&golfsdk.Configuration{
 		UserAgent: "InternetGolfClient",
 		DefaultHeader: map[string]string{
@@ -118,36 +113,13 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 	})
 
 	// perform health check against the API URL that was determined above. (the
-	// auth header doesn't actually matter for this part). as part of this, try
-	// to tell the server to set up https if there is an https error. try 20
-	// times (with a half-second pause between tries) in case the server is just
-	// starting up or needs to initialize https
-	initReqSent := false
+	// auth header doesn't actually matter for this part). try 20 times (with a
+	// half-second pause between tries) in case the server is just starting up
 	retries := 20
 	for i := range retries {
 		body, _, err := client.DefaultAPI.GetAlive(context.Background()).Execute()
-		if err != nil {
-			if strings.Contains(err.Error(), "tls: internal error") && !initReqSent {
-				// if there is a tls error, try to get the server to initialize
-				// https for this domain. repeat this until we get a success
-				// response, since the server might still be starting up
-				body, _, err := client.DefaultAPI.
-					PutDeployInitByDomain(context.Background(), parsedResolvedUrl.Host).
-					Execute()
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Got error when initializing domain on server: %s\n", err.Error())
-				} else if !body.Success {
-					fmt.Fprintf(
-						os.Stderr,
-						"Did not get success response when initializing domain %s\n",
-						parsedResolvedUrl.Host,
-					)
-				} else {
-					initReqSent = true
-				}
-			}
-		}
-		if body.Ok {
+
+		if err == nil && body.Ok {
 			break
 		}
 		if i == retries-1 {
