@@ -164,15 +164,6 @@ func (m *MockApiServer) Init() {
 		// sending it to the test function in an InterceptedRequest, instead of
 		// just sending `r` to the test runner
 
-		// we don't really care about health check requests here for testing
-		// purposes - i guess it would be nice to make sure they exist but it
-		// would certainly complicate things
-		if r.URL.Path == "/alive" {
-			w.Header().Add("Content-Type", "application/json")
-			w.Write([]byte("{\"$schema\": \"whatever\", \"ok\": true}"))
-			return
-		}
-
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			panic(err.Error())
@@ -187,7 +178,11 @@ func (m *MockApiServer) Init() {
 		}
 
 		w.Header().Add("Content-Type", "application/json")
-		w.Write([]byte("{\"$schema\": \"whatever\", \"success\": true, \"message\": \"Request to mock API received\"}"))
+		if r.URL.Path == "/alive" {
+			w.Write([]byte("{\"$schema\": \"whatever\", \"ok\": true}"))
+		} else {
+			w.Write([]byte("{\"$schema\": \"whatever\", \"success\": true, \"message\": \"Request to mock API received\"}"))
+		}
 	})
 	port, err := utils.GetFreePort()
 	if err != nil {
@@ -310,8 +305,16 @@ func TestClientCli(t *testing.T) {
 			// run client cli command
 			runClientCliCommand(testCase.cliCommand, m.port, t)
 
-			// get the request that was sent to the mock server as a result of
+			// get the requests that were sent to the mock server as a result of
 			// the client cli command
+
+			// 1. standard health check request
+			health := <-m.reqQueue
+			if !strings.HasSuffix(health.Req.URL.Path, "/alive") {
+				t.Fatalf("health check not performed in test case %s", testCase.name)
+			}
+
+			// 2. actual contentful request
 			intercepted := <-m.reqQueue
 			req := intercepted.Req
 
@@ -366,8 +369,16 @@ func TestClientCli(t *testing.T) {
 			// run client cli command
 			runClientCliCommand(testCase.cliCommand, m.port, t)
 
-			// get the request that was sent to the mock server as a result of
+			// get the requests that were sent to the mock server as a result of
 			// the client cli command
+
+			// 1. standard health check request
+			health := <-m.reqQueue
+			if !strings.HasSuffix(health.Req.URL.Path, "/alive") {
+				t.Fatalf("health check not performed in test case %s", testCase.name)
+			}
+
+			// 2. actual contentful request
 			intercepted := <-m.reqQueue
 			req := intercepted.Req
 
@@ -428,8 +439,16 @@ func TestClientCli(t *testing.T) {
 			// run client cli command
 			runClientCliCommand(testCase.cliCommand, m.port, t)
 
-			// get the request that was sent to the mock server as a result of
+			// get the requests that were sent to the mock server as a result of
 			// the client cli command
+
+			// 1. standard health check request
+			health := <-m.reqQueue
+			if !strings.HasSuffix(health.Req.URL.Path, "/alive") {
+				t.Fatalf("health check not performed in test case %s", testCase.name)
+			}
+
+			// 2. actual contentful request
 			intercepted := <-m.reqQueue
 			req := intercepted.Req
 
