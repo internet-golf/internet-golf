@@ -11,6 +11,8 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
+var onDemandTlsEndpointPath = "/approve-tls"
+
 // returns server, server port (as string), error
 func createTlsApprovalServer() (*http.Server, string, error) {
 	port, portErr := utils.GetFreePort()
@@ -19,7 +21,7 @@ func createTlsApprovalServer() (*http.Server, string, error) {
 	}
 
 	router := http.NewServeMux()
-	router.HandleFunc("/approve-tls", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(onDemandTlsEndpointPath, func(w http.ResponseWriter, r *http.Request) {
 
 		resp := func(status int, message string) {
 			w.WriteHeader(status)
@@ -101,7 +103,7 @@ func getTlsConfig(approvalServerPort string) utils.JsonObj {
 			"on_demand": utils.JsonObj{
 				"permission": utils.JsonObj{
 					"module":   "http",
-					"endpoint": "localhost:" + approvalServerPort + "/approve-tls",
+					"endpoint": "http://localhost:" + approvalServerPort + onDemandTlsEndpointPath,
 				},
 			},
 		},
