@@ -90,7 +90,7 @@ func createTlsApprovalServer() (*http.Server, string, error) {
 	})
 
 	strPort := strconv.Itoa(port)
-	server := http.Server{Addr: "localhost:" + strPort}
+	server := http.Server{Addr: "localhost:" + strPort, Handler: router}
 	return &server, strPort, nil
 }
 
