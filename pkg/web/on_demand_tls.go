@@ -35,6 +35,12 @@ func createTlsApprovalServer() (*http.Server, string, error) {
 			return
 		}
 
+		addr := net.ParseIP(domain)
+		if addr != nil {
+			resp(400, fmt.Sprintf("cannot use ip %s as domain", domain))
+			return
+		}
+
 		myIpResp, err := http.Get("https://ipv4.icanhazip.com/")
 		if err != nil {
 			resp(
