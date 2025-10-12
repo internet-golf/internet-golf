@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -44,9 +45,12 @@ type CaddyServer struct {
 	}
 	StorageSettings        db.StorageSettings
 	placeholderContentPath string
+	onDemandTls            onDemandTls
 }
 
 const httpAppServerName = "internetgolf"
+
+// TODO: placeholder content should probably be managed by the FileManager?
 
 //go:embed dist/placeholder.html
 var placeholderContent []byte
@@ -144,6 +148,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	// mitch.website/thing needs to be sorted before mitch.website or else
 	// mitch.website will always be matched and mitch.website/thing will never
 	// be matched
+	// TODO: test, with asterisks. need config to get admin api route from (#32)
 	slices.SortFunc(
 		httpApp.Servers[httpAppServerName].Routes,
 		func(a caddyhttp.Route, b caddyhttp.Route) int {
@@ -194,6 +199,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	if c.Settings.Verbose {
 		logLevel = "DEBUG"
 	}
+
 	caddyConfig := caddy.Config{
 		AppsRaw: caddy.ModuleMap{"http": httpJson},
 		Admin: &caddy.AdminConfig{
@@ -212,6 +218,16 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		},
 	}
 
+	if !c.Settings.LocalOnly {
+		tlsConfig, err := getOnDemandTls()
+		if err != nil {
+			panic(err)
+		}
+		c.onDemandTls = tlsConfig
+		caddyConfig.AppsRaw["tls"] = utils.JsonOrPanic(tlsConfig.caddyTlsConfig)
+		go c.onDemandTls.tlsApprovalServer.ListenAndServe()
+	}
+
 	err = caddy.Run(&caddyConfig)
 	if err != nil {
 		panic(err)
@@ -221,5 +237,12 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 }
 
 func (c *CaddyServer) Stop() error {
+	if !c.Settings.LocalOnly {
+		err := c.onDemandTls.tlsApprovalServer.Shutdown(context.TODO())
+		if err != nil {
+			caddy.Stop()
+			return err
+		}
+	}
 	return caddy.Stop()
 }

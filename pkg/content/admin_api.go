@@ -133,7 +133,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return resp, nil
 		})
 
-	huma.Post(api, "/deploy/new", func(
+	huma.Put(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)

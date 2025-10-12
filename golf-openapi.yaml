@@ -281,9 +281,32 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Put deploy files
+  /deploy/init/{domain}:
+    put:
+      operationId: put-deploy-init-by-domain
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Put deploy init by domain
   /deploy/new:
-    post:
-      operationId: post-deploy-new
+    put:
+      operationId: put-deploy-new
       requestBody:
         content:
           application/json:
@@ -303,7 +326,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
-      summary: Post deploy new
+      summary: Put deploy new
   /deployment/{url}:
     get:
       operationId: get-deployment-by-url

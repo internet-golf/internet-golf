@@ -12,7 +12,8 @@ import (
 func GetCaddyReverseProxyRoute(d db.Deployment) ([]caddyhttp.Route, error) {
 	if d.ServedThingType != db.ReverseProxy {
 		return []caddyhttp.Route{}, fmt.Errorf(
-			"deployment with name %s passed to getCaddyReverseProxyRoute despite having resource type %s",
+			"deployment with name %s passed to "+
+				"getCaddyReverseProxyRoute despite having resource type %s",
 			d.Url, d.ServedThingType,
 		)
 	}
