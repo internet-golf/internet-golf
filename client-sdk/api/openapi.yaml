@@ -231,7 +231,6 @@ components:
       additionalProperties: false
       example:
         registryUrl: registryUrl
-        internalAppPort: 0
         imageName: imageName
         $schema: https://openapi-generator.tech
         registryAuthToken: registryAuthToken
@@ -244,9 +243,6 @@ components:
           type: string
         imageName:
           type: string
-        internalAppPort:
-          format: int64
-          type: integer
         registryAuthToken:
           type: string
         registryUrl:
@@ -255,7 +251,6 @@ components:
           type: string
       required:
       - imageName
-      - internalAppPort
       - registryUrl
       - url
     DeploymentCreateInputBody:

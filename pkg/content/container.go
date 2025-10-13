@@ -11,7 +11,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 const DOCKER_HUB_REGISTRY = "docker.io"
@@ -48,43 +47,45 @@ func (*ContainerManager) PullContainer(name string, registry string, authToken s
 	return nil
 }
 
-func (*ContainerManager) StartContainer(deploymentName string, name string, registry string, port int) (string, error) {
+func (*ContainerManager) StartContainer(name string) (string, error) {
 
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		return "", err
 	}
 
-	hostPort, err := utils.GetFreePort()
+	ctx := context.Background()
+	inspection, err := cli.ImageInspect(ctx, name)
 	if err != nil {
-		return "", errors.New("failed to find a free port to bind to the container")
+		return "", errors.New("failed to inspect image for ports")
 	}
 
-	ctx := context.Background()
-	container, err := cli.ContainerCreate(
+	portBindings := nat.PortMap{}
+	for port := range inspection.Config.ExposedPorts {
+		portBindings[nat.Port(port)] = []nat.PortBinding{nat.PortBinding{}}
+	}
+
+	cont, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image:           registry + "/" + name,
-			AttachStdout:    false,
-			AttachStderr:    false,
-			StopTimeout:     new(int),
-			NetworkDisabled: true,
+			Image:        name,
+			AttachStdout: false,
+			AttachStderr: false,
 		},
-		&container.HostConfig{
-			PortBindings: nat.PortMap{
-				nat.Port(port): []nat.PortBinding{
-					nat.PortBinding{HostPort: string(hostPort)},
-				},
-			},
-		},
+		&container.HostConfig{PortBindings: portBindings},
 		nil,
 		nil,
-		deploymentName,
+		"",
 	)
 
 	if err != nil {
-		return "", err
+		return "", errors.New("failed to create container from image")
 	}
 
-	return container.ID, nil
+	containerId := cont.ID
+	if err := cli.ContainerStart(ctx, containerId, container.StartOptions{}); err != nil {
+		return "", errors.New("failed start container " + containerId)
+	}
+
+	return containerId, nil
 }

@@ -24,7 +24,6 @@ type DeployContainerInputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty"`
 	ImageName string `json:"imageName"`
-	InternalAppPort int64 `json:"internalAppPort"`
 	RegistryAuthToken *string `json:"registryAuthToken,omitempty"`
 	RegistryUrl string `json:"registryUrl"`
 	Url string `json:"url"`
@@ -36,10 +35,9 @@ type _DeployContainerInputBody DeployContainerInputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeployContainerInputBody(imageName string, internalAppPort int64, registryUrl string, url string) *DeployContainerInputBody {
+func NewDeployContainerInputBody(imageName string, registryUrl string, url string) *DeployContainerInputBody {
 	this := DeployContainerInputBody{}
 	this.ImageName = imageName
-	this.InternalAppPort = internalAppPort
 	this.RegistryUrl = registryUrl
 	this.Url = url
 	return &this
@@ -107,30 +105,6 @@ func (o *DeployContainerInputBody) GetImageNameOk() (*string, bool) {
 // SetImageName sets field value
 func (o *DeployContainerInputBody) SetImageName(v string) {
 	o.ImageName = v
-}
-
-// GetInternalAppPort returns the InternalAppPort field value
-func (o *DeployContainerInputBody) GetInternalAppPort() int64 {
-	if o == nil {
-		var ret int64
-		return ret
-	}
-
-	return o.InternalAppPort
-}
-
-// GetInternalAppPortOk returns a tuple with the InternalAppPort field value
-// and a boolean to check if the value has been set.
-func (o *DeployContainerInputBody) GetInternalAppPortOk() (*int64, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.InternalAppPort, true
-}
-
-// SetInternalAppPort sets field value
-func (o *DeployContainerInputBody) SetInternalAppPort(v int64) {
-	o.InternalAppPort = v
 }
 
 // GetRegistryAuthToken returns the RegistryAuthToken field value if set, zero value otherwise.
@@ -227,7 +201,6 @@ func (o DeployContainerInputBody) ToMap() (map[string]interface{}, error) {
 		toSerialize["$schema"] = o.Schema
 	}
 	toSerialize["imageName"] = o.ImageName
-	toSerialize["internalAppPort"] = o.InternalAppPort
 	if !IsNil(o.RegistryAuthToken) {
 		toSerialize["registryAuthToken"] = o.RegistryAuthToken
 	}
@@ -242,7 +215,6 @@ func (o *DeployContainerInputBody) UnmarshalJSON(data []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"imageName",
-		"internalAppPort",
 		"registryUrl",
 		"url",
 	}

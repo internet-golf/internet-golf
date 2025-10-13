@@ -61,9 +61,6 @@ components:
           type: string
         imageName:
           type: string
-        internalAppPort:
-          format: int64
-          type: integer
         registryAuthToken:
           type: string
         registryUrl:
@@ -74,7 +71,6 @@ components:
         - url
         - registryUrl
         - imageName
-        - internalAppPort
       type: object
     DeploymentCreateInputBody:
       additionalProperties: false

@@ -12,11 +12,10 @@ import (
 func deployContainerCommand() *cobra.Command {
 	var name string
 	var registry string
-	var internalPort int64
 
 	deployContent := cobra.Command{
 		Use:     "deploy-container [deployment-name]",
-		Example: "deploy-container example.com --name my-container --registry docker.io --internalPort 3000",
+		Example: "deploy-container example.com --name my-container --registry docker.io",
 		Short:   "Deploys container",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -25,9 +24,9 @@ func deployContainerCommand() *cobra.Command {
 			body, resp, respError := client.
 				DefaultAPI.PutDeployContainer(context.TODO()).
 				DeployContainerInputBody(golfsdk.DeployContainerInputBody{
-					ImageName:       name,
-					RegistryUrl:     registry,
-					InternalAppPort: internalPort,
+					Url:         args[0],
+					ImageName:   name,
+					RegistryUrl: registry,
 				}).
 				Execute()
 
@@ -56,11 +55,6 @@ func deployContainerCommand() *cobra.Command {
 	deployContent.Flags().StringVar(
 		&registry, "registry", "",
 		"Supply the registry of the image you wish to deploy.",
-	)
-
-	deployContent.Flags().Int64Var(
-		&internalPort, "internalPort", 3000,
-		"Supply the port that the image binds to.",
 	)
 
 	return &deployContent
