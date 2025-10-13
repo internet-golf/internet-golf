@@ -2,6 +2,7 @@ package content
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 
@@ -10,12 +11,14 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 const DOCKER_HUB_REGISTRY = "docker.io"
 
 type ContainerManager struct{ Settings db.StorageSettings }
 
+// probably want to add future support for a full name like "docker.io/hello-world" being passed
 func (*ContainerManager) PullContainer(name string, registry string, authToken string) error {
 
 	cli, err := client.NewClientWithOpts()
@@ -45,11 +48,16 @@ func (*ContainerManager) PullContainer(name string, registry string, authToken s
 	return nil
 }
 
-func (*ContainerManager) StartContainer(deploymentName string, name string, registry string, port string) (string, error) {
+func (*ContainerManager) StartContainer(deploymentName string, name string, registry string, port int) (string, error) {
 
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		return "", err
+	}
+
+	hostPort, err := utils.GetFreePort()
+	if err != nil {
+		return "", errors.New("failed to find a free port to bind to the container")
 	}
 
 	ctx := context.Background()
@@ -65,7 +73,7 @@ func (*ContainerManager) StartContainer(deploymentName string, name string, regi
 		&container.HostConfig{
 			PortBindings: nat.PortMap{
 				nat.Port(port): []nat.PortBinding{
-					nat.PortBinding{HostPort: port},
+					nat.PortBinding{HostPort: string(hostPort)},
 				},
 			},
 		},

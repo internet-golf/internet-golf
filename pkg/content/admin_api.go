@@ -59,6 +59,16 @@ type DeployFilesInput struct {
 	RawBody huma.MultipartFormFiles[DeployFilesBody]
 }
 
+type DeployContainerInput struct {
+	Body struct {
+		Url               string `json:"url"`
+		RegistryUrl       string `json:"registryUrl"`
+		RegistryAuthToken string `json:"registryUrl" required:"false"`
+		ContainerName     string `json:"containerName"`
+		InternalAppPort   int    `json:"internalAppPort"`
+	}
+}
+
 type AddExternalUserBody struct {
 	ExternalUserHandle string                `json:"externalUserHandle,omitempty" docs:"A username, like \"internet-golf\" for Github user @internet-golf. Will be ignored if externalUserId is specified."`
 	ExternalUserId     string                `json:"externalUserId,omitempty" docs:"The ID that the user has in the external system. Not needed if externalUserHandle is specified."`
@@ -84,15 +94,6 @@ type CreateBearerTokenInput struct {
 type CreateBearerTokenOutput struct {
 	Body struct {
 		Token string `json:"token"`
-	}
-}
-
-type DeployContainerInput struct {
-	Body struct {
-		// should this be json even though the static deployment input is form data??
-		ContainerUrl    string `json:"containerUrl"`
-		InternalAppPort int    `json:"internalAppPort"`
-		Id              string `json:"id" required:"false"`
 	}
 }
 
@@ -202,7 +203,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
 			if !permissionsOk {
-				return nil, fmt.Errorf("Auth check failed somehow")
+				return nil, fmt.Errorf("auth check failed somehow")
 			}
 
 			url := urlFromString(formData.Url)
@@ -261,6 +262,64 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			output.Body.Message = "Updated content for " + url.String()
 			return &output, nil
 		})
+
+	huma.Put(api, "/deploy/container", func(
+		ctx context.Context, input *DeployContainerInput,
+	) (*SuccessOutput, error) {
+
+		body := input.Body
+
+		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+		if !permissionsOk {
+			return nil, fmt.Errorf("auth check failed somehow")
+		}
+
+		url := urlFromString(body.Url)
+		deployment, findDeploymentError := a.Web.GetDeploymentByUrl(&url)
+		if findDeploymentError != nil {
+			return nil, huma.Error404NotFound(
+				fmt.Sprintf("could not find deployment with URL \"%s\"", url),
+			)
+		}
+
+		if !permissions.CanModifyDeployment(&deployment) {
+			return nil, huma.Error403Forbidden(
+				fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", url),
+			)
+		}
+
+		pullContainerErr := a.Containers.PullContainer(body.ContainerName, body.RegistryUrl, body.RegistryAuthToken)
+		if pullContainerErr != nil {
+			return nil, huma.Error500InternalServerError(
+				"Error occurred while pulling container: " + pullContainerErr.Error(),
+			)
+		}
+
+		containerId, startContainerErr := a.Containers.StartContainer(url.String(), body.ContainerName, body.RegistryUrl, body.InternalAppPort)
+		if startContainerErr != nil {
+			return nil, huma.Error500InternalServerError(
+				"Error occurred while starting container: " + startContainerErr.Error(),
+			)
+		}
+
+		err := a.Web.PutDeploymentContentByUrl(
+			url,
+			db.DeploymentContent{
+				ServedThingType: db.DockerContainer,
+				ServedThing:     containerId,
+			},
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output := SuccessOutput{}
+		output.Body.Success = true
+		output.Body.Message = "Updated container for " + url.String()
+		return &output, nil
+
+	})
 
 	huma.Put(api, "/user/register", func(ctx context.Context, input *AddExternalUserInput) (*SuccessOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
@@ -329,13 +388,6 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		output.Body.Token = token
 		return &output, nil
 	})
-
-	// huma.Put(api, "/deploy/container", func(
-	// 	ctx context.Context, input *DeployContainerInput,
-	// ) (*SuccessOutput, error) {
-	// 	// TODO: implement this at all
-	// 	panic("not implemented")
-	// })
 }
 
 func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
