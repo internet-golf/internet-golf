@@ -63,7 +63,7 @@ type DeployContainerInput struct {
 	Body struct {
 		Url               string `json:"url"`
 		RegistryUrl       string `json:"registryUrl"`
-		RegistryAuthToken string `json:"registryUrl" required:"false"`
+		RegistryAuthToken string `json:"registryAuthToken" required:"false"`
 		ContainerName     string `json:"containerName"`
 		InternalAppPort   int    `json:"internalAppPort"`
 	}
