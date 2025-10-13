@@ -82,6 +82,7 @@ Class | Method | HTTP request | Description
 *DefaultAPI* | [**GetDeploymentByUrl**](docs/DefaultAPI.md#getdeploymentbyurl) | **Get** /deployment/{url} | Get deployment by URL
 *DefaultAPI* | [**PostDeployNew**](docs/DefaultAPI.md#postdeploynew) | **Post** /deploy/new | Post deploy new
 *DefaultAPI* | [**PostTokenGenerate**](docs/DefaultAPI.md#posttokengenerate) | **Post** /token/generate | Post token generate
+*DefaultAPI* | [**PutDeployContainer**](docs/DefaultAPI.md#putdeploycontainer) | **Put** /deploy/container | Put deploy container
 *DefaultAPI* | [**PutDeployFiles**](docs/DefaultAPI.md#putdeployfiles) | **Put** /deploy/files | Put deploy files
 *DefaultAPI* | [**PutUserRegister**](docs/DefaultAPI.md#putuserregister) | **Put** /user/register | Put user register
 
@@ -91,6 +92,7 @@ Class | Method | HTTP request | Description
  - [AddExternalUserInputBody](docs/AddExternalUserInputBody.md)
  - [CreateBearerTokenInputBody](docs/CreateBearerTokenInputBody.md)
  - [CreateBearerTokenOutputBody](docs/CreateBearerTokenOutputBody.md)
+ - [DeployContainerInputBody](docs/DeployContainerInputBody.md)
  - [DeploymentCreateInputBody](docs/DeploymentCreateInputBody.md)
  - [ErrorDetail](docs/ErrorDetail.md)
  - [ErrorModel](docs/ErrorModel.md)

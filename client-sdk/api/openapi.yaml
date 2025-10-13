@@ -22,6 +22,29 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get alive
+  /deploy/container:
+    put:
+      operationId: put-deploy-container
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeployContainerInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Put deploy container
   /deploy/files:
     put:
       operationId: put-deploy-files
@@ -204,6 +227,37 @@ components:
           type: string
       required:
       - token
+    DeployContainerInputBody:
+      additionalProperties: false
+      example:
+        registryUrl: registryUrl
+        internalAppPort: 0
+        $schema: https://openapi-generator.tech
+        containerName: containerName
+        registryAuthToken: registryAuthToken
+        url: url
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        containerName:
+          type: string
+        internalAppPort:
+          format: int64
+          type: integer
+        registryAuthToken:
+          type: string
+        registryUrl:
+          type: string
+        url:
+          type: string
+      required:
+      - containerName
+      - internalAppPort
+      - registryUrl
+      - url
     DeploymentCreateInputBody:
       additionalProperties: false
       example:
