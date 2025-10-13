@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
 [**GetDeploymentByUrl**](DefaultAPI.md#GetDeploymentByUrl) | **Get** /deployment/{url} | Get deployment by URL
 [**PostTokenGenerate**](DefaultAPI.md#PostTokenGenerate) | **Post** /token/generate | Post token generate
+[**PutDeployContainer**](DefaultAPI.md#PutDeployContainer) | **Put** /deploy/container | Put deploy container
 [**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
 [**PutDeployInitByDomain**](DefaultAPI.md#PutDeployInitByDomain) | **Put** /deploy/init/{domain} | Put deploy init by domain
 [**PutDeployNew**](DefaultAPI.md#PutDeployNew) | **Put** /deploy/new | Put deploy new
@@ -190,6 +191,70 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**CreateBearerTokenOutputBody**](CreateBearerTokenOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## PutDeployContainer
+
+> SuccessOutputBody PutDeployContainer(ctx).DeployContainerInputBody(deployContainerInputBody).Execute()
+
+Put deploy container
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	deployContainerInputBody := *openapiclient.NewDeployContainerInputBody("ImageName_example", "RegistryUrl_example", "Url_example") // DeployContainerInputBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.PutDeployContainer(context.Background()).DeployContainerInputBody(deployContainerInputBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutDeployContainer``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PutDeployContainer`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutDeployContainer`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPutDeployContainerRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **deployContainerInputBody** | [**DeployContainerInputBody**](DeployContainerInputBody.md) |  | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
 
 ### Authorization
 

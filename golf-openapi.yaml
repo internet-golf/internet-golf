@@ -49,6 +49,29 @@ components:
       required:
         - token
       type: object
+    DeployContainerInputBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/DeployContainerInputBody.json
+          format: uri
+          readOnly: true
+          type: string
+        imageName:
+          type: string
+        registryAuthToken:
+          type: string
+        registryUrl:
+          type: string
+        url:
+          type: string
+      required:
+        - url
+        - registryUrl
+        - imageName
+      type: object
     DeploymentCreateInputBody:
       additionalProperties: false
       properties:
@@ -236,6 +259,29 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get alive
+  /deploy/container:
+    put:
+      operationId: put-deploy-container
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeployContainerInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Put deploy container
   /deploy/files:
     put:
       operationId: put-deploy-files

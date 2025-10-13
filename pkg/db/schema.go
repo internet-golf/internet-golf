@@ -65,7 +65,7 @@ type DeploymentContent struct {
 	// "NotSureYet" value for ServedThingType?)
 	HasContent bool `json:"hasContent"`
 	// for static files, this is the path to a local directory; for a docker
-	// container, this is a port number (?); for a redirect, this is a url or url
+	// container, this is the ID of the container; for a redirect, this is a url or url
 	// path; for a reverse proxy, this is a host and port (probably "localhost:[port]")
 	ServedThing     string          `json:"servedThing"`
 	ServedThingType ServedThingType `json:"servedThingType"`
