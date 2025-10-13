@@ -59,7 +59,7 @@ components:
           format: uri
           readOnly: true
           type: string
-        containerName:
+        imageName:
           type: string
         internalAppPort:
           format: int64
@@ -73,7 +73,7 @@ components:
       required:
         - url
         - registryUrl
-        - containerName
+        - imageName
         - internalAppPort
       type: object
     DeploymentCreateInputBody:

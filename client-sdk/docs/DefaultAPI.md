@@ -288,7 +288,7 @@ import (
 )
 
 func main() {
-	deployContainerInputBody := *openapiclient.NewDeployContainerInputBody("ContainerName_example", int64(123), "RegistryUrl_example", "Url_example") // DeployContainerInputBody | 
+	deployContainerInputBody := *openapiclient.NewDeployContainerInputBody("ImageName_example", int64(123), "RegistryUrl_example", "Url_example") // DeployContainerInputBody | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)

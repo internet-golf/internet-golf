@@ -232,8 +232,8 @@ components:
       example:
         registryUrl: registryUrl
         internalAppPort: 0
+        imageName: imageName
         $schema: https://openapi-generator.tech
-        containerName: containerName
         registryAuthToken: registryAuthToken
         url: url
       properties:
@@ -242,7 +242,7 @@ components:
           format: uri
           readOnly: true
           type: string
-        containerName:
+        imageName:
           type: string
         internalAppPort:
           format: int64
@@ -254,7 +254,7 @@ components:
         url:
           type: string
       required:
-      - containerName
+      - imageName
       - internalAppPort
       - registryUrl
       - url

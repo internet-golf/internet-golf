@@ -64,7 +64,7 @@ type DeployContainerInput struct {
 		Url               string `json:"url"`
 		RegistryUrl       string `json:"registryUrl"`
 		RegistryAuthToken string `json:"registryAuthToken" required:"false"`
-		ContainerName     string `json:"containerName"`
+		ImageName         string `json:"imageName"`
 		InternalAppPort   int    `json:"internalAppPort"`
 	}
 }
@@ -288,14 +288,14 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			)
 		}
 
-		pullContainerErr := a.Containers.PullContainer(body.ContainerName, body.RegistryUrl, body.RegistryAuthToken)
+		pullContainerErr := a.Containers.PullContainer(body.ImageName, body.RegistryUrl, body.RegistryAuthToken)
 		if pullContainerErr != nil {
 			return nil, huma.Error500InternalServerError(
 				"Error occurred while pulling container: " + pullContainerErr.Error(),
 			)
 		}
 
-		containerId, startContainerErr := a.Containers.StartContainer(url.String(), body.ContainerName, body.RegistryUrl, body.InternalAppPort)
+		containerId, startContainerErr := a.Containers.StartContainer(url.String(), body.ImageName, body.RegistryUrl, body.InternalAppPort)
 		if startContainerErr != nil {
 			return nil, huma.Error500InternalServerError(
 				"Error occurred while starting container: " + startContainerErr.Error(),

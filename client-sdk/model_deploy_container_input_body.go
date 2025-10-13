@@ -23,7 +23,7 @@ var _ MappedNullable = &DeployContainerInputBody{}
 type DeployContainerInputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty"`
-	ContainerName string `json:"containerName"`
+	ImageName string `json:"imageName"`
 	InternalAppPort int64 `json:"internalAppPort"`
 	RegistryAuthToken *string `json:"registryAuthToken,omitempty"`
 	RegistryUrl string `json:"registryUrl"`
@@ -36,9 +36,9 @@ type _DeployContainerInputBody DeployContainerInputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeployContainerInputBody(containerName string, internalAppPort int64, registryUrl string, url string) *DeployContainerInputBody {
+func NewDeployContainerInputBody(imageName string, internalAppPort int64, registryUrl string, url string) *DeployContainerInputBody {
 	this := DeployContainerInputBody{}
-	this.ContainerName = containerName
+	this.ImageName = imageName
 	this.InternalAppPort = internalAppPort
 	this.RegistryUrl = registryUrl
 	this.Url = url
@@ -85,28 +85,28 @@ func (o *DeployContainerInputBody) SetSchema(v string) {
 	o.Schema = &v
 }
 
-// GetContainerName returns the ContainerName field value
-func (o *DeployContainerInputBody) GetContainerName() string {
+// GetImageName returns the ImageName field value
+func (o *DeployContainerInputBody) GetImageName() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.ContainerName
+	return o.ImageName
 }
 
-// GetContainerNameOk returns a tuple with the ContainerName field value
+// GetImageNameOk returns a tuple with the ImageName field value
 // and a boolean to check if the value has been set.
-func (o *DeployContainerInputBody) GetContainerNameOk() (*string, bool) {
+func (o *DeployContainerInputBody) GetImageNameOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.ContainerName, true
+	return &o.ImageName, true
 }
 
-// SetContainerName sets field value
-func (o *DeployContainerInputBody) SetContainerName(v string) {
-	o.ContainerName = v
+// SetImageName sets field value
+func (o *DeployContainerInputBody) SetImageName(v string) {
+	o.ImageName = v
 }
 
 // GetInternalAppPort returns the InternalAppPort field value
@@ -226,7 +226,7 @@ func (o DeployContainerInputBody) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Schema) {
 		toSerialize["$schema"] = o.Schema
 	}
-	toSerialize["containerName"] = o.ContainerName
+	toSerialize["imageName"] = o.ImageName
 	toSerialize["internalAppPort"] = o.InternalAppPort
 	if !IsNil(o.RegistryAuthToken) {
 		toSerialize["registryAuthToken"] = o.RegistryAuthToken
@@ -241,7 +241,7 @@ func (o *DeployContainerInputBody) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"containerName",
+		"imageName",
 		"internalAppPort",
 		"registryUrl",
 		"url",

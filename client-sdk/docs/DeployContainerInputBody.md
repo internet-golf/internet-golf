@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schema** | Pointer to **string** | A URL to the JSON Schema for this object. | [optional] [readonly] 
-**ContainerName** | **string** |  | 
+**ImageName** | **string** |  | 
 **InternalAppPort** | **int64** |  | 
 **RegistryAuthToken** | Pointer to **string** |  | [optional] 
 **RegistryUrl** | **string** |  | 
@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 
 ### NewDeployContainerInputBody
 
-`func NewDeployContainerInputBody(containerName string, internalAppPort int64, registryUrl string, url string, ) *DeployContainerInputBody`
+`func NewDeployContainerInputBody(imageName string, internalAppPort int64, registryUrl string, url string, ) *DeployContainerInputBody`
 
 NewDeployContainerInputBody instantiates a new DeployContainerInputBody object
 This constructor will assign default values to properties that have it defined,
@@ -55,24 +55,24 @@ SetSchema sets Schema field to given value.
 
 HasSchema returns a boolean if a field has been set.
 
-### GetContainerName
+### GetImageName
 
-`func (o *DeployContainerInputBody) GetContainerName() string`
+`func (o *DeployContainerInputBody) GetImageName() string`
 
-GetContainerName returns the ContainerName field if non-nil, zero value otherwise.
+GetImageName returns the ImageName field if non-nil, zero value otherwise.
 
-### GetContainerNameOk
+### GetImageNameOk
 
-`func (o *DeployContainerInputBody) GetContainerNameOk() (*string, bool)`
+`func (o *DeployContainerInputBody) GetImageNameOk() (*string, bool)`
 
-GetContainerNameOk returns a tuple with the ContainerName field if it's non-nil, zero value otherwise
+GetImageNameOk returns a tuple with the ImageName field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetContainerName
+### SetImageName
 
-`func (o *DeployContainerInputBody) SetContainerName(v string)`
+`func (o *DeployContainerInputBody) SetImageName(v string)`
 
-SetContainerName sets ContainerName field to given value.
+SetImageName sets ImageName field to given value.
 
 
 ### GetInternalAppPort
