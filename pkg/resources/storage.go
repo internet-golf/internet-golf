@@ -4,9 +4,12 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/md5"
+	"embed"
+	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,18 +19,27 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
+//go:embed dash-dist/*
+var dash embed.FS
+
 type FileManager struct {
 	config        *utils.Config
 	DbPath        string
 	CaddyDataPath string
+	DashSpaPath   string
 }
 
 func NewFileManager(config *utils.Config) *FileManager {
-	return &FileManager{
+	manager := &FileManager{
 		config:        config,
 		DbPath:        path.Join(config.DataDirectory, "internet.db"),
 		CaddyDataPath: path.Join(config.DataDirectory, "caddy-internal"),
+		DashSpaPath:   path.Join(config.DataDirectory, "dashboard"),
 	}
+
+	writeOutEmbeddedFs(dash, "dash-dist", manager.DashSpaPath)
+
+	return manager
 }
 
 // receives a stream of a .tar.gz file, extracts its contents according to the
@@ -178,4 +190,36 @@ func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs b
 	}
 
 	return nil
+}
+
+func writeOutEmbeddedFs(files embed.FS, rootDir string, destDir string) error {
+	return fs.WalkDir(files, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Determine the relative path to maintain the structure
+		relPath, err := filepath.Rel(rootDir, path)
+		if err != nil {
+			return err
+		}
+
+		// Construct the full destination path
+		destPath := filepath.Join(destDir, relPath)
+
+		if d.IsDir() {
+			// Create directories with appropriate permissions
+			return os.MkdirAll(destPath, 0755)
+		} else {
+			// Read the file content from the embedded FS
+			content, err := fs.ReadFile(files, path)
+			if err != nil {
+				return err
+			}
+
+			// Write the content to the physical file
+			// Use 0644 permissions for files
+			return os.WriteFile(destPath, content, 0644)
+		}
+	})
 }

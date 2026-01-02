@@ -66,6 +66,20 @@ func main() {
 					ServedThing:     "127.0.0.1:" + adminApiPort,
 				})
 
+			// temporary (this needs to be customized via options or maybe a
+			// special case of create-deployment):
+			deploymentBus.PutDeploymentContentByUrl(
+				database.Url{
+					Domain: "internet-golf-test.local",
+					Path:   "/",
+				},
+				database.DeploymentContent{
+					HasContent:      true,
+					ServedThingType: database.StaticFiles,
+					ServedThing:     fileManager.DashSpaPath,
+				},
+			)
+
 			// start the admin api
 			server := adminApi.CreateServer()
 			server.ListenAndServe()

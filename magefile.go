@@ -39,8 +39,13 @@ func Build() {
 	mg.Deps(BuildClient, BuildServer)
 }
 
+func BuildDash() error {
+	fmt.Println("Building dashboard...")
+	return sh.Run("docker", "build", "-o", "./pkg/resources/dash-dist/", "./admin-dash/")
+}
+
 func BuildServer() error {
-	mg.Deps(SetExtension, InstallDeps)
+	mg.Deps(SetExtension, InstallDeps, BuildDash)
 	fmt.Println("Building server...")
 	return sh.Run("go", "build", "-o", "golf-server"+extension, "./cmd")
 }
