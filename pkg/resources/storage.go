@@ -17,11 +17,17 @@ import (
 )
 
 type FileManager struct {
-	config *utils.Config
+	config        *utils.Config
+	DbPath        string
+	CaddyDataPath string
 }
 
 func NewFileManager(config *utils.Config) *FileManager {
-	return &FileManager{config: config}
+	return &FileManager{
+		config:        config,
+		DbPath:        path.Join(config.DataDirectory, "internet.db"),
+		CaddyDataPath: path.Join(config.DataDirectory, "caddy-internal"),
+	}
 }
 
 // receives a stream of a .tar.gz file, extracts its contents according to the

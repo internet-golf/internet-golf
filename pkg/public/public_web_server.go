@@ -5,12 +5,12 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"path"
 	"slices"
 	"strconv"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 
 	"github.com/internet-golf/internet-golf/pkg/utils"
 
@@ -38,14 +38,15 @@ type PublicWebServer interface {
 // package
 type CaddyServer struct {
 	config      *utils.Config
+	dataPath    string
 	onDemandTls onDemandTls
 }
 
 const httpAppServerName = "internetgolf"
 
-func NewPublicWebServer(config *utils.Config) (PublicWebServer, error) {
+func NewPublicWebServer(config *utils.Config, files *resources.FileManager) (PublicWebServer, error) {
 
-	return &CaddyServer{config: config}, nil
+	return &CaddyServer{config: config, dataPath: files.CaddyDataPath}, nil
 }
 
 // puts all the deployments on the public internet. prioritizes more specific
@@ -186,7 +187,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		},
 		StorageRaw: utils.JsonOrPanic(map[string]string{
 			"module": "file_system",
-			"root":   path.Join(c.config.DataDirectory, "caddy"),
+			"root":   c.dataPath,
 		}),
 		Logging: &caddy.Logging{
 			Logs: map[string]*caddy.CustomLog{

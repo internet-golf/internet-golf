@@ -2,9 +2,9 @@ package db
 
 import (
 	"fmt"
-	"path"
 
 	"github.com/asdine/storm/v3"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
@@ -25,10 +25,8 @@ type StormDb struct {
 	dbFile string
 }
 
-func NewDb(config *utils.Config) (Db, error) {
-	// initialize database file
-
-	dbFile := path.Join(config.DataDirectory, "internet.db")
+func NewDb(config *utils.Config, files *resources.FileManager) (Db, error) {
+	dbFile := files.DbPath
 
 	storm, stormOpenErr := storm.Open(dbFile)
 	if stormOpenErr != nil {

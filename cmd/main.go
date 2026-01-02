@@ -31,17 +31,19 @@ func main() {
 
 			config := utils.NewConfig(dataDirectory, localOnly, verbose, adminApiPort)
 
-			db, err := database.NewDb(config)
+			fileManager := resources.NewFileManager(config)
+
+			db, err := database.NewDb(config, fileManager)
 			if err != nil {
 				panic(err)
 			}
 
-			deploymentServer, err := public.NewPublicWebServer(config)
+			deploymentServer, err := public.NewPublicWebServer(config, fileManager)
 			if err != nil {
 				panic(err)
 			}
 
-			deploymentBus, err := api.NewDeploymentBus(deploymentServer, db, resources.NewFileManager(config))
+			deploymentBus, err := api.NewDeploymentBus(deploymentServer, db, fileManager)
 			if err != nil {
 				panic(err)
 			}
