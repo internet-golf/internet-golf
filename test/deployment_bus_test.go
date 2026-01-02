@@ -14,7 +14,7 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/db"
 	database "github.com/internet-golf/internet-golf/pkg/db"
 	"github.com/internet-golf/internet-golf/pkg/public_web_server"
-	"github.com/internet-golf/internet-golf/pkg/settings"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 var tempDirs []string
@@ -28,7 +28,7 @@ func createBus() *admin_api.DeploymentBus {
 	tempDirs = append(tempDirs, tempDir)
 
 	// the port doesn't matter since we're not actually starting the admin api
-	config := settings.NewConfig(tempDir, true, true, "0")
+	config := utils.NewConfig(tempDir, true, true, "0")
 
 	db, err := database.NewDb(config)
 	if err != nil {
@@ -74,6 +74,24 @@ func getFixturePath(fixture string) string {
 	return path.Join(
 		// for some reason the cwd already includes /test/
 		strings.ReplaceAll(cwd, "\\", "/"), "fixtures", fixture)
+}
+
+func TestDeploymentPlaceholderContent(t *testing.T) {
+
+	deploymentBus := createBus()
+	defer deploymentBus.Stop()
+
+	url := "http://" + BasicTestHost
+	assertUrlEmpty(url, t)
+
+	deploymentBus.SetupDeployment(db.DeploymentMetadata{
+		Url: db.Url{Domain: BasicTestHost},
+	})
+
+	bodyStr := urlToPageContent(url, t)
+	if bodyStr != "server initialized" {
+		t.Fatalf("expected \"server initialized\", got %v", []byte(bodyStr))
+	}
 }
 
 func TestBasicStaticDeployment(t *testing.T) {

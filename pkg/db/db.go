@@ -5,7 +5,7 @@ import (
 	"path"
 
 	"github.com/asdine/storm/v3"
-	"github.com/internet-golf/internet-golf/pkg/settings"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 type Db interface {
@@ -21,14 +21,14 @@ type Db interface {
 // i had created a storage implementation using it that it hasn't been updated
 // in 5 years. i guess it's fine??? implements the `Db` interface.
 type StormDb struct {
-	settings *settings.Config
-	dbFile   string
+	config *utils.Config
+	dbFile string
 }
 
-func NewDb(settings *settings.Config) (Db, error) {
+func NewDb(config *utils.Config) (Db, error) {
 	// initialize database file
 
-	dbFile := path.Join(settings.DataDirectory, "internet.db")
+	dbFile := path.Join(config.DataDirectory, "internet.db")
 
 	storm, stormOpenErr := storm.Open(dbFile)
 	if stormOpenErr != nil {
@@ -49,15 +49,15 @@ func NewDb(settings *settings.Config) (Db, error) {
 	// create and return object that implements Db
 
 	db := &StormDb{
-		settings: settings,
-		dbFile:   dbFile,
+		config: config,
+		dbFile: dbFile,
 	}
 
 	return db, nil
 }
 
 func (s *StormDb) GetStorageDirectory() string {
-	return s.settings.DataDirectory
+	return s.config.DataDirectory
 }
 
 func (s *StormDb) GetDeployments() ([]Deployment, error) {

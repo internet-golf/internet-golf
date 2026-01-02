@@ -12,13 +12,12 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/internet-golf/internet-golf/pkg/auth"
 	"github.com/internet-golf/internet-golf/pkg/db"
 	"github.com/internet-golf/internet-golf/pkg/resources"
-	"github.com/internet-golf/internet-golf/pkg/settings"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
-func readAuth(api huma.API, authManager *auth.AuthManager) func(huma.Context, func(huma.Context)) {
+func readAuth(api huma.API, authManager *AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		// this header is set by the internal caddy reverse-proxy when it is
 		// forwarding a request - we don't want to mistake those for "true"
@@ -119,15 +118,15 @@ type GetDeploymentOutput struct {
 
 type AdminApi struct {
 	web    *DeploymentBus
-	auth   *auth.AuthManager
+	auth   *AuthManager
 	files  *resources.FileManager
-	config *settings.Config
+	config *utils.Config
 }
 
-func NewAdminApi(bus *DeploymentBus, db db.Db, config *settings.Config) *AdminApi {
+func NewAdminApi(bus *DeploymentBus, db db.Db, config *utils.Config) *AdminApi {
 	return &AdminApi{
 		web:    bus,
-		auth:   auth.NewAuthManager(db),
+		auth:   NewAuthManager(db),
 		files:  resources.NewFileManager(config),
 		config: config,
 	}
@@ -146,7 +145,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Put(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, huma.Error500InternalServerError("Auth check failed somehow")
 		}
@@ -171,7 +170,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Get(api, "/deployment/{url}", func(ctx context.Context, input *struct {
 		Url string `path:"url"`
 	}) (*GetDeploymentOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
@@ -209,7 +208,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			formData := input.RawBody.Data()
 			fmt.Printf("received form data: %+v\n", formData)
 
-			permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+			permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 			if !permissionsOk {
 				return nil, fmt.Errorf("Auth check failed somehow")
 			}
@@ -272,7 +271,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		})
 
 	huma.Put(api, "/user/register", func(ctx context.Context, input *AddExternalUserInput) (*SuccessOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}

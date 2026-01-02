@@ -36,7 +36,6 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/admin_api"
 	database "github.com/internet-golf/internet-golf/pkg/db"
 	"github.com/internet-golf/internet-golf/pkg/public_web_server"
-	"github.com/internet-golf/internet-golf/pkg/settings"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
@@ -221,7 +220,7 @@ func startFullServer(port string) func() {
 	}
 	tempDirs = append(tempDirs, tempDir)
 
-	config := settings.NewConfig(tempDir, true, true, port)
+	config := utils.NewConfig(tempDir, true, true, port)
 
 	db, err := database.NewDb(config)
 	if err != nil {

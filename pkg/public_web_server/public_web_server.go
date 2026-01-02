@@ -11,7 +11,6 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/settings"
 
 	"github.com/internet-golf/internet-golf/pkg/utils"
 
@@ -38,13 +37,13 @@ type PublicWebServer interface {
 // implements the PublicWebServer interface. the primary struct for this whole
 // package
 type CaddyServer struct {
-	config      *settings.Config
+	config      *utils.Config
 	onDemandTls onDemandTls
 }
 
 const httpAppServerName = "internetgolf"
 
-func NewPublicWebServer(config *settings.Config) (PublicWebServer, error) {
+func NewPublicWebServer(config *utils.Config) (PublicWebServer, error) {
 
 	return &CaddyServer{config: config}, nil
 }

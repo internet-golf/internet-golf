@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/md5"
-	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -14,15 +13,14 @@ import (
 	"strings"
 
 	"github.com/gosimple/slug"
-	"github.com/internet-golf/internet-golf/pkg/settings"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 type FileManager struct {
-	config *settings.Config
+	config *utils.Config
 }
 
-func NewFileManager(config *settings.Config) *FileManager {
+func NewFileManager(config *utils.Config) *FileManager {
 	return &FileManager{config: config}
 }
 
