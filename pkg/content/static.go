@@ -13,11 +13,11 @@ import (
 	"strings"
 
 	"github.com/gosimple/slug"
-	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/settings"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
-type FileManager struct{ Settings db.StorageSettings }
+type FileManager struct{ Config *settings.Config }
 
 // receives a stream of a .tar.gz file, extracts its contents according to the
 // settings, returns the path of the contents
@@ -30,7 +30,7 @@ func (f FileManager) TarGzToDeploymentFiles(
 		return "", fmt.Errorf("could not hash files for %s", contentName)
 	}
 	outDir := path.Join(
-		f.Settings.DataDirectory,
+		f.Config.DataDirectory,
 		slug.Make(contentName),
 		hash,
 	)

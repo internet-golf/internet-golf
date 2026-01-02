@@ -12,12 +12,14 @@ import (
 
 	"github.com/internet-golf/internet-golf/pkg/content"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	database "github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/settings"
 	"github.com/internet-golf/internet-golf/pkg/web"
 )
 
 var tempDirs []string
 
-func createBus() content.DeploymentBus {
+func createBus() *content.DeploymentBus {
 
 	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
 	if tempDirError != nil {
@@ -25,22 +27,23 @@ func createBus() content.DeploymentBus {
 	}
 	tempDirs = append(tempDirs, tempDir)
 
-	settings := db.StorageSettings{}
-	settings.Init(tempDir)
-	db := db.StormDb{}
-	db.Init(settings)
+	// the port doesn't matter since we're not actually starting the admin api
+	config := settings.NewConfig(tempDir, true, true, "0")
 
-	// interface to the web server that actually deploys the deployments
-	deploymentServer := web.CaddyServer{StorageSettings: settings}
-	deploymentServer.Settings.LocalOnly = true
-
-	// object that receives the active deployments and broadcasts
-	// them to the deploymentServer when necessary
-	deploymentBus := content.DeploymentBus{
-		Server: &deploymentServer,
-		Db:     &db,
+	db, err := database.NewDb(config)
+	if err != nil {
+		panic(err)
 	}
-	deploymentBus.Init()
+
+	deploymentServer, err := web.NewPublicWebServer(config)
+	if err != nil {
+		panic(err)
+	}
+
+	deploymentBus, err := content.NewDeploymentBus(deploymentServer, db)
+	if err != nil {
+		panic(err)
+	}
 
 	return deploymentBus
 }
@@ -124,7 +127,10 @@ func TestBasicStaticDeploymentPersistence(t *testing.T) {
 
 	deploymentBus.Stop()
 
-	deploymentBus.Init()
+	deploymentBus, err := content.NewDeploymentBus(deploymentBus.Server, deploymentBus.Db)
+	if err != nil {
+		panic(err)
+	}
 
 	bodyStr = urlToPageContent(url, t)
 	if bodyStr != "stuff\n" {

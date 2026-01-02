@@ -33,9 +33,9 @@ import (
 	"testing"
 
 	golfsdk "github.com/internet-golf/internet-golf/client-sdk"
-	"github.com/internet-golf/internet-golf/pkg/auth"
 	"github.com/internet-golf/internet-golf/pkg/content"
 	database "github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/settings"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 	"github.com/internet-golf/internet-golf/pkg/web"
 )
@@ -221,27 +221,24 @@ func startFullServer(port string) func() {
 	}
 	tempDirs = append(tempDirs, tempDir)
 
-	settings := database.StorageSettings{}
-	settings.Init(tempDir)
+	config := settings.NewConfig(tempDir, true, true, port)
 
-	deploymentServer := web.CaddyServer{StorageSettings: settings}
-	deploymentServer.Settings.LocalOnly = true
-
-	db := database.StormDb{}
-	db.Init(settings)
-
-	deploymentBus := content.DeploymentBus{
-		Server: &deploymentServer,
-		Db:     &db,
+	db, err := database.NewDb(config)
+	if err != nil {
+		panic(err)
 	}
-	deploymentBus.Init()
-	adminApi := content.AdminApi{
-		Web:       &deploymentBus,
-		Auth:      auth.AuthManager{Db: &db},
-		Port:      port,
-		Files:     content.FileManager{Settings: settings},
-		LocalOnly: true,
+
+	deploymentServer, err := web.NewPublicWebServer(config)
+	if err != nil {
+		panic(err)
 	}
+
+	deploymentBus, err := content.NewDeploymentBus(deploymentServer, db)
+	if err != nil {
+		panic(err)
+	}
+
+	adminApi := content.NewAdminApi(deploymentBus, db, config)
 
 	// TODO: this default admin API path needs to be a global constant somewhere
 	adminApiUrl := database.Url{Path: "/_golf"}

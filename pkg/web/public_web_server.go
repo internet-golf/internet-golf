@@ -12,6 +12,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/settings"
 
 	"github.com/internet-golf/internet-golf/pkg/utils"
 
@@ -31,7 +32,6 @@ import (
 
 // the primary interface for this whole package
 type PublicWebServer interface {
-	Init() error
 	DeployAll([]db.Deployment) error
 	Stop() error
 }
@@ -39,36 +39,35 @@ type PublicWebServer interface {
 // implements the PublicWebServer interface. the primary struct for this whole
 // package
 type CaddyServer struct {
-	Settings struct {
-		LocalOnly bool
-		Verbose   bool
-	}
-	StorageSettings        db.StorageSettings
+	Config                 *settings.Config
 	placeholderContentPath string
 	onDemandTls            onDemandTls
 }
 
 const httpAppServerName = "internetgolf"
 
-// TODO: placeholder content should probably be managed by the FileManager?
-
 //go:embed dist/placeholder.html
 var placeholderContent []byte
 
-func (c *CaddyServer) Init() error {
-	c.placeholderContentPath = path.Join(c.StorageSettings.DataDirectory, "placeholder-content")
-	os.MkdirAll(c.placeholderContentPath, 0644)
-
-	return os.WriteFile(path.Join(c.placeholderContentPath, "index.html"), placeholderContent, 0644)
-
-	// caddy seems to start itself?
+func NewPublicWebServer(config *settings.Config) (PublicWebServer, error) {
+	placeholderContentPath := path.Join(config.DataDirectory, "placeholder-content")
+	if err := os.MkdirAll(placeholderContentPath, 0644); err != nil {
+		return nil, err
+	}
+	if err := os.WriteFile(path.Join(placeholderContentPath, "index.html"), placeholderContent, 0644); err != nil {
+		return nil, err
+	}
+	return &CaddyServer{
+		Config:                 config,
+		placeholderContentPath: placeholderContentPath,
+	}, nil
 }
 
 // puts all the deployments on the public internet. prioritizes more specific
 // urls over less specific urls
 func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	var listen []string
-	if c.Settings.LocalOnly {
+	if c.Config.LocalOnly {
 		listen = []string{"localhost:80"}
 	} else {
 		listen = []string{":80", ":443"}
@@ -78,7 +77,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 			httpAppServerName: {
 				Listen: listen,
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
-					Disabled: c.Settings.LocalOnly,
+					Disabled: c.Config.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{{
 					// this matches everything (apparently)
@@ -196,7 +195,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	// this program might make it slightly harder to reach and exploit 🤞
 	caddyAdminApiPort, _ := utils.GetFreePort()
 	logLevel := "ERROR"
-	if c.Settings.Verbose {
+	if c.Config.Verbose {
 		logLevel = "DEBUG"
 	}
 
@@ -207,7 +206,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		},
 		StorageRaw: utils.JsonOrPanic(map[string]string{
 			"module": "file_system",
-			"root":   path.Join(c.StorageSettings.DataDirectory, "caddy"),
+			"root":   path.Join(c.Config.DataDirectory, "caddy"),
 		}),
 		Logging: &caddy.Logging{
 			Logs: map[string]*caddy.CustomLog{
@@ -218,7 +217,9 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		},
 	}
 
-	if !c.Settings.LocalOnly {
+	// TODO: wait, how is the tlsApprovalServer set up every time that DeployAll
+	// is called? shouldn't this be in NewPublicWebServer?
+	if !c.Config.LocalOnly {
 		tlsConfig, err := getOnDemandTls()
 		if err != nil {
 			panic(err)
@@ -237,7 +238,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 }
 
 func (c *CaddyServer) Stop() error {
-	if !c.Settings.LocalOnly {
+	if !c.Config.LocalOnly {
 		err := c.onDemandTls.tlsApprovalServer.Shutdown(context.TODO())
 		if err != nil {
 			caddy.Stop()

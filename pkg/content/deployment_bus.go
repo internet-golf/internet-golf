@@ -30,19 +30,22 @@ type DeploymentBus struct {
 	Db          db.Db
 }
 
-// brings any persisted deployments back to life and initializes the
-// DeploymentBus' Server with them
-func (bus *DeploymentBus) Init() {
-	deployments, err := bus.Db.GetDeployments()
+func NewDeploymentBus(server web.PublicWebServer, db db.Db) (*DeploymentBus, error) {
+	deployments, err := db.GetDeployments()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	bus.deployments = deployments
-	serverErr := bus.Server.Init()
-	if serverErr != nil {
-		panic(serverErr)
+
+	if err := server.DeployAll(deployments); err != nil {
+		return nil, err
 	}
-	bus.Server.DeployAll(bus.deployments)
+
+	return &DeploymentBus{
+		deployments: deployments,
+		Server:      server,
+		Db:          db,
+	}, nil
+
 }
 
 func (bus *DeploymentBus) Stop() error {

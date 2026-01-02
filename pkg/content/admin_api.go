@@ -14,6 +14,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/internet-golf/internet-golf/pkg/auth"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/settings"
 )
 
 func readAuth(api huma.API, authManager auth.AuthManager) func(huma.Context, func(huma.Context)) {
@@ -116,11 +117,19 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web       *DeploymentBus
-	Auth      auth.AuthManager
-	Files     FileManager
-	Port      string
-	LocalOnly bool
+	Web    *DeploymentBus
+	Auth   auth.AuthManager
+	Files  FileManager
+	Config *settings.Config
+}
+
+func NewAdminApi(bus *DeploymentBus, db db.Db, config *settings.Config) *AdminApi {
+	return &AdminApi{
+		Web:    bus,
+		Auth:   auth.AuthManager{Db: db},
+		Files:  FileManager{Config: config},
+		Config: config,
+	}
 }
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
@@ -352,7 +361,7 @@ func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
 }
 
 func (a *AdminApi) CreateServer() *http.Server {
-	if len(a.Port) == 0 {
+	if len(a.Config.AdminApiPort) == 0 {
 		panic("Admin API port not set")
 	}
 
@@ -363,11 +372,11 @@ func (a *AdminApi) CreateServer() *http.Server {
 
 	a.addRoutes(api)
 
-	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
+	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Config.AdminApiPort)
 	address := "0.0.0.0"
-	if a.LocalOnly {
+	if a.Config.LocalOnly {
 		address = "127.0.0.1"
 	}
-	server := http.Server{Addr: address + ":" + a.Port, Handler: router}
+	server := http.Server{Addr: address + ":" + a.Config.AdminApiPort, Handler: router}
 	return &server
 }
