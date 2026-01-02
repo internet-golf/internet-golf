@@ -16,6 +16,9 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
+// this returns a huma middleware function that figures out the permissions
+// assigned to the entity making the request and stores them in the request
+// context
 func readAuth(api huma.API, authManager *AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		// this header is set by the internal caddy reverse-proxy when it is
@@ -131,6 +134,11 @@ func NewAdminApi(bus *DeploymentBus, db db.Db, config *utils.Config) *AdminApi {
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
 
+// this function sets up the endpoints for the server's admin API. note that the
+// route handlers are meant to be fairly thin; their job is to parse incoming
+// data, verify the permissions of the entity making the request, and respond to
+// the client afterward. it's easier to handle business logic in dedicated
+// entities like DeploymentBus and AuthManager.
 func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Get(api, "/alive",
 		func(ctx context.Context, i *struct{}) (*HealthCheckOutput, error) {
@@ -153,7 +161,6 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 		input.Body.DeploymentMetadata.Url = urlFromString(input.Body.Url)
 
-		// TODO: validate externalSourceType and i guess Domain and Path
 		putDeploymentErr := a.web.SetupDeployment(input.Body.DeploymentMetadata)
 		if putDeploymentErr != nil {
 			return nil, putDeploymentErr
@@ -249,6 +256,8 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		if len(input.Body.ExternalUserHandle) == 0 && len(input.Body.ExternalUserId) == 0 {
 			return nil, huma.Error400BadRequest("Either ID or handle must be specified.")
 		}
+
+		// TODO: move this logic into AuthManager somehow
 
 		if len(input.Body.ExternalUserId) == 0 {
 			if input.Body.ExternalUserSource == db.Github {

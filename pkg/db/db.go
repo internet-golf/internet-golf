@@ -60,6 +60,9 @@ func (s *StormDb) GetStorageDirectory() string {
 	return s.config.DataDirectory
 }
 
+// i am sort of not sure why i open and close the database in each and every one
+// of these methods, instead of keeping it open
+
 func (s *StormDb) GetDeployments() ([]Deployment, error) {
 	db, dbOpenErr := storm.Open(s.dbFile)
 	if dbOpenErr != nil {

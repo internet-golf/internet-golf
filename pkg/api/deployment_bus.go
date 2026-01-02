@@ -23,9 +23,8 @@ func urlFromString(url string) db.Url {
 	}
 }
 
-// this struct provides access to the active set of deployments and also, more
-// importantly, sends those deployments to the PublicWebServer and the database
-// when necessary.
+// the DeploymentBus handles data and config received by the admin API and
+// persists them and turns them into websites.
 type DeploymentBus struct {
 	deployments []db.Deployment
 	server      public.PublicWebServer
@@ -65,7 +64,7 @@ func (bus *DeploymentBus) persistDeployments() error {
 func (bus *DeploymentBus) SetupDeployment(metadata db.DeploymentMetadata) error {
 	// TODO: make sure its URL does not overlap with any existing deployments
 	// (except the one it is replacing), and that at least the domain is present
-	// and a valid domain name?
+	// and a valid domain name? also validate externalSourceType if that's a thing
 
 	existingIndex := slices.IndexFunc(bus.deployments, func(d db.Deployment) bool {
 		return d.Url.Equals(&metadata.Url)
@@ -134,7 +133,7 @@ func (bus *DeploymentBus) PutStaticFilesForDeployment(
 	})
 
 	// TODO: delete the old directory after deployContent is
-	// finished? presumably that'll be safe
+	// finished? presumably that'll be safe (INT-42)
 
 	return nil
 }
