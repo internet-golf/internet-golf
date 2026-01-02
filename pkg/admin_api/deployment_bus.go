@@ -1,4 +1,4 @@
-package content
+package admin_api
 
 import (
 	_ "embed"
@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/web"
+	"github.com/internet-golf/internet-golf/pkg/public_web_server"
 )
 
 func urlFromString(url string) db.Url {
@@ -26,11 +26,11 @@ func urlFromString(url string) db.Url {
 // when necessary.
 type DeploymentBus struct {
 	deployments []db.Deployment
-	Server      web.PublicWebServer
+	Server      public_web_server.PublicWebServer
 	Db          db.Db
 }
 
-func NewDeploymentBus(server web.PublicWebServer, db db.Db) (*DeploymentBus, error) {
+func NewDeploymentBus(server public_web_server.PublicWebServer, db db.Db) (*DeploymentBus, error) {
 	deployments, err := db.GetDeployments()
 	if err != nil {
 		return nil, err

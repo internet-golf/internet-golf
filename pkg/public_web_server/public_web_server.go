@@ -1,4 +1,4 @@
-package web
+package public_web_server
 
 import (
 	"context"
@@ -98,7 +98,8 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		var getCaddyRoute Handler
+		type deploymentToCaddyRouteConverter = func(d db.Deployment) ([]caddyhttp.Route, error)
+		var getCaddyRoute deploymentToCaddyRouteConverter
 
 		if !deployment.DeploymentContent.HasContent {
 			// if the deployment has no content, substitute in this placeholder
@@ -122,8 +123,6 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 			switch deployment.ServedThingType {
 			case db.StaticFiles:
 				getCaddyRoute = GetCaddyStaticRoutes
-			case db.DockerContainer:
-				getCaddyRoute = GetCaddyContainerRoute
 			case db.ReverseProxy:
 				getCaddyRoute = GetCaddyReverseProxyRoute
 			default:

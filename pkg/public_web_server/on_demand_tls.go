@@ -1,4 +1,4 @@
-package web
+package public_web_server
 
 import (
 	"fmt"

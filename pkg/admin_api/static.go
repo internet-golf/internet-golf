@@ -1,4 +1,4 @@
-package content
+package admin_api
 
 import (
 	"archive/tar"

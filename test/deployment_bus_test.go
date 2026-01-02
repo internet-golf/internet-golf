@@ -10,16 +10,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/internet-golf/internet-golf/pkg/content"
+	"github.com/internet-golf/internet-golf/pkg/admin_api"
 	"github.com/internet-golf/internet-golf/pkg/db"
 	database "github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/public_web_server"
 	"github.com/internet-golf/internet-golf/pkg/settings"
-	"github.com/internet-golf/internet-golf/pkg/web"
 )
 
 var tempDirs []string
 
-func createBus() *content.DeploymentBus {
+func createBus() *admin_api.DeploymentBus {
 
 	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
 	if tempDirError != nil {
@@ -35,12 +35,12 @@ func createBus() *content.DeploymentBus {
 		panic(err)
 	}
 
-	deploymentServer, err := web.NewPublicWebServer(config)
+	deploymentServer, err := public_web_server.NewPublicWebServer(config)
 	if err != nil {
 		panic(err)
 	}
 
-	deploymentBus, err := content.NewDeploymentBus(deploymentServer, db)
+	deploymentBus, err := admin_api.NewDeploymentBus(deploymentServer, db)
 	if err != nil {
 		panic(err)
 	}
@@ -127,7 +127,7 @@ func TestBasicStaticDeploymentPersistence(t *testing.T) {
 
 	deploymentBus.Stop()
 
-	deploymentBus, err := content.NewDeploymentBus(deploymentBus.Server, deploymentBus.Db)
+	deploymentBus, err := admin_api.NewDeploymentBus(deploymentBus.Server, deploymentBus.Db)
 	if err != nil {
 		panic(err)
 	}
