@@ -1,13 +1,15 @@
-package admin_api
+package api
 
 import (
 	_ "embed"
 	"fmt"
+	"io"
 	"slices"
 	"strings"
 
 	"github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/public_web_server"
+	"github.com/internet-golf/internet-golf/pkg/public"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 )
 
 func urlFromString(url string) db.Url {
@@ -26,11 +28,12 @@ func urlFromString(url string) db.Url {
 // when necessary.
 type DeploymentBus struct {
 	deployments []db.Deployment
-	Server      public_web_server.PublicWebServer
-	Db          db.Db
+	server      public.PublicWebServer
+	db          db.Db
+	files       *resources.FileManager
 }
 
-func NewDeploymentBus(server public_web_server.PublicWebServer, db db.Db) (*DeploymentBus, error) {
+func NewDeploymentBus(server public.PublicWebServer, db db.Db, files *resources.FileManager) (*DeploymentBus, error) {
 	deployments, err := db.GetDeployments()
 	if err != nil {
 		return nil, err
@@ -42,18 +45,19 @@ func NewDeploymentBus(server public_web_server.PublicWebServer, db db.Db) (*Depl
 
 	return &DeploymentBus{
 		deployments: deployments,
-		Server:      server,
-		Db:          db,
+		server:      server,
+		db:          db,
+		files:       files,
 	}, nil
 
 }
 
 func (bus *DeploymentBus) Stop() error {
-	return bus.Server.Stop()
+	return bus.server.Stop()
 }
 
 func (bus *DeploymentBus) persistDeployments() error {
-	return bus.Db.SaveDeployments(bus.deployments)
+	return bus.db.SaveDeployments(bus.deployments)
 }
 
 // create a deployment or, if a deployment with the same name as the input
@@ -73,7 +77,7 @@ func (bus *DeploymentBus) SetupDeployment(metadata db.DeploymentMetadata) error 
 		bus.deployments[existingIndex].DeploymentMetadata = metadata
 	}
 
-	deploymentErr := bus.Server.DeployAll(bus.deployments)
+	deploymentErr := bus.server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
 		// rollback to persisted state?
 		return deploymentErr
@@ -110,6 +114,31 @@ func (bus *DeploymentBus) PutDeploymentContentByUrl(
 	return bus.updateDeploymentContentByIndex(existingIndex, content)
 }
 
+func (bus *DeploymentBus) PutStaticFilesForDeployment(
+	deployment db.Deployment, gzippedDir io.ReadSeeker, keepLeadingDirectories bool,
+) error {
+
+	outDir, extractionErr := bus.files.TarGzToDeploymentFiles(
+		gzippedDir, deployment.Url.String(),
+		keepLeadingDirectories,
+	)
+
+	if extractionErr != nil {
+		return extractionErr
+	}
+
+	bus.PutDeploymentContentByUrl(deployment.Url, db.DeploymentContent{
+		HasContent:      true,
+		ServedThingType: db.StaticFiles,
+		ServedThing:     outDir,
+	})
+
+	// TODO: delete the old directory after deployContent is
+	// finished? presumably that'll be safe
+
+	return nil
+}
+
 // updates the content of the deployment at the given index, pushes the
 // deployments to the public web server, and then saves them
 func (bus *DeploymentBus) updateDeploymentContentByIndex(
@@ -118,7 +147,7 @@ func (bus *DeploymentBus) updateDeploymentContentByIndex(
 	bus.deployments[index].DeploymentContent = content
 	bus.deployments[index].DeploymentContent.HasContent = true
 
-	deploymentErr := bus.Server.DeployAll(bus.deployments)
+	deploymentErr := bus.server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
 		// rollback to previous persisted state?
 		return deploymentErr
@@ -138,7 +167,7 @@ func (bus *DeploymentBus) DeleteDeployment(url db.Url) error {
 
 	bus.deployments = slices.Delete(bus.deployments, index, index+1)
 
-	deploymentErr := bus.Server.DeployAll(bus.deployments)
+	deploymentErr := bus.server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
 		return deploymentErr
 	}

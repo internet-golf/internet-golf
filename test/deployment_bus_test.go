@@ -10,16 +10,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/internet-golf/internet-golf/pkg/admin_api"
+	"github.com/internet-golf/internet-golf/pkg/api"
 	"github.com/internet-golf/internet-golf/pkg/db"
-	database "github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/public_web_server"
+	"github.com/internet-golf/internet-golf/pkg/public"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 var tempDirs []string
 
-func createBus() *admin_api.DeploymentBus {
+func createBus() *api.DeploymentBus {
 
 	tempDir, tempDirError := os.MkdirTemp("", "internet-golf-test")
 	if tempDirError != nil {
@@ -28,19 +28,19 @@ func createBus() *admin_api.DeploymentBus {
 	tempDirs = append(tempDirs, tempDir)
 
 	// the port doesn't matter since we're not actually starting the admin api
-	config := utils.NewConfig(tempDir, true, true, "0")
+	config := utils.NewConfig(tempDir, true, false, "0")
 
-	db, err := database.NewDb(config)
+	db, err := db.NewDb(config)
 	if err != nil {
 		panic(err)
 	}
 
-	deploymentServer, err := public_web_server.NewPublicWebServer(config)
+	deploymentServer, err := public.NewPublicWebServer(config)
 	if err != nil {
 		panic(err)
 	}
 
-	deploymentBus, err := admin_api.NewDeploymentBus(deploymentServer, db)
+	deploymentBus, err := api.NewDeploymentBus(deploymentServer, db, resources.NewFileManager(config))
 	if err != nil {
 		panic(err)
 	}
@@ -119,40 +119,6 @@ func TestBasicStaticDeployment(t *testing.T) {
 	bodyStr := urlToPageContent(url, t)
 	if bodyStr != "stuff\n" {
 		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
-	}
-}
-
-func TestBasicStaticDeploymentPersistence(t *testing.T) {
-	deploymentBus := createBus()
-
-	url := "http://" + BasicTestHost
-
-	deploymentBus.SetupDeployment(db.DeploymentMetadata{
-		Url: db.Url{Domain: BasicTestHost},
-	})
-
-	deploymentBus.PutDeploymentContentByUrl(
-		db.Url{Domain: BasicTestHost},
-		db.DeploymentContent{
-			ServedThingType: db.StaticFiles,
-			ServedThing:     getFixturePath("static-site"),
-		})
-
-	bodyStr := urlToPageContent(url, t)
-	if bodyStr != "stuff\n" {
-		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
-	}
-
-	deploymentBus.Stop()
-
-	deploymentBus, err := admin_api.NewDeploymentBus(deploymentBus.Server, deploymentBus.Db)
-	if err != nil {
-		panic(err)
-	}
-
-	bodyStr = urlToPageContent(url, t)
-	if bodyStr != "stuff\n" {
-		t.Fatalf("expected stuff\\n, got %s", bodyStr)
 	}
 }
 

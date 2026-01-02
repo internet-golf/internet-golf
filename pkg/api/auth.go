@@ -1,4 +1,4 @@
-package admin_api
+package api
 
 import (
 	"fmt"

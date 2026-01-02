@@ -1,4 +1,4 @@
-package admin_api
+package api
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/resources"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
@@ -119,7 +118,6 @@ type GetDeploymentOutput struct {
 type AdminApi struct {
 	web    *DeploymentBus
 	auth   *AuthManager
-	files  *resources.FileManager
 	config *utils.Config
 }
 
@@ -127,7 +125,6 @@ func NewAdminApi(bus *DeploymentBus, db db.Db, config *utils.Config) *AdminApi {
 	return &AdminApi{
 		web:    bus,
 		auth:   NewAuthManager(db),
-		files:  resources.NewFileManager(config),
 		config: config,
 	}
 }
@@ -204,9 +201,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		func(
 			ctx context.Context, input *DeployFilesInput,
 		) (*SuccessOutput, error) {
-			// 0. parse the form data
 			formData := input.RawBody.Data()
-			fmt.Printf("received form data: %+v\n", formData)
 
 			permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 			if !permissionsOk {
@@ -227,42 +222,13 @@ func (a *AdminApi) addRoutes(api huma.API) {
 				)
 			}
 
-			// 2. actually create the deployment content locally
+			filesErr := a.web.PutStaticFilesForDeployment(deployment, formData.Contents, formData.KeepLeadingDirectories)
 
-			var previousPath string
-			if formData.PreserveExistingFiles {
-				previousContent, previousContentErr := a.web.GetDeploymentByUrl(&url)
-				if previousContentErr == nil {
-					previousPath = previousContent.ServedThing
-				}
-			}
-			outDir, extractionErr := a.files.TarGzToDeploymentFiles(
-				formData.Contents, formData.Url,
-				formData.KeepLeadingDirectories, previousPath,
-			)
-			if extractionErr != nil {
+			if filesErr != nil {
 				return nil, huma.Error500InternalServerError(
-					"Error occurred while unpacking uploaded files: " + extractionErr.Error(),
+					"Error occurred while unpacking uploaded files: " + filesErr.Error(),
 				)
 			}
-
-			// 3. send the content to the deployment bus using the function that
-			// was created in step 1
-
-			err := a.web.PutDeploymentContentByUrl(
-				url,
-				db.DeploymentContent{
-					ServedThingType: db.StaticFiles,
-					ServedThing:     outDir,
-				},
-			)
-			if err != nil {
-				return nil, err
-			}
-			// TODO: delete the old directory after deployContent is
-			// finished? presumably that'll be safe
-
-			// 4. return success
 
 			output := SuccessOutput{}
 			output.Body.Success = true

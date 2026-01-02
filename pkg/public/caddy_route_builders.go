@@ -1,4 +1,4 @@
-package public_web_server
+package public
 
 import (
 	"encoding/json"

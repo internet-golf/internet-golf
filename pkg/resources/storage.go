@@ -27,8 +27,7 @@ func NewFileManager(config *utils.Config) *FileManager {
 // receives a stream of a .tar.gz file, extracts its contents according to the
 // settings, returns the path of the contents
 func (f FileManager) TarGzToDeploymentFiles(
-	stream io.ReadSeeker, contentName string,
-	keepLeadingDirectories bool, _preserveFromPreviousPath string,
+	stream io.ReadSeeker, contentName string, keepLeadingDirectories bool,
 ) (string, error) {
 	hash, hashErr := hashStream(stream)
 	if hashErr != nil {

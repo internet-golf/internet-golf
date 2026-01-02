@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/internet-golf/internet-golf/pkg/admin_api"
+	"github.com/internet-golf/internet-golf/pkg/api"
 	database "github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/public_web_server"
+	"github.com/internet-golf/internet-golf/pkg/public"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -35,17 +36,17 @@ func main() {
 				panic(err)
 			}
 
-			deploymentServer, err := public_web_server.NewPublicWebServer(config)
+			deploymentServer, err := public.NewPublicWebServer(config)
 			if err != nil {
 				panic(err)
 			}
 
-			deploymentBus, err := admin_api.NewDeploymentBus(deploymentServer, db)
+			deploymentBus, err := api.NewDeploymentBus(deploymentServer, db, resources.NewFileManager(config))
 			if err != nil {
 				panic(err)
 			}
 
-			adminApi := admin_api.NewAdminApi(deploymentBus, db, config)
+			adminApi := api.NewAdminApi(deploymentBus, db, config)
 
 			// create a deployment for the admin api (slightly premature, but
 			// that's fine as long as the health check endpoint is used)
@@ -103,7 +104,7 @@ func main() {
 		Use:  "openapi",
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			adminApi := admin_api.AdminApi{}
+			adminApi := api.AdminApi{}
 			adminApi.OutputOpenApiSpec(openapiOutputPath)
 		},
 	}
