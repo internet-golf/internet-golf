@@ -1,32 +1,14 @@
 package db
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"path"
-	"strings"
 
 	"github.com/asdine/storm/v3"
+	"github.com/internet-golf/internet-golf/pkg/resources"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
-type StorageSettings struct {
-	DataDirectory string
-}
-
-// pass in an empty string to use the default data directory
-func (s *StorageSettings) Init(nonDefaultDataDirectory string) {
-	var dataDirectoryError error
-	s.DataDirectory, dataDirectoryError = getDataDirectory(nonDefaultDataDirectory)
-	if dataDirectoryError != nil {
-		panic("Could not create data directory: " + dataDirectoryError.Error())
-	}
-	fmt.Printf("Initialized data directory to %s\n", s.DataDirectory)
-}
-
 type Db interface {
-	Init(settings StorageSettings) error
-	GetStorageDirectory() string
 	SaveDeployments(d []Deployment) error
 	GetDeployments() ([]Deployment, error)
 	SaveExternalUser(u ExternalUser) error
@@ -39,36 +21,45 @@ type Db interface {
 // i had created a storage implementation using it that it hasn't been updated
 // in 5 years. i guess it's fine??? implements the `Db` interface.
 type StormDb struct {
-	settings StorageSettings
-	dbFile   string
+	config *utils.Config
+	dbFile string
 }
 
-func (s *StormDb) Init(settings StorageSettings) error {
-	s.settings = settings
-	s.dbFile = path.Join(settings.DataDirectory, "internet.db")
+func NewDb(config *utils.Config, files *resources.FileManager) (Db, error) {
+	dbFile := files.DbPath
 
-	db, dbOpenErr := storm.Open(s.dbFile)
-	if dbOpenErr != nil {
-		return dbOpenErr
+	storm, stormOpenErr := storm.Open(dbFile)
+	if stormOpenErr != nil {
+		return nil, stormOpenErr
 	}
-	defer db.Close()
+	defer storm.Close()
 
-	deploymentBucketErr := db.Init(&Deployment{})
+	deploymentBucketErr := storm.Init(&Deployment{})
 	if deploymentBucketErr != nil {
-		return fmt.Errorf("Error creating deployment bucket: %+v", deploymentBucketErr)
+		return nil, fmt.Errorf("Error creating deployment bucket: %+v", deploymentBucketErr)
 	}
 
-	usersBucketErr := db.Init(&ExternalUser{})
+	usersBucketErr := storm.Init(&ExternalUser{})
 	if usersBucketErr != nil {
-		return fmt.Errorf("Error creating users bucket: %+v", usersBucketErr)
+		return nil, fmt.Errorf("Error creating users bucket: %+v", usersBucketErr)
 	}
 
-	return nil
+	// create and return object that implements Db
+
+	db := &StormDb{
+		config: config,
+		dbFile: dbFile,
+	}
+
+	return db, nil
 }
 
 func (s *StormDb) GetStorageDirectory() string {
-	return s.settings.DataDirectory
+	return s.config.DataDirectory
 }
+
+// i am sort of not sure why i open and close the database in each and every one
+// of these methods, instead of keeping it open
 
 func (s *StormDb) GetDeployments() ([]Deployment, error) {
 	db, dbOpenErr := storm.Open(s.dbFile)
@@ -157,34 +148,4 @@ func (s *StormDb) GetBearerToken(id string) (BearerToken, error) {
 	}
 
 	return result, nil
-}
-
-// receives a dataDirectoryPath; translates "$HOME" to the user's home
-// directory; creates a directory at the path if it doesn't already exist.
-// why is this a separate function ???
-func getDataDirectory(dataDirectoryPath string) (string, error) {
-	if strings.Contains(dataDirectoryPath, "$HOME") {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return "", errors.New(
-				"could not obtain home directory, so data directory could not be " +
-					"created using it. please manually configure the data directory",
-			)
-		}
-		// hopefully this replaceAll doesn't have weird consequences -
-		// everything still seems to work here on windows
-		homeDir = strings.ReplaceAll(homeDir, "\\", "/")
-		dataDirectoryPath = strings.ReplaceAll(dataDirectoryPath, "$HOME", homeDir)
-	}
-
-	if _, err := os.Lstat(dataDirectoryPath); err != nil {
-		fmt.Printf("Creating data directory at %v\n", dataDirectoryPath)
-		// TODO: hope that 0750 works for permissions. can Caddy access the result???
-		// will this work recursively?
-		if os.Mkdir(dataDirectoryPath, 0750) != nil {
-			return "", errors.New("could not create data directory at " + dataDirectoryPath)
-		}
-	}
-
-	return dataDirectoryPath, nil
 }

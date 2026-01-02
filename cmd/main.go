@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/internet-golf/internet-golf/pkg/auth"
-	"github.com/internet-golf/internet-golf/pkg/content"
-	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/api"
 	database "github.com/internet-golf/internet-golf/pkg/db"
-	"github.com/internet-golf/internet-golf/pkg/web"
+	"github.com/internet-golf/internet-golf/pkg/public"
+	"github.com/internet-golf/internet-golf/pkg/resources"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -29,40 +29,26 @@ func main() {
 		// re-implementation of it in utils_test.go
 		Run: func(cmd *cobra.Command, args []string) {
 
-			// the core architecture of this app consists of these top-level actors:
+			config := utils.NewConfig(dataDirectory, localOnly, verbose, adminApiPort)
 
-			// 0. the db module
-			storageSettings := db.StorageSettings{}
-			storageSettings.Init(dataDirectory)
-			db := db.StormDb{}
-			if err := db.Init(storageSettings); err != nil {
+			fileManager := resources.NewFileManager(config)
+
+			db, err := database.NewDb(config, fileManager)
+			if err != nil {
 				panic(err)
 			}
 
-			// 1. interface to the web server that actually deploys the deployments
-			deploymentServer := web.CaddyServer{StorageSettings: storageSettings}
-			deploymentServer.Settings.LocalOnly = localOnly
-			deploymentServer.Settings.Verbose = verbose
-
-			// 2. object that receives the active deployments and broadcasts
-			// them to the deploymentServer when necessary
-			deploymentBus := content.DeploymentBus{
-				Server: &deploymentServer,
-				Db:     &db,
-			}
-			deploymentBus.Init()
-
-			// 3. api server that receives admin API requests and updates the active
-			// deployments in response to them
-			adminApi := content.AdminApi{
-				Web:       &deploymentBus,
-				Auth:      auth.AuthManager{Db: &db},
-				Port:      adminApiPort,
-				Files:     content.FileManager{Settings: storageSettings},
-				LocalOnly: localOnly,
+			deploymentServer, err := public.NewPublicWebServer(config, fileManager)
+			if err != nil {
+				panic(err)
 			}
 
-			// putting the pieces together:
+			deploymentBus, err := api.NewDeploymentBus(deploymentServer, db, fileManager)
+			if err != nil {
+				panic(err)
+			}
+
+			adminApi := api.NewAdminApi(deploymentBus, db, config)
 
 			// create a deployment for the admin api (slightly premature, but
 			// that's fine as long as the health check endpoint is used)
@@ -107,8 +93,7 @@ func main() {
 	)
 	rootCmd.Flags().StringVar(
 		&dataDirectory, "data-dir", "$HOME/.internetgolf",
-		"Location on disk where deployments will be stored. "+
-			"Separate from Caddy's data directory.\n",
+		"Location on disk where deployment content and configuration will be stored.",
 	)
 	rootCmd.Flags().BoolVarP(
 		&verbose, "verbose", "v", false,
@@ -121,7 +106,7 @@ func main() {
 		Use:  "openapi",
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			adminApi := content.AdminApi{}
+			adminApi := api.AdminApi{}
 			adminApi.OutputOpenApiSpec(openapiOutputPath)
 		},
 	}

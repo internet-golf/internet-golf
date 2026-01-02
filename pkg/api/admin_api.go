@@ -1,4 +1,4 @@
-package content
+package api
 
 import (
 	"context"
@@ -12,11 +12,14 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/internet-golf/internet-golf/pkg/auth"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
-func readAuth(api huma.API, authManager auth.AuthManager) func(huma.Context, func(huma.Context)) {
+// this returns a huma middleware function that figures out the permissions
+// assigned to the entity making the request and stores them in the request
+// context
+func readAuth(api huma.API, authManager *AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		// this header is set by the internal caddy reverse-proxy when it is
 		// forwarding a request - we don't want to mistake those for "true"
@@ -116,15 +119,26 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web       *DeploymentBus
-	Auth      auth.AuthManager
-	Files     FileManager
-	Port      string
-	LocalOnly bool
+	web    *DeploymentBus
+	auth   *AuthManager
+	config *utils.Config
+}
+
+func NewAdminApi(bus *DeploymentBus, db db.Db, config *utils.Config) *AdminApi {
+	return &AdminApi{
+		web:    bus,
+		auth:   NewAuthManager(db),
+		config: config,
+	}
 }
 
 var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
 
+// this function sets up the endpoints for the server's admin API. note that the
+// route handlers are meant to be fairly thin; their job is to parse incoming
+// data, verify the permissions of the entity making the request, and respond to
+// the client afterward. it's easier to handle business logic in dedicated
+// entities like DeploymentBus and AuthManager.
 func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Get(api, "/alive",
 		func(ctx context.Context, i *struct{}) (*HealthCheckOutput, error) {
@@ -136,7 +150,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Put(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, huma.Error500InternalServerError("Auth check failed somehow")
 		}
@@ -147,8 +161,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 		input.Body.DeploymentMetadata.Url = urlFromString(input.Body.Url)
 
-		// TODO: validate externalSourceType and i guess Domain and Path
-		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
+		putDeploymentErr := a.web.SetupDeployment(input.Body.DeploymentMetadata)
 		if putDeploymentErr != nil {
 			return nil, putDeploymentErr
 		}
@@ -161,14 +174,14 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	huma.Get(api, "/deployment/{url}", func(ctx context.Context, input *struct {
 		Url string `path:"url"`
 	}) (*GetDeploymentOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
 
 		url := urlFromString(input.Url)
 
-		deployment, err := a.Web.GetDeploymentByUrl(&url)
+		deployment, err := a.web.GetDeploymentByUrl(&url)
 		if err != nil {
 			return nil, huma.Error404NotFound(
 				fmt.Sprintf("Could not find deployment with URL \"%s\"", url),
@@ -195,17 +208,15 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		func(
 			ctx context.Context, input *DeployFilesInput,
 		) (*SuccessOutput, error) {
-			// 0. parse the form data
 			formData := input.RawBody.Data()
-			fmt.Printf("received form data: %+v\n", formData)
 
-			permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+			permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 			if !permissionsOk {
 				return nil, fmt.Errorf("Auth check failed somehow")
 			}
 
 			url := urlFromString(formData.Url)
-			deployment, findDeploymentError := a.Web.GetDeploymentByUrl(&url)
+			deployment, findDeploymentError := a.web.GetDeploymentByUrl(&url)
 			if findDeploymentError != nil {
 				return nil, huma.Error404NotFound(
 					fmt.Sprintf("could not find deployment with URL \"%s\"", url),
@@ -218,42 +229,13 @@ func (a *AdminApi) addRoutes(api huma.API) {
 				)
 			}
 
-			// 2. actually create the deployment content locally
+			filesErr := a.web.PutStaticFilesForDeployment(deployment, formData.Contents, formData.KeepLeadingDirectories)
 
-			var previousPath string
-			if formData.PreserveExistingFiles {
-				previousContent, previousContentErr := a.Web.GetDeploymentByUrl(&url)
-				if previousContentErr == nil {
-					previousPath = previousContent.ServedThing
-				}
-			}
-			outDir, extractionErr := a.Files.TarGzToDeploymentFiles(
-				formData.Contents, formData.Url,
-				formData.KeepLeadingDirectories, previousPath,
-			)
-			if extractionErr != nil {
+			if filesErr != nil {
 				return nil, huma.Error500InternalServerError(
-					"Error occurred while unpacking uploaded files: " + extractionErr.Error(),
+					"Error occurred while unpacking uploaded files: " + filesErr.Error(),
 				)
 			}
-
-			// 3. send the content to the deployment bus using the function that
-			// was created in step 1
-
-			err := a.Web.PutDeploymentContentByUrl(
-				url,
-				db.DeploymentContent{
-					ServedThingType: db.StaticFiles,
-					ServedThing:     outDir,
-				},
-			)
-			if err != nil {
-				return nil, err
-			}
-			// TODO: delete the old directory after deployContent is
-			// finished? presumably that'll be safe
-
-			// 4. return success
 
 			output := SuccessOutput{}
 			output.Body.Success = true
@@ -262,7 +244,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		})
 
 	huma.Put(api, "/user/register", func(ctx context.Context, input *AddExternalUserInput) (*SuccessOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(auth.Permissions)
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, fmt.Errorf("Auth check failed somehow")
 		}
@@ -274,6 +256,8 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		if len(input.Body.ExternalUserHandle) == 0 && len(input.Body.ExternalUserId) == 0 {
 			return nil, huma.Error400BadRequest("Either ID or handle must be specified.")
 		}
+
+		// TODO: move this logic into AuthManager somehow
 
 		if len(input.Body.ExternalUserId) == 0 {
 			if input.Body.ExternalUserSource == db.Github {
@@ -301,7 +285,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			}
 		}
 
-		a.Auth.RegisterExternalUser(db.ExternalUser{
+		a.auth.RegisterExternalUser(db.ExternalUser{
 			ExternalSource: input.Body.ExternalUserSource,
 			ExternalId:     input.Body.ExternalUserId,
 			// defaulting to full permissions until more granular permissions are added
@@ -319,7 +303,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	// TODO: get (all?) users endpoint
 
 	huma.Post(api, "/token/generate", func(ctx context.Context, input *CreateBearerTokenInput) (*CreateBearerTokenOutput, error) {
-		token, err := a.Auth.CreateBearerToken(input.Body.FullPermissions)
+		token, err := a.auth.CreateBearerToken(input.Body.FullPermissions)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Could not generate token: " + err.Error())
 		}
@@ -352,22 +336,22 @@ func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
 }
 
 func (a *AdminApi) CreateServer() *http.Server {
-	if len(a.Port) == 0 {
+	if len(a.config.AdminApiPort) == 0 {
 		panic("Admin API port not set")
 	}
 
 	router := http.NewServeMux()
 	api := humago.New(router, humaConfig)
 
-	api.UseMiddleware(readAuth(api, a.Auth))
+	api.UseMiddleware(readAuth(api, a.auth))
 
 	a.addRoutes(api)
 
-	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Port)
+	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.config.AdminApiPort)
 	address := "0.0.0.0"
-	if a.LocalOnly {
+	if a.config.LocalOnly {
 		address = "127.0.0.1"
 	}
-	server := http.Server{Addr: address + ":" + a.Port, Handler: router}
+	server := http.Server{Addr: address + ":" + a.config.AdminApiPort, Handler: router}
 	return &server
 }

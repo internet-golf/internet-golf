@@ -33,11 +33,11 @@ import (
 	"testing"
 
 	golfsdk "github.com/internet-golf/internet-golf/client-sdk"
-	"github.com/internet-golf/internet-golf/pkg/auth"
-	"github.com/internet-golf/internet-golf/pkg/content"
+	"github.com/internet-golf/internet-golf/pkg/api"
 	database "github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/public"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 	"github.com/internet-golf/internet-golf/pkg/utils"
-	"github.com/internet-golf/internet-golf/pkg/web"
 )
 
 // test case stuff =======================================================
@@ -67,7 +67,7 @@ type NewDeploymentTestCase struct {
 	CliApiTestCase
 	// expected body for the API request that the client CLI will make to the
 	// server
-	apiBody content.DeploymentCreateBody
+	apiBody api.DeploymentCreateBody
 }
 
 var deploymentCreateTestCases = []NewDeploymentTestCase{
@@ -84,7 +84,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 				}
 			},
 		},
-		apiBody: content.DeploymentCreateBody{
+		apiBody: api.DeploymentCreateBody{
 			Url: "example.com",
 		},
 	},
@@ -93,7 +93,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 
 type UserAddTestCase struct {
 	CliApiTestCase
-	apiBody content.AddExternalUserBody
+	apiBody api.AddExternalUserBody
 }
 
 var addUserTestCases = []UserAddTestCase{
@@ -104,7 +104,7 @@ var addUserTestCases = []UserAddTestCase{
 			apiPath:    "/user/register",
 			apiMethod:  "PUT",
 		},
-		apiBody: content.AddExternalUserBody{
+		apiBody: api.AddExternalUserBody{
 			ExternalUserHandle: "internet-golf",
 			ExternalUserSource: "Github",
 		},
@@ -221,27 +221,26 @@ func startFullServer(port string) func() {
 	}
 	tempDirs = append(tempDirs, tempDir)
 
-	settings := database.StorageSettings{}
-	settings.Init(tempDir)
+	config := utils.NewConfig(tempDir, true, true, port)
 
-	deploymentServer := web.CaddyServer{StorageSettings: settings}
-	deploymentServer.Settings.LocalOnly = true
+	fileManager := resources.NewFileManager(config)
 
-	db := database.StormDb{}
-	db.Init(settings)
-
-	deploymentBus := content.DeploymentBus{
-		Server: &deploymentServer,
-		Db:     &db,
+	db, err := database.NewDb(config, fileManager)
+	if err != nil {
+		panic(err)
 	}
-	deploymentBus.Init()
-	adminApi := content.AdminApi{
-		Web:       &deploymentBus,
-		Auth:      auth.AuthManager{Db: &db},
-		Port:      port,
-		Files:     content.FileManager{Settings: settings},
-		LocalOnly: true,
+
+	deploymentServer, err := public.NewPublicWebServer(config, fileManager)
+	if err != nil {
+		panic(err)
 	}
+
+	deploymentBus, err := api.NewDeploymentBus(deploymentServer, db, fileManager)
+	if err != nil {
+		panic(err)
+	}
+
+	adminApi := api.NewAdminApi(deploymentBus, db, config)
 
 	// TODO: this default admin API path needs to be a global constant somewhere
 	adminApiUrl := database.Url{Path: "/_golf"}
@@ -328,7 +327,7 @@ func TestClientCli(t *testing.T) {
 				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
 			}
 
-			var contents content.DeploymentCreateBody
+			var contents api.DeploymentCreateBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())
@@ -464,7 +463,7 @@ func TestClientCli(t *testing.T) {
 
 			fmt.Printf("intercepted body %v\n", string(intercepted.Body))
 
-			var contents content.AddExternalUserBody
+			var contents api.AddExternalUserBody
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())

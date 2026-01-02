@@ -1,4 +1,4 @@
-package content
+package resources
 
 import (
 	"archive/tar"
@@ -13,24 +13,34 @@ import (
 	"strings"
 
 	"github.com/gosimple/slug"
-	"github.com/internet-golf/internet-golf/pkg/db"
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
-type FileManager struct{ Settings db.StorageSettings }
+type FileManager struct {
+	config        *utils.Config
+	DbPath        string
+	CaddyDataPath string
+}
+
+func NewFileManager(config *utils.Config) *FileManager {
+	return &FileManager{
+		config:        config,
+		DbPath:        path.Join(config.DataDirectory, "internet.db"),
+		CaddyDataPath: path.Join(config.DataDirectory, "caddy-internal"),
+	}
+}
 
 // receives a stream of a .tar.gz file, extracts its contents according to the
 // settings, returns the path of the contents
 func (f FileManager) TarGzToDeploymentFiles(
-	stream io.ReadSeeker, contentName string,
-	keepLeadingDirectories bool, _preserveFromPreviousPath string,
+	stream io.ReadSeeker, contentName string, keepLeadingDirectories bool,
 ) (string, error) {
 	hash, hashErr := hashStream(stream)
 	if hashErr != nil {
 		return "", fmt.Errorf("could not hash files for %s", contentName)
 	}
 	outDir := path.Join(
-		f.Settings.DataDirectory,
+		f.config.DataDirectory,
 		slug.Make(contentName),
 		hash,
 	)

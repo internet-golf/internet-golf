@@ -1,17 +1,16 @@
-package web
+package public
 
 import (
 	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path"
 	"slices"
 	"strconv"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 
 	"github.com/internet-golf/internet-golf/pkg/utils"
 
@@ -31,7 +30,6 @@ import (
 
 // the primary interface for this whole package
 type PublicWebServer interface {
-	Init() error
 	DeployAll([]db.Deployment) error
 	Stop() error
 }
@@ -39,36 +37,23 @@ type PublicWebServer interface {
 // implements the PublicWebServer interface. the primary struct for this whole
 // package
 type CaddyServer struct {
-	Settings struct {
-		LocalOnly bool
-		Verbose   bool
-	}
-	StorageSettings        db.StorageSettings
-	placeholderContentPath string
-	onDemandTls            onDemandTls
+	config      *utils.Config
+	dataPath    string
+	onDemandTls onDemandTls
 }
 
 const httpAppServerName = "internetgolf"
 
-// TODO: placeholder content should probably be managed by the FileManager?
+func NewPublicWebServer(config *utils.Config, files *resources.FileManager) (PublicWebServer, error) {
 
-//go:embed dist/placeholder.html
-var placeholderContent []byte
-
-func (c *CaddyServer) Init() error {
-	c.placeholderContentPath = path.Join(c.StorageSettings.DataDirectory, "placeholder-content")
-	os.MkdirAll(c.placeholderContentPath, 0644)
-
-	return os.WriteFile(path.Join(c.placeholderContentPath, "index.html"), placeholderContent, 0644)
-
-	// caddy seems to start itself?
+	return &CaddyServer{config: config, dataPath: files.CaddyDataPath}, nil
 }
 
 // puts all the deployments on the public internet. prioritizes more specific
 // urls over less specific urls
 func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	var listen []string
-	if c.Settings.LocalOnly {
+	if c.config.LocalOnly {
 		listen = []string{"localhost:80"}
 	} else {
 		listen = []string{":80", ":443"}
@@ -78,7 +63,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 			httpAppServerName: {
 				Listen: listen,
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
-					Disabled: c.Settings.LocalOnly,
+					Disabled: c.config.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{{
 					// this matches everything (apparently)
@@ -99,23 +84,20 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		var getCaddyRoute Handler
+		type deploymentToCaddyRouteConverter = func(d db.Deployment) ([]caddyhttp.Route, error)
+		var getCaddyRoute deploymentToCaddyRouteConverter
 
 		if !deployment.DeploymentContent.HasContent {
 			// if the deployment has no content, substitute in this placeholder
-			// content. this is actually load-bearing, since caddy will not
-			// generate an https cert for this url until it's serving
-			// *something*, and until it sets up https, we can't deploy actual
-			// content to this url from non-localhost places
+			// content. this is actually load-bearing if not using auto tls,
+			// since in that case, caddy will not generate an https cert for
+			// this url until it's serving *something*, and until it sets up
+			// https, we can't deploy actual content to this url from
+			// non-localhost places
 			getCaddyRoute = func(d db.Deployment) ([]caddyhttp.Route, error) {
-				return GetCaddyStaticRoutes(
+				return GetCaddyTextContentRoute(
 					db.Deployment{
 						DeploymentMetadata: d.DeploymentMetadata,
-						DeploymentContent: db.DeploymentContent{
-							HasContent:      true,
-							ServedThingType: db.StaticFiles,
-							ServedThing:     c.placeholderContentPath,
-						},
 					},
 				)
 			}
@@ -123,8 +105,6 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 			switch deployment.ServedThingType {
 			case db.StaticFiles:
 				getCaddyRoute = GetCaddyStaticRoutes
-			case db.DockerContainer:
-				getCaddyRoute = GetCaddyContainerRoute
 			case db.ReverseProxy:
 				getCaddyRoute = GetCaddyReverseProxyRoute
 			default:
@@ -196,7 +176,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	// this program might make it slightly harder to reach and exploit 🤞
 	caddyAdminApiPort, _ := utils.GetFreePort()
 	logLevel := "ERROR"
-	if c.Settings.Verbose {
+	if c.config.Verbose {
 		logLevel = "DEBUG"
 	}
 
@@ -207,7 +187,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		},
 		StorageRaw: utils.JsonOrPanic(map[string]string{
 			"module": "file_system",
-			"root":   path.Join(c.StorageSettings.DataDirectory, "caddy"),
+			"root":   c.dataPath,
 		}),
 		Logging: &caddy.Logging{
 			Logs: map[string]*caddy.CustomLog{
@@ -218,7 +198,9 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		},
 	}
 
-	if !c.Settings.LocalOnly {
+	// TODO: wait, how is the tlsApprovalServer set up every time that DeployAll
+	// is called? shouldn't this be in NewPublicWebServer?
+	if !c.config.LocalOnly {
 		tlsConfig, err := getOnDemandTls()
 		if err != nil {
 			panic(err)
@@ -237,7 +219,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 }
 
 func (c *CaddyServer) Stop() error {
-	if !c.Settings.LocalOnly {
+	if !c.config.LocalOnly {
 		err := c.onDemandTls.tlsApprovalServer.Shutdown(context.TODO())
 		if err != nil {
 			caddy.Stop()
