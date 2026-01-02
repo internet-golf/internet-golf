@@ -11,27 +11,33 @@ import (
 )
 
 type AuthManager struct {
-	Db db.Db
+	db db.Db
+}
+
+func NewAuthManager(db db.Db) *AuthManager {
+	return &AuthManager{
+		db: db,
+	}
 }
 
 func (a *AuthManager) GetPermissionsForRequest(remoteAddr string, authHeader string) (Permissions, error) {
 	if l := (LocalReqAuthChecker{}); l.setReqData(remoteAddr, authHeader) {
 		fmt.Println("automatically trusting request from " + remoteAddr)
 		return &l, nil
-	} else if g := (GithubAuthChecker{Db: a.Db}); g.setReqData(remoteAddr, authHeader) {
+	} else if g := (GithubAuthChecker{Db: a.db}); g.setReqData(remoteAddr, authHeader) {
 		return &g, nil
-	} else if b := (BearerTokenAuthChecker{Db: a.Db}); b.setReqData(remoteAddr, authHeader) {
+	} else if b := (BearerTokenAuthChecker{Db: a.db}); b.setReqData(remoteAddr, authHeader) {
 		return &b, nil
 	}
 	return nil, fmt.Errorf("could not check auth for header value \"%s\"", authHeader)
 }
 
 func (a *AuthManager) RegisterExternalUser(e db.ExternalUser) {
-	a.Db.SaveExternalUser(e)
+	a.db.SaveExternalUser(e)
 }
 
 func (a *AuthManager) CreateBearerToken(fullPermissions bool) (string, error) {
-	return (&BearerTokenAuthChecker{Db: a.Db}).CreateBearerToken(fullPermissions)
+	return (&BearerTokenAuthChecker{Db: a.db}).CreateBearerToken(fullPermissions)
 }
 
 type Permissions interface {

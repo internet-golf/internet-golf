@@ -14,10 +14,11 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/internet-golf/internet-golf/pkg/auth"
 	"github.com/internet-golf/internet-golf/pkg/db"
+	"github.com/internet-golf/internet-golf/pkg/resources"
 	"github.com/internet-golf/internet-golf/pkg/settings"
 )
 
-func readAuth(api huma.API, authManager auth.AuthManager) func(huma.Context, func(huma.Context)) {
+func readAuth(api huma.API, authManager *auth.AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		// this header is set by the internal caddy reverse-proxy when it is
 		// forwarding a request - we don't want to mistake those for "true"
@@ -117,18 +118,18 @@ type GetDeploymentOutput struct {
 }
 
 type AdminApi struct {
-	Web    *DeploymentBus
-	Auth   auth.AuthManager
-	Files  FileManager
-	Config *settings.Config
+	web    *DeploymentBus
+	auth   *auth.AuthManager
+	files  *resources.FileManager
+	config *settings.Config
 }
 
 func NewAdminApi(bus *DeploymentBus, db db.Db, config *settings.Config) *AdminApi {
 	return &AdminApi{
-		Web:    bus,
-		Auth:   auth.AuthManager{Db: db},
-		Files:  FileManager{Config: config},
-		Config: config,
+		web:    bus,
+		auth:   auth.NewAuthManager(db),
+		files:  resources.NewFileManager(config),
+		config: config,
 	}
 }
 
@@ -157,7 +158,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 		input.Body.DeploymentMetadata.Url = urlFromString(input.Body.Url)
 
 		// TODO: validate externalSourceType and i guess Domain and Path
-		putDeploymentErr := a.Web.SetupDeployment(input.Body.DeploymentMetadata)
+		putDeploymentErr := a.web.SetupDeployment(input.Body.DeploymentMetadata)
 		if putDeploymentErr != nil {
 			return nil, putDeploymentErr
 		}
@@ -177,7 +178,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 		url := urlFromString(input.Url)
 
-		deployment, err := a.Web.GetDeploymentByUrl(&url)
+		deployment, err := a.web.GetDeploymentByUrl(&url)
 		if err != nil {
 			return nil, huma.Error404NotFound(
 				fmt.Sprintf("Could not find deployment with URL \"%s\"", url),
@@ -214,7 +215,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			}
 
 			url := urlFromString(formData.Url)
-			deployment, findDeploymentError := a.Web.GetDeploymentByUrl(&url)
+			deployment, findDeploymentError := a.web.GetDeploymentByUrl(&url)
 			if findDeploymentError != nil {
 				return nil, huma.Error404NotFound(
 					fmt.Sprintf("could not find deployment with URL \"%s\"", url),
@@ -231,12 +232,12 @@ func (a *AdminApi) addRoutes(api huma.API) {
 
 			var previousPath string
 			if formData.PreserveExistingFiles {
-				previousContent, previousContentErr := a.Web.GetDeploymentByUrl(&url)
+				previousContent, previousContentErr := a.web.GetDeploymentByUrl(&url)
 				if previousContentErr == nil {
 					previousPath = previousContent.ServedThing
 				}
 			}
-			outDir, extractionErr := a.Files.TarGzToDeploymentFiles(
+			outDir, extractionErr := a.files.TarGzToDeploymentFiles(
 				formData.Contents, formData.Url,
 				formData.KeepLeadingDirectories, previousPath,
 			)
@@ -249,7 +250,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			// 3. send the content to the deployment bus using the function that
 			// was created in step 1
 
-			err := a.Web.PutDeploymentContentByUrl(
+			err := a.web.PutDeploymentContentByUrl(
 				url,
 				db.DeploymentContent{
 					ServedThingType: db.StaticFiles,
@@ -310,7 +311,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			}
 		}
 
-		a.Auth.RegisterExternalUser(db.ExternalUser{
+		a.auth.RegisterExternalUser(db.ExternalUser{
 			ExternalSource: input.Body.ExternalUserSource,
 			ExternalId:     input.Body.ExternalUserId,
 			// defaulting to full permissions until more granular permissions are added
@@ -328,7 +329,7 @@ func (a *AdminApi) addRoutes(api huma.API) {
 	// TODO: get (all?) users endpoint
 
 	huma.Post(api, "/token/generate", func(ctx context.Context, input *CreateBearerTokenInput) (*CreateBearerTokenOutput, error) {
-		token, err := a.Auth.CreateBearerToken(input.Body.FullPermissions)
+		token, err := a.auth.CreateBearerToken(input.Body.FullPermissions)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Could not generate token: " + err.Error())
 		}
@@ -361,22 +362,22 @@ func (a *AdminApi) OutputOpenApiSpec(outputPath string) {
 }
 
 func (a *AdminApi) CreateServer() *http.Server {
-	if len(a.Config.AdminApiPort) == 0 {
+	if len(a.config.AdminApiPort) == 0 {
 		panic("Admin API port not set")
 	}
 
 	router := http.NewServeMux()
 	api := humago.New(router, humaConfig)
 
-	api.UseMiddleware(readAuth(api, a.Auth))
+	api.UseMiddleware(readAuth(api, a.auth))
 
 	a.addRoutes(api)
 
-	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.Config.AdminApiPort)
+	fmt.Println("Starting admin API server at http://127.0.0.1:" + a.config.AdminApiPort)
 	address := "0.0.0.0"
-	if a.Config.LocalOnly {
+	if a.config.LocalOnly {
 		address = "127.0.0.1"
 	}
-	server := http.Server{Addr: address + ":" + a.Config.AdminApiPort, Handler: router}
+	server := http.Server{Addr: address + ":" + a.config.AdminApiPort, Handler: router}
 	return &server
 }

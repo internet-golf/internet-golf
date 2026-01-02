@@ -125,6 +125,26 @@ func GetCaddyStaticRoutes(d db.Deployment) ([]caddyhttp.Route, error) {
 	return routes, nil
 }
 
+// get a route that will respond with basic text content. this does not look at
+// anything in the deployment that's passed in except the URL.
+func GetCaddyTextContentRoute(d db.Deployment) ([]caddyhttp.Route, error) {
+	matcher, matcherErr := urlToMatcher(d.Url, false, true)
+	if matcherErr != nil {
+		return []caddyhttp.Route{}, matcherErr
+	}
+
+	return []caddyhttp.Route{{
+		MatcherSetsRaw: caddyhttp.RawMatcherSets{matcher},
+		HandlersRaw: []json.RawMessage{
+			utils.JsonOrPanic(utils.JsonObj{
+				"handler":     "static_response",
+				"status_code": 200,
+				"body":        "server initialized",
+			}),
+		},
+	}}, nil
+}
+
 // TODO: remove requireDomain argument. if enforced, that should be validated at
 // the api call/deployment creation level
 // utility function used by route creator functions above

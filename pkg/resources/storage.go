@@ -1,9 +1,10 @@
-package admin_api
+package resources
 
 import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/md5"
+	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -17,7 +18,13 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
-type FileManager struct{ Config *settings.Config }
+type FileManager struct {
+	config *settings.Config
+}
+
+func NewFileManager(config *settings.Config) *FileManager {
+	return &FileManager{config: config}
+}
 
 // receives a stream of a .tar.gz file, extracts its contents according to the
 // settings, returns the path of the contents
@@ -30,7 +37,7 @@ func (f FileManager) TarGzToDeploymentFiles(
 		return "", fmt.Errorf("could not hash files for %s", contentName)
 	}
 	outDir := path.Join(
-		f.Config.DataDirectory,
+		f.config.DataDirectory,
 		slug.Make(contentName),
 		hash,
 	)

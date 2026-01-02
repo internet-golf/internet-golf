@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path"
 	"slices"
 	"strconv"
@@ -39,35 +38,22 @@ type PublicWebServer interface {
 // implements the PublicWebServer interface. the primary struct for this whole
 // package
 type CaddyServer struct {
-	Config                 *settings.Config
-	placeholderContentPath string
-	onDemandTls            onDemandTls
+	config      *settings.Config
+	onDemandTls onDemandTls
 }
 
 const httpAppServerName = "internetgolf"
 
-//go:embed dist/placeholder.html
-var placeholderContent []byte
-
 func NewPublicWebServer(config *settings.Config) (PublicWebServer, error) {
-	placeholderContentPath := path.Join(config.DataDirectory, "placeholder-content")
-	if err := os.MkdirAll(placeholderContentPath, 0644); err != nil {
-		return nil, err
-	}
-	if err := os.WriteFile(path.Join(placeholderContentPath, "index.html"), placeholderContent, 0644); err != nil {
-		return nil, err
-	}
-	return &CaddyServer{
-		Config:                 config,
-		placeholderContentPath: placeholderContentPath,
-	}, nil
+
+	return &CaddyServer{config: config}, nil
 }
 
 // puts all the deployments on the public internet. prioritizes more specific
 // urls over less specific urls
 func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	var listen []string
-	if c.Config.LocalOnly {
+	if c.config.LocalOnly {
 		listen = []string{"localhost:80"}
 	} else {
 		listen = []string{":80", ":443"}
@@ -77,7 +63,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 			httpAppServerName: {
 				Listen: listen,
 				AutoHTTPS: &caddyhttp.AutoHTTPSConfig{
-					Disabled: c.Config.LocalOnly,
+					Disabled: c.config.LocalOnly,
 				},
 				Routes: caddyhttp.RouteList{{
 					// this matches everything (apparently)
@@ -103,19 +89,15 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 
 		if !deployment.DeploymentContent.HasContent {
 			// if the deployment has no content, substitute in this placeholder
-			// content. this is actually load-bearing, since caddy will not
-			// generate an https cert for this url until it's serving
-			// *something*, and until it sets up https, we can't deploy actual
-			// content to this url from non-localhost places
+			// content. this is actually load-bearing if not using auto tls,
+			// since in that case, caddy will not generate an https cert for
+			// this url until it's serving *something*, and until it sets up
+			// https, we can't deploy actual content to this url from
+			// non-localhost places
 			getCaddyRoute = func(d db.Deployment) ([]caddyhttp.Route, error) {
-				return GetCaddyStaticRoutes(
+				return GetCaddyTextContentRoute(
 					db.Deployment{
 						DeploymentMetadata: d.DeploymentMetadata,
-						DeploymentContent: db.DeploymentContent{
-							HasContent:      true,
-							ServedThingType: db.StaticFiles,
-							ServedThing:     c.placeholderContentPath,
-						},
 					},
 				)
 			}
@@ -194,7 +176,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	// this program might make it slightly harder to reach and exploit 🤞
 	caddyAdminApiPort, _ := utils.GetFreePort()
 	logLevel := "ERROR"
-	if c.Config.Verbose {
+	if c.config.Verbose {
 		logLevel = "DEBUG"
 	}
 
@@ -205,7 +187,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		},
 		StorageRaw: utils.JsonOrPanic(map[string]string{
 			"module": "file_system",
-			"root":   path.Join(c.Config.DataDirectory, "caddy"),
+			"root":   path.Join(c.config.DataDirectory, "caddy"),
 		}),
 		Logging: &caddy.Logging{
 			Logs: map[string]*caddy.CustomLog{
@@ -218,7 +200,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 
 	// TODO: wait, how is the tlsApprovalServer set up every time that DeployAll
 	// is called? shouldn't this be in NewPublicWebServer?
-	if !c.Config.LocalOnly {
+	if !c.config.LocalOnly {
 		tlsConfig, err := getOnDemandTls()
 		if err != nil {
 			panic(err)
@@ -237,7 +219,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 }
 
 func (c *CaddyServer) Stop() error {
-	if !c.Config.LocalOnly {
+	if !c.config.LocalOnly {
 		err := c.onDemandTls.tlsApprovalServer.Shutdown(context.TODO())
 		if err != nil {
 			caddy.Stop()
