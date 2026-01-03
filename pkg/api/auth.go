@@ -29,7 +29,11 @@ func (a *AuthManager) GetPermissionsForRequest(remoteAddr string, authHeader str
 	} else if b := (BearerTokenAuthChecker{Db: a.db}); b.setReqData(remoteAddr, authHeader) {
 		return &b, nil
 	}
-	return nil, fmt.Errorf("could not check auth for header value \"%s\"", authHeader)
+	if len(authHeader) > 0 {
+		return nil, fmt.Errorf("could not check auth for header value \"%s\"", authHeader)
+	} else {
+		return nil, fmt.Errorf("no auth header present")
+	}
 }
 
 func (a *AuthManager) RegisterExternalUser(e db.ExternalUser) {
@@ -67,6 +71,7 @@ func (l *LocalReqAuthChecker) setReqData(remoteAddr string, authHeader string) b
 	// virtual network)
 	serverAddr, _ := net.LookupIP("golf-client")
 	return (remoteAddr == "127.0.0.1" || strings.HasPrefix(remoteAddr, "127.0.0.1:") ||
+		remoteAddr == "[::1]" || strings.HasPrefix(remoteAddr, "[::1]:") ||
 		(len(serverAddr) > 0 && strings.HasPrefix(remoteAddr, serverAddr[0].String()+":")))
 }
 func (l *LocalReqAuthChecker) CanModifyDeployment(_ *db.Deployment) bool {

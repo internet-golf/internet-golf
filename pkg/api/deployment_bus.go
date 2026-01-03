@@ -138,6 +138,20 @@ func (bus *DeploymentBus) PutStaticFilesForDeployment(
 	return nil
 }
 
+func (bus *DeploymentBus) PutAdminDash(url db.Url) error {
+	if err := bus.SetupDeployment(db.DeploymentMetadata{
+		Url:  url,
+		Tags: []string{"system"},
+	}); err != nil {
+		return err
+	}
+	return bus.PutDeploymentContentByUrl(url, db.DeploymentContent{
+		HasContent:      true,
+		ServedThingType: db.StaticFiles,
+		ServedThing:     bus.files.DashSpaPath,
+	})
+}
+
 // updates the content of the deployment at the given index, pushes the
 // deployments to the public web server, and then saves them
 func (bus *DeploymentBus) updateDeploymentContentByIndex(

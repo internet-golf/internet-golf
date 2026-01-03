@@ -7,8 +7,8 @@ Method | HTTP request | Description
 [**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
 [**GetDeploymentByUrl**](DefaultAPI.md#GetDeploymentByUrl) | **Get** /deployment/{url} | Get deployment by URL
 [**PostTokenGenerate**](DefaultAPI.md#PostTokenGenerate) | **Post** /token/generate | Post token generate
+[**PutAdminDash**](DefaultAPI.md#PutAdminDash) | **Put** /admin-dash | Put admin DASH
 [**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
-[**PutDeployInitByDomain**](DefaultAPI.md#PutDeployInitByDomain) | **Put** /deploy/init/{domain} | Put deploy init by domain
 [**PutDeployNew**](DefaultAPI.md#PutDeployNew) | **Put** /deploy/new | Put deploy new
 [**PutUserRegister**](DefaultAPI.md#PutUserRegister) | **Put** /user/register | Put user register
 
@@ -205,6 +205,70 @@ No authorization required
 [[Back to README]](../README.md)
 
 
+## PutAdminDash
+
+> SuccessOutputBody PutAdminDash(ctx).DeployAdminDashBody(deployAdminDashBody).Execute()
+
+Put admin DASH
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	deployAdminDashBody := *openapiclient.NewDeployAdminDashBody("Url_example") // DeployAdminDashBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.PutAdminDash(context.Background()).DeployAdminDashBody(deployAdminDashBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutAdminDash``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PutAdminDash`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutAdminDash`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPutAdminDashRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **deployAdminDashBody** | [**DeployAdminDashBody**](DeployAdminDashBody.md) |  | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## PutDeployFiles
 
 > SuccessOutputBody PutDeployFiles(ctx).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
@@ -268,74 +332,6 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: multipart/form-data
-- **Accept**: application/json, application/problem+json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## PutDeployInitByDomain
-
-> SuccessOutputBody PutDeployInitByDomain(ctx, domain).Execute()
-
-Put deploy init by domain
-
-### Example
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
-)
-
-func main() {
-	domain := "domain_example" // string | 
-
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.PutDeployInitByDomain(context.Background(), domain).Execute()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutDeployInitByDomain``: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-	}
-	// response from `PutDeployInitByDomain`: SuccessOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutDeployInitByDomain`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
-**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**domain** | **string** |  | 
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiPutDeployInitByDomainRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
-
-
-### Return type
-
-[**SuccessOutputBody**](SuccessOutputBody.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
 - **Accept**: application/json, application/problem+json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

@@ -42,9 +42,9 @@ go tool mage build
 go tool mage generateclientsdk
 ```
 
-## Usage
+## Running Stuff for Development
 
-Run server by itself (during dev, you probably just want it to bind to localhost):
+Run server by itself (during dev, you probably just want it to bind to localhost; also, without this option, it will try to force https for everything, which is hard to make work locally):
 
 ```
 go run ./cmd --local

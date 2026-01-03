@@ -172,6 +172,10 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 		panic(err)
 	}
 
+	// TODO: like the auto tls server setup, the admin api port stuff is called
+	// every time DeployAll is called, when it should be more like an initial
+	// setup thing
+
 	// starting the caddy admin api at a random port that is only known within
 	// this program might make it slightly harder to reach and exploit 🤞
 	caddyAdminApiPort, _ := utils.GetFreePort()
@@ -179,6 +183,8 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	if c.config.Verbose {
 		logLevel = "DEBUG"
 	}
+
+	fmt.Printf("Caddy API running at localhost:%v\n", caddyAdminApiPort)
 
 	caddyConfig := caddy.Config{
 		AppsRaw: caddy.ModuleMap{"http": httpJson},
