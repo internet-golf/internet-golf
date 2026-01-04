@@ -20,7 +20,7 @@ var _ MappedNullable = &GetDeploymentsOutputBody{}
 
 // GetDeploymentsOutputBody struct for GetDeploymentsOutputBody
 type GetDeploymentsOutputBody struct {
-	Deployments []DeploymentBody `json:"deployments"`
+	Deployments []DeploymentModel `json:"deployments"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -30,7 +30,7 @@ type _GetDeploymentsOutputBody GetDeploymentsOutputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetDeploymentsOutputBody(deployments []DeploymentBody) *GetDeploymentsOutputBody {
+func NewGetDeploymentsOutputBody(deployments []DeploymentModel) *GetDeploymentsOutputBody {
 	this := GetDeploymentsOutputBody{}
 	this.Deployments = deployments
 	return &this
@@ -45,10 +45,10 @@ func NewGetDeploymentsOutputBodyWithDefaults() *GetDeploymentsOutputBody {
 }
 
 // GetDeployments returns the Deployments field value
-// If the value is explicit nil, the zero value for []DeploymentBody will be returned
-func (o *GetDeploymentsOutputBody) GetDeployments() []DeploymentBody {
+// If the value is explicit nil, the zero value for []DeploymentModel will be returned
+func (o *GetDeploymentsOutputBody) GetDeployments() []DeploymentModel {
 	if o == nil {
-		var ret []DeploymentBody
+		var ret []DeploymentModel
 		return ret
 	}
 
@@ -58,7 +58,7 @@ func (o *GetDeploymentsOutputBody) GetDeployments() []DeploymentBody {
 // GetDeploymentsOk returns a tuple with the Deployments field value
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *GetDeploymentsOutputBody) GetDeploymentsOk() ([]DeploymentBody, bool) {
+func (o *GetDeploymentsOutputBody) GetDeploymentsOk() ([]DeploymentModel, bool) {
 	if o == nil || IsNil(o.Deployments) {
 		return nil, false
 	}
@@ -66,7 +66,7 @@ func (o *GetDeploymentsOutputBody) GetDeploymentsOk() ([]DeploymentBody, bool) {
 }
 
 // SetDeployments sets field value
-func (o *GetDeploymentsOutputBody) SetDeployments(v []DeploymentBody) {
+func (o *GetDeploymentsOutputBody) SetDeployments(v []DeploymentModel) {
 	o.Deployments = v
 }
 

@@ -7,19 +7,20 @@ Name | Type | Description | Notes
 **ExternalSource** | Pointer to **string** | Original repository for this deployment&#39;s source. Can include a branch name. | [optional] 
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
-**ServerContentLocation** | Pointer to **string** |  | [optional] 
-**SpaMode** | Pointer to **bool** |  | [optional] 
+**ServerContentLocation** | Pointer to **string** | The path to this deployment&#39;s files on the server. | [optional] 
+**SpaMode** | Pointer to **bool** | Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests. | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
-**Type** | **string** | Type of deployment contents; can be StaticSite, Alias, or Empty. | 
+**Type** | **string** | Type of deployment contents. | 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 **AliasedTo** | Pointer to **string** | The URL that this deployment is an alias for. | [optional] 
 **Redirect** | Pointer to **bool** | If this is true, visitors to this deployment&#39;s URL will be completely redirected to the URL that this alias is for. | [optional] 
+**NoContentYet** | **bool** | Set to true to indicate that this deployment has not yet been set up. | 
 
 ## Methods
 
 ### NewGetDeployment200Response
 
-`func NewGetDeployment200Response(type_ string, url string, ) *GetDeployment200Response`
+`func NewGetDeployment200Response(type_ string, url string, noContentYet bool, ) *GetDeployment200Response`
 
 NewGetDeployment200Response instantiates a new GetDeployment200Response object
 This constructor will assign default values to properties that have it defined,
@@ -273,6 +274,26 @@ SetRedirect sets Redirect field to given value.
 `func (o *GetDeployment200Response) HasRedirect() bool`
 
 HasRedirect returns a boolean if a field has been set.
+
+### GetNoContentYet
+
+`func (o *GetDeployment200Response) GetNoContentYet() bool`
+
+GetNoContentYet returns the NoContentYet field if non-nil, zero value otherwise.
+
+### GetNoContentYetOk
+
+`func (o *GetDeployment200Response) GetNoContentYetOk() (*bool, bool)`
+
+GetNoContentYetOk returns a tuple with the NoContentYet field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetNoContentYet
+
+`func (o *GetDeployment200Response) SetNoContentYet(v bool)`
+
+SetNoContentYet sets NoContentYet field to given value.
+
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

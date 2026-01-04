@@ -154,7 +154,7 @@ func createDeploymentCommand() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.PutDeployNew(context.TODO()).
+				DefaultAPI.CreateDeployment(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Url:                args[0],
 					ExternalSourceType: &externalSourceType,
@@ -197,7 +197,7 @@ func deployAdminDash() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.PutAdminDash(context.TODO()).
+				DefaultAPI.DeployAdminDash(context.TODO()).
 				DeployAdminDashBody(golfsdk.DeployAdminDashBody{Url: args[0]}).
 				Execute()
 
@@ -233,7 +233,7 @@ func deployAliasCommand() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.PutDeployNew(context.TODO()).
+				DefaultAPI.CreateDeployment(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Url: args[0],
 				}).Execute()
@@ -319,7 +319,7 @@ func deployContentCommand() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.PutDeployFiles(context.TODO()).
+				DefaultAPI.DeployFiles(context.TODO()).
 				Url(args[0]).
 				Contents(tempFile).
 				Execute()

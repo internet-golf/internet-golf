@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Deployments** | [**[]DeploymentBody**](DeploymentBody.md) |  | 
+**Deployments** | [**[]DeploymentModel**](DeploymentModel.md) |  | 
 
 ## Methods
 
 ### NewGetDeploymentsOutputBody
 
-`func NewGetDeploymentsOutputBody(deployments []DeploymentBody, ) *GetDeploymentsOutputBody`
+`func NewGetDeploymentsOutputBody(deployments []DeploymentModel, ) *GetDeploymentsOutputBody`
 
 NewGetDeploymentsOutputBody instantiates a new GetDeploymentsOutputBody object
 This constructor will assign default values to properties that have it defined,
@@ -27,20 +27,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetDeployments
 
-`func (o *GetDeploymentsOutputBody) GetDeployments() []DeploymentBody`
+`func (o *GetDeploymentsOutputBody) GetDeployments() []DeploymentModel`
 
 GetDeployments returns the Deployments field if non-nil, zero value otherwise.
 
 ### GetDeploymentsOk
 
-`func (o *GetDeploymentsOutputBody) GetDeploymentsOk() (*[]DeploymentBody, bool)`
+`func (o *GetDeploymentsOutputBody) GetDeploymentsOk() (*[]DeploymentModel, bool)`
 
 GetDeploymentsOk returns a tuple with the Deployments field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetDeployments
 
-`func (o *GetDeploymentsOutputBody) SetDeployments(v []DeploymentBody)`
+`func (o *GetDeploymentsOutputBody) SetDeployments(v []DeploymentModel)`
 
 SetDeployments sets Deployments field to given value.
 

@@ -7,10 +7,10 @@ Name | Type | Description | Notes
 **ExternalSource** | Pointer to **string** | Original repository for this deployment&#39;s source. Can include a branch name. | [optional] 
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
-**ServerContentLocation** | Pointer to **string** |  | [optional] 
-**SpaMode** | Pointer to **bool** |  | [optional] 
+**ServerContentLocation** | Pointer to **string** | The path to this deployment&#39;s files on the server. | [optional] 
+**SpaMode** | Pointer to **bool** | Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests. | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
-**Type** | **string** |  | 
+**Type** | **string** | Type of deployment contents. | 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 
 ## Methods

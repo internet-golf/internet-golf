@@ -11,22 +11,7 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/db"
 )
 
-type DeploymentBase struct {
-	Url string `json:"url" doc:"URL that this deployment will appear at. The DNS for the domain has to be set up first." example:"mysite.mydomain.com"`
-
-	// assuming that there won't be multiple external sources...
-	ExternalSource     string `json:"externalSource,omitempty" required:"false" doc:"Original repository for this deployment's source. Can include a branch name." example:"user/repo or user/repo#branch-name"`
-	ExternalSourceType string `json:"externalSourceType,omitempty" required:"false" doc:"Place where the original repository lives."`
-
-	Tags []string `json:"tags" required:"false" doc:"Tags used for metadata."`
-
-	PreserveExternalPath bool `json:"preserveExternalPath" required:"false" doc:"if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)"`
-
-	Type string `json:"type" required:"false" doc:"Type of deployment contents; can be StaticSite, Alias, or Empty."`
-}
-type DeploymentCreateInput struct {
-	Body struct{ DeploymentBase }
-}
+// input types ======================
 
 type DeployFilesBody struct {
 	Url                    string        `form:"url" required:"true" doc:"The URL of the deployment that you're updating." example:"mysite.mydomain.com"`
@@ -53,17 +38,37 @@ type DeployAdminDashInput struct {
 	Body DeployAdminDashBody
 }
 
-type StaticSiteResponseBase struct {
+// this input type cheats and reuses the output type declared below
+type DeploymentCreateInput struct {
+	Body struct{ DeploymentBase }
+}
+
+// output types ============================
+
+type DeploymentBase struct {
+	Url string `json:"url" doc:"URL that this deployment will appear at. The DNS for the domain has to be set up first." example:"mysite.mydomain.com"`
+
+	// assuming that there won't be multiple external sources...
+	ExternalSource     string `json:"externalSource,omitempty" required:"false" doc:"Original repository for this deployment's source. Can include a branch name." example:"user/repo or user/repo#branch-name"`
+	ExternalSourceType string `json:"externalSourceType,omitempty" required:"false" doc:"Place where the original repository lives."`
+
+	Tags []string `json:"tags" required:"false" doc:"Tags used for metadata."`
+
+	PreserveExternalPath bool `json:"preserveExternalPath" required:"false" doc:"if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)"`
+}
+
+// this could go in DeploymentBase if DeploymentCreateInput didn't cheat and use
+// it for input
+type DeploymentType struct {
+	Type string `json:"type" enum:"StaticSite,Alias,Empty" doc:"Type of deployment contents."`
+}
+
+type StaticSiteBase struct {
 	// these values are pointers so that they will be properly omitted from the
 	// JSON response if not set by the API handler (which will happen when
 	// creating a DeploymentBody for a non-static-site deployment)
-	ServerContentLocation *string `json:"serverContentLocation,omitempty"`
-	SpaMode               *bool   `json:"spaMode,omitempty"`
-}
-type StaticSiteDeployment struct {
-	DeploymentBase
-	Type string `json:"type" enum:"StaticSite,Alias"`
-	StaticSiteResponseBase
+	ServerContentLocation *string `json:"serverContentLocation,omitempty" doc:"The path to this deployment's files on the server."`
+	SpaMode               *bool   `json:"spaMode,omitempty" doc:"Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests."`
 }
 
 type AliasBase struct {
@@ -73,34 +78,38 @@ type AliasBase struct {
 	AliasedTo *string `json:"aliasedTo,omitempty" doc:"The URL that this deployment is an alias for."`
 	Redirect  *bool   `json:"redirect,omitempty" doc:"If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for."`
 }
-type AliasDeployment struct {
-	DeploymentBase
-	AliasBase
+
+// this mostly exists to make absolutely sure that the different deployment base
+// types can be distinguished between by e.g. OpenAPI validation
+type EmptyBase struct {
+	NoContentYet bool `json:"noContentYet" doc:"Set to true to indicate that this deployment has not yet been set up."`
 }
 
 // this is the type that is returned for a deployment from the api. it combines
 // the properties of all the possible deployment types. to let api consumers use
-// this more safely, a custom schema (`deploymentSchema`) is created for it and
-// inserted into the OpenAPI specification. the custom schema narrows which
-// fields are available on each deployment returned by the api based on the
-// "type" field (which is in DeploymentBase.)
-type DeploymentBody struct {
+// this more safely, a custom schema (`deploymentSchema`) is created for it in
+// the API code and inserted into the OpenAPI specification; see below
+type DeploymentModel struct {
 	DeploymentBase
-	StaticSiteResponseBase
+	DeploymentType
 	AliasBase
+	StaticSiteBase
+	EmptyBase
 }
 type GetDeploymentOutput struct {
-	Body DeploymentBody
+	Body DeploymentModel
 }
 
 type GetDeploymentsOutput struct {
 	Body struct {
-		Deployments []DeploymentBody `json:"deployments" required:"true"`
+		Deployments []DeploymentModel `json:"deployments" required:"true"`
 	}
 }
 
-func deploymentToApiModel(deployment db.Deployment) (DeploymentBody, error) {
-	var output DeploymentBody
+// api code =================================
+
+func deploymentToApiModel(deployment db.Deployment) (DeploymentModel, error) {
+	var output DeploymentModel
 	output.DeploymentBase = DeploymentBase{
 		Url:                  deployment.Url.String(),
 		ExternalSource:       deployment.ExternalSource,
@@ -110,8 +119,8 @@ func deploymentToApiModel(deployment db.Deployment) (DeploymentBody, error) {
 	}
 	if deployment.ServedThingType == db.StaticFiles {
 		output.Type = "StaticSite"
-		output.StaticSiteResponseBase.ServerContentLocation = &deployment.ServedThing
-		output.StaticSiteResponseBase.SpaMode = &deployment.SpaMode
+		output.StaticSiteBase.ServerContentLocation = &deployment.ServedThing
+		output.StaticSiteBase.SpaMode = &deployment.SpaMode
 	} else if deployment.ServedThingType == db.Alias {
 		output.Type = "Alias"
 		aliasedTo := deployment.AliasedTo.String()
@@ -119,8 +128,9 @@ func deploymentToApiModel(deployment db.Deployment) (DeploymentBody, error) {
 		output.AliasBase.Redirect = &deployment.Redirect
 	} else if len(deployment.ServedThingType) == 0 {
 		output.Type = "Empty"
+		output.EmptyBase.NoContentYet = true
 	} else {
-		return DeploymentBody{}, fmt.Errorf("Deployment type " + string(deployment.ServedThingType) + " not supported by the API")
+		return DeploymentModel{}, fmt.Errorf("Deployment type %v not supported by the API", deployment.ServedThingType)
 	}
 	return output, nil
 }
@@ -129,7 +139,12 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 
 	// TODO: abstract out permissions checks, which are currently very repetitive
 
-	huma.Put(api, "/deploy/new", func(
+	huma.Register(api, huma.Operation{
+		OperationID: "CreateDeployment",
+		Description: "Create a new deployment.",
+		Method:      http.MethodPut,
+		Path:        "/deploy/new",
+	}, func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
@@ -163,23 +178,46 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 	})
 
 	registry := api.OpenAPI().Components.Schemas
+
+	// these types and this schema match the DeploymentModel type except it
+	// narrows the structs for the different types of deployments down to one
+	// for each instance of the response object, with "type" as the field that
+	// indicates which one you're getting. go doesn't really have this feature,
+	// but it produces a discriminated union if you use it to generate
+	// typescript
+
+	type StaticSiteDeployment struct {
+		DeploymentBase
+		DeploymentType
+		StaticSiteBase
+	}
+	type AliasDeployment struct {
+		DeploymentBase
+		DeploymentType
+		AliasBase
+	}
+	type EmptyDeployment struct {
+		DeploymentBase
+		DeploymentType
+		EmptyBase
+	}
 	deploymentSchema := &huma.Schema{
 		OneOf: []*huma.Schema{
 			registry.Schema(reflect.TypeOf(StaticSiteDeployment{}), true, ""),
 			registry.Schema(reflect.TypeOf(AliasDeployment{}), true, ""),
-			registry.Schema(reflect.TypeOf(DeploymentBase{}), true, ""),
+			registry.Schema(reflect.TypeOf(EmptyDeployment{}), true, ""),
 		},
 		Discriminator: &huma.Discriminator{
 			PropertyName: "type", Mapping: map[string]string{
 				"StaticSite": "#/components/schemas/StaticSiteDeployment",
 				"Alias":      "#/components/schemas/AliasDeployment",
-				"Empty":      "#/components/schemas/DeploymentBase",
+				"Empty":      "#/components/schemas/EmptyDeployment",
 			},
 		},
 	}
 	deploymentsSchema := &huma.Schema{
 		Properties: map[string]*huma.Schema{
-			"deployments": &huma.Schema{
+			"deployments": {
 				Type:  "array",
 				Items: deploymentSchema,
 			},
@@ -214,7 +252,7 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 		})
 
 		var output GetDeploymentsOutput
-		output.Body.Deployments = []DeploymentBody{}
+		output.Body.Deployments = []DeploymentModel{}
 		for _, d := range deployments {
 			model, error := deploymentToApiModel(d)
 			if error != nil {
@@ -307,48 +345,55 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 		return &output, nil
 	})
 
-	huma.Put(
-		api,
-		"/deploy/files",
-		func(
-			ctx context.Context, input *DeployFilesInput,
-		) (*SuccessOutput, error) {
-			formData := input.RawBody.Data()
+	huma.Register(api, huma.Operation{
+		OperationID: "DeployFiles",
+		Description: "Put files in an existing deployment.",
+		Method:      http.MethodPut,
+		Path:        "/deploy/files",
+	}, func(
+		ctx context.Context, input *DeployFilesInput,
+	) (*SuccessOutput, error) {
+		formData := input.RawBody.Data()
 
-			permissions, permissionsOk := ctx.Value("permissions").(Permissions)
-			if !permissionsOk {
-				return nil, fmt.Errorf("Auth check failed somehow")
-			}
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		if !permissionsOk {
+			return nil, fmt.Errorf("Auth check failed somehow")
+		}
 
-			url := urlFromString(formData.Url)
-			deployment, findDeploymentError := a.web.GetDeploymentByUrl(&url)
-			if findDeploymentError != nil {
-				return nil, huma.Error404NotFound(
-					fmt.Sprintf("could not find deployment with URL \"%s\"", url),
-				)
-			}
+		url := urlFromString(formData.Url)
+		deployment, findDeploymentError := a.web.GetDeploymentByUrl(&url)
+		if findDeploymentError != nil {
+			return nil, huma.Error404NotFound(
+				fmt.Sprintf("could not find deployment with URL \"%s\"", url),
+			)
+		}
 
-			if !permissions.CanModifyDeployment(&deployment) {
-				return nil, huma.Error403Forbidden(
-					fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", url),
-				)
-			}
+		if !permissions.CanModifyDeployment(&deployment) {
+			return nil, huma.Error403Forbidden(
+				fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", url),
+			)
+		}
 
-			filesErr := a.web.PutStaticFilesForDeployment(deployment, formData.Contents, formData.KeepLeadingDirectories)
+		filesErr := a.web.PutStaticFilesForDeployment(deployment, formData.Contents, formData.KeepLeadingDirectories)
 
-			if filesErr != nil {
-				return nil, huma.Error500InternalServerError(
-					"Error occurred while unpacking uploaded files: " + filesErr.Error(),
-				)
-			}
+		if filesErr != nil {
+			return nil, huma.Error500InternalServerError(
+				"Error occurred while unpacking uploaded files: " + filesErr.Error(),
+			)
+		}
 
-			output := SuccessOutput{}
-			output.Body.Success = true
-			output.Body.Message = "Updated content for " + url.String()
-			return &output, nil
-		})
+		output := SuccessOutput{}
+		output.Body.Success = true
+		output.Body.Message = "Updated content for " + url.String()
+		return &output, nil
+	})
 
-	huma.Put(api, "/admin-dash", func(ctx context.Context, input *DeployAdminDashInput) (*SuccessOutput, error) {
+	huma.Register(api, huma.Operation{
+		OperationID: "DeployAdminDash",
+		Description: "Deploy the admin dashboard to a specified URL.",
+		Method:      http.MethodPut,
+		Path:        "/admin-dash",
+	}, func(ctx context.Context, input *DeployAdminDashInput) (*SuccessOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
 			return nil, huma.Error500InternalServerError("Auth check failed somehow")

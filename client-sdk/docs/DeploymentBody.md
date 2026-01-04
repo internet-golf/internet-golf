@@ -9,8 +9,8 @@ Name | Type | Description | Notes
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
 **Redirect** | Pointer to **bool** | If this is true, visitors to this deployment&#39;s URL will be completely redirected to the URL that this alias is for. | [optional] 
-**ServerContentLocation** | Pointer to **string** |  | [optional] 
-**SpaMode** | Pointer to **bool** |  | [optional] 
+**ServerContentLocation** | Pointer to **string** | The path to this deployment&#39;s files on the server. | [optional] 
+**SpaMode** | Pointer to **bool** | Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests. | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
 **Type** | Pointer to **string** | Type of deployment contents; can be StaticSite, Alias, or Empty. | [optional] 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 

@@ -27,10 +27,13 @@ type StaticSiteDeployment struct {
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
 	// if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
+	// The path to this deployment's files on the server.
 	ServerContentLocation *string `json:"serverContentLocation,omitempty"`
+	// Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests.
 	SpaMode *bool `json:"spaMode,omitempty"`
 	// Tags used for metadata.
 	Tags []string `json:"tags,omitempty"`
+	// Type of deployment contents.
 	Type string `json:"type"`
 	// URL that this deployment will appear at. The DNS for the domain has to be set up first.
 	Url string `json:"url"`

@@ -12,9 +12,9 @@ docs/CreateBearerTokenOutputBody.md
 docs/DefaultAPI.md
 docs/DeployAdminDashBody.md
 docs/DeployAliasBody.md
-docs/DeploymentBase.md
-docs/DeploymentBody.md
 docs/DeploymentCreateInputBody.md
+docs/DeploymentModel.md
+docs/EmptyDeployment.md
 docs/ErrorDetail.md
 docs/ErrorModel.md
 docs/GetDeployment200Response.md
@@ -30,9 +30,9 @@ model_create_bearer_token_input_body.go
 model_create_bearer_token_output_body.go
 model_deploy_admin_dash_body.go
 model_deploy_alias_body.go
-model_deployment_base.go
-model_deployment_body.go
 model_deployment_create_input_body.go
+model_deployment_model.go
+model_empty_deployment.go
 model_error_detail.go
 model_error_model.go
 model_get_deployment_200_response.go

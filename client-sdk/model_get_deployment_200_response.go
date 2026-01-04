@@ -19,7 +19,7 @@ import (
 // GetDeployment200Response - struct for GetDeployment200Response
 type GetDeployment200Response struct {
 	AliasDeployment *AliasDeployment
-	DeploymentBase *DeploymentBase
+	EmptyDeployment *EmptyDeployment
 	StaticSiteDeployment *StaticSiteDeployment
 }
 
@@ -30,10 +30,10 @@ func AliasDeploymentAsGetDeployment200Response(v *AliasDeployment) GetDeployment
 	}
 }
 
-// DeploymentBaseAsGetDeployment200Response is a convenience function that returns DeploymentBase wrapped in GetDeployment200Response
-func DeploymentBaseAsGetDeployment200Response(v *DeploymentBase) GetDeployment200Response {
+// EmptyDeploymentAsGetDeployment200Response is a convenience function that returns EmptyDeployment wrapped in GetDeployment200Response
+func EmptyDeploymentAsGetDeployment200Response(v *EmptyDeployment) GetDeployment200Response {
 	return GetDeployment200Response{
-		DeploymentBase: v,
+		EmptyDeployment: v,
 	}
 }
 
@@ -66,21 +66,21 @@ func (dst *GetDeployment200Response) UnmarshalJSON(data []byte) error {
 		dst.AliasDeployment = nil
 	}
 
-	// try to unmarshal data into DeploymentBase
-	err = newStrictDecoder(data).Decode(&dst.DeploymentBase)
+	// try to unmarshal data into EmptyDeployment
+	err = newStrictDecoder(data).Decode(&dst.EmptyDeployment)
 	if err == nil {
-		jsonDeploymentBase, _ := json.Marshal(dst.DeploymentBase)
-		if string(jsonDeploymentBase) == "{}" { // empty struct
-			dst.DeploymentBase = nil
+		jsonEmptyDeployment, _ := json.Marshal(dst.EmptyDeployment)
+		if string(jsonEmptyDeployment) == "{}" { // empty struct
+			dst.EmptyDeployment = nil
 		} else {
-			if err = validator.Validate(dst.DeploymentBase); err != nil {
-				dst.DeploymentBase = nil
+			if err = validator.Validate(dst.EmptyDeployment); err != nil {
+				dst.EmptyDeployment = nil
 			} else {
 				match++
 			}
 		}
 	} else {
-		dst.DeploymentBase = nil
+		dst.EmptyDeployment = nil
 	}
 
 	// try to unmarshal data into StaticSiteDeployment
@@ -103,7 +103,7 @@ func (dst *GetDeployment200Response) UnmarshalJSON(data []byte) error {
 	if match > 1 { // more than 1 match
 		// reset to nil
 		dst.AliasDeployment = nil
-		dst.DeploymentBase = nil
+		dst.EmptyDeployment = nil
 		dst.StaticSiteDeployment = nil
 
 		return fmt.Errorf("data matches more than one schema in oneOf(GetDeployment200Response)")
@@ -120,8 +120,8 @@ func (src GetDeployment200Response) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.AliasDeployment)
 	}
 
-	if src.DeploymentBase != nil {
-		return json.Marshal(&src.DeploymentBase)
+	if src.EmptyDeployment != nil {
+		return json.Marshal(&src.EmptyDeployment)
 	}
 
 	if src.StaticSiteDeployment != nil {
@@ -140,8 +140,8 @@ func (obj *GetDeployment200Response) GetActualInstance() (interface{}) {
 		return obj.AliasDeployment
 	}
 
-	if obj.DeploymentBase != nil {
-		return obj.DeploymentBase
+	if obj.EmptyDeployment != nil {
+		return obj.EmptyDeployment
 	}
 
 	if obj.StaticSiteDeployment != nil {
@@ -158,8 +158,8 @@ func (obj GetDeployment200Response) GetActualInstanceValue() (interface{}) {
 		return *obj.AliasDeployment
 	}
 
-	if obj.DeploymentBase != nil {
-		return *obj.DeploymentBase
+	if obj.EmptyDeployment != nil {
+		return *obj.EmptyDeployment
 	}
 
 	if obj.StaticSiteDeployment != nil {

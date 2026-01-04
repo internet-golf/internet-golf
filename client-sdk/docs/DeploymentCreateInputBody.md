@@ -9,7 +9,6 @@ Name | Type | Description | Notes
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
-**Type** | Pointer to **string** | Type of deployment contents; can be StaticSite, Alias, or Empty. | [optional] 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 
 ## Methods
@@ -166,31 +165,6 @@ HasTags returns a boolean if a field has been set.
 `func (o *DeploymentCreateInputBody) UnsetTags()`
 
 UnsetTags ensures that no value is present for Tags, not even an explicit nil
-### GetType
-
-`func (o *DeploymentCreateInputBody) GetType() string`
-
-GetType returns the Type field if non-nil, zero value otherwise.
-
-### GetTypeOk
-
-`func (o *DeploymentCreateInputBody) GetTypeOk() (*string, bool)`
-
-GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetType
-
-`func (o *DeploymentCreateInputBody) SetType(v string)`
-
-SetType sets Type field to given value.
-
-### HasType
-
-`func (o *DeploymentCreateInputBody) HasType() bool`
-
-HasType returns a boolean if a field has been set.
-
 ### GetUrl
 
 `func (o *DeploymentCreateInputBody) GetUrl() string`

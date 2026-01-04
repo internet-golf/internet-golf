@@ -47,7 +47,11 @@ components:
             - array
             - "null"
         type:
-          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
+          description: Type of deployment contents.
+          enum:
+            - StaticSite
+            - Alias
+            - Empty
           type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
@@ -56,6 +60,7 @@ components:
           type: string
       required:
         - url
+        - type
       type: object
     CreateBearerTokenInputBody:
       additionalProperties: false
@@ -129,80 +134,6 @@ components:
       required:
         - Url
       type: object
-    DeploymentBase:
-      additionalProperties: false
-      properties:
-        externalSource:
-          description: Original repository for this deployment's source. Can include a branch name.
-          examples:
-            - user/repo or user/repo#branch-name
-          type: string
-        externalSourceType:
-          description: Place where the original repository lives.
-          type: string
-        preserveExternalPath:
-          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
-          type: boolean
-        tags:
-          description: Tags used for metadata.
-          items:
-            type: string
-          type:
-            - array
-            - "null"
-        type:
-          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
-          type: string
-        url:
-          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
-          examples:
-            - mysite.mydomain.com
-          type: string
-      required:
-        - url
-      type: object
-    DeploymentBody:
-      additionalProperties: false
-      properties:
-        aliasedTo:
-          description: The URL that this deployment is an alias for.
-          type: string
-        externalSource:
-          description: Original repository for this deployment's source. Can include a branch name.
-          examples:
-            - user/repo or user/repo#branch-name
-          type: string
-        externalSourceType:
-          description: Place where the original repository lives.
-          type: string
-        preserveExternalPath:
-          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
-          type: boolean
-        redirect:
-          description: If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
-          type: boolean
-        serverContentLocation:
-          type: string
-        spaMode:
-          type: boolean
-        tags:
-          description: Tags used for metadata.
-          items:
-            type: string
-          type:
-            - array
-            - "null"
-        type:
-          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
-          type: string
-        url:
-          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
-          examples:
-            - mysite.mydomain.com
-          type: string
-      required:
-        - url
-      type: object
     DeploymentCreateInputBody:
       additionalProperties: false
       properties:
@@ -231,8 +162,56 @@ components:
           type:
             - array
             - "null"
+        url:
+          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
+          examples:
+            - mysite.mydomain.com
+          type: string
+      required:
+        - url
+      type: object
+    DeploymentModel:
+      additionalProperties: false
+      properties:
+        aliasedTo:
+          description: The URL that this deployment is an alias for.
+          type: string
+        externalSource:
+          description: Original repository for this deployment's source. Can include a branch name.
+          examples:
+            - user/repo or user/repo#branch-name
+          type: string
+        externalSourceType:
+          description: Place where the original repository lives.
+          type: string
+        noContentYet:
+          description: Set to true to indicate that this deployment has not yet been set up.
+          type: boolean
+        preserveExternalPath:
+          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          type: boolean
+        redirect:
+          description: If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
+          type: boolean
+        serverContentLocation:
+          description: The path to this deployment's files on the server.
+          type: string
+        spaMode:
+          description: Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests.
+          type: boolean
+        tags:
+          description: Tags used for metadata.
+          items:
+            type: string
+          type:
+            - array
+            - "null"
         type:
-          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
+          description: Type of deployment contents.
+          enum:
+            - StaticSite
+            - Alias
+            - Empty
           type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
@@ -241,6 +220,49 @@ components:
           type: string
       required:
         - url
+        - type
+        - noContentYet
+      type: object
+    EmptyDeployment:
+      additionalProperties: false
+      properties:
+        externalSource:
+          description: Original repository for this deployment's source. Can include a branch name.
+          examples:
+            - user/repo or user/repo#branch-name
+          type: string
+        externalSourceType:
+          description: Place where the original repository lives.
+          type: string
+        noContentYet:
+          description: Set to true to indicate that this deployment has not yet been set up.
+          type: boolean
+        preserveExternalPath:
+          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          type: boolean
+        tags:
+          description: Tags used for metadata.
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        type:
+          description: Type of deployment contents.
+          enum:
+            - StaticSite
+            - Alias
+            - Empty
+          type: string
+        url:
+          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
+          examples:
+            - mysite.mydomain.com
+          type: string
+      required:
+        - url
+        - type
+        - noContentYet
       type: object
     ErrorDetail:
       additionalProperties: false
@@ -306,7 +328,7 @@ components:
       properties:
         deployments:
           items:
-            $ref: "#/components/schemas/DeploymentBody"
+            $ref: "#/components/schemas/DeploymentModel"
           type:
             - array
             - "null"
@@ -343,8 +365,10 @@ components:
           description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
         serverContentLocation:
+          description: The path to this deployment's files on the server.
           type: string
         spaMode:
+          description: Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests.
           type: boolean
         tags:
           description: Tags used for metadata.
@@ -354,9 +378,11 @@ components:
             - array
             - "null"
         type:
+          description: Type of deployment contents.
           enum:
             - StaticSite
             - Alias
+            - Empty
           type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
@@ -364,8 +390,8 @@ components:
             - mysite.mydomain.com
           type: string
       required:
-        - type
         - url
+        - type
       type: object
     SuccessOutputBody:
       additionalProperties: false
@@ -392,7 +418,8 @@ openapi: 3.1.0
 paths:
   /admin-dash:
     put:
-      operationId: put-admin-dash
+      description: Deploy the admin dashboard to a specified URL.
+      operationId: DeployAdminDash
       requestBody:
         content:
           application/json:
@@ -412,7 +439,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
-      summary: Put admin DASH
   /alive:
     get:
       operationId: get-alive
@@ -455,7 +481,8 @@ paths:
           description: Error
   /deploy/files:
     put:
-      operationId: put-deploy-files
+      description: Put files in an existing deployment.
+      operationId: DeployFiles
       requestBody:
         content:
           multipart/form-data:
@@ -504,10 +531,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
-      summary: Put deploy files
   /deploy/new:
     put:
-      operationId: put-deploy-new
+      description: Create a new deployment.
+      operationId: CreateDeployment
       requestBody:
         content:
           application/json:
@@ -527,7 +554,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
-      summary: Put deploy new
   /deployment/{url}:
     get:
       description: Retrieve an active deployment.
@@ -546,13 +572,13 @@ paths:
                 discriminator:
                   mapping:
                     Alias: "#/components/schemas/AliasDeployment"
-                    Empty: "#/components/schemas/DeploymentBase"
+                    Empty: "#/components/schemas/EmptyDeployment"
                     StaticSite: "#/components/schemas/StaticSiteDeployment"
                   propertyName: type
                 oneOf:
                   - $ref: "#/components/schemas/StaticSiteDeployment"
                   - $ref: "#/components/schemas/AliasDeployment"
-                  - $ref: "#/components/schemas/DeploymentBase"
+                  - $ref: "#/components/schemas/EmptyDeployment"
           description: OK
         default:
           content:
@@ -575,13 +601,13 @@ paths:
                       discriminator:
                         mapping:
                           Alias: "#/components/schemas/AliasDeployment"
-                          Empty: "#/components/schemas/DeploymentBase"
+                          Empty: "#/components/schemas/EmptyDeployment"
                           StaticSite: "#/components/schemas/StaticSiteDeployment"
                         propertyName: type
                       oneOf:
                         - $ref: "#/components/schemas/StaticSiteDeployment"
                         - $ref: "#/components/schemas/AliasDeployment"
-                        - $ref: "#/components/schemas/DeploymentBase"
+                        - $ref: "#/components/schemas/EmptyDeployment"
                     type: array
           description: OK
         default:

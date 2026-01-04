@@ -1,233 +1,233 @@
-# AliasDeployment
+# ResponseIfStaticSite
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**AliasedTo** | Pointer to **string** | The URL that this deployment is an alias for. | [optional] 
 **ExternalSource** | Pointer to **string** | Original repository for this deployment&#39;s source. Can include a branch name. | [optional] 
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
-**Redirect** | Pointer to **bool** | If this is true, visitors to this deployment&#39;s URL will be completely redirected to the URL that this alias is for. | [optional] 
+**ServerContentLocation** | Pointer to **string** | The path to this deployment&#39;s files on the server. | [optional] 
+**SpaMode** | Pointer to **bool** | Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests. | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
 **Type** | **string** | Type of deployment contents. | 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 
 ## Methods
 
-### NewAliasDeployment
+### NewResponseIfStaticSite
 
-`func NewAliasDeployment(type_ string, url string, ) *AliasDeployment`
+`func NewResponseIfStaticSite(type_ string, url string, ) *ResponseIfStaticSite`
 
-NewAliasDeployment instantiates a new AliasDeployment object
+NewResponseIfStaticSite instantiates a new ResponseIfStaticSite object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewAliasDeploymentWithDefaults
+### NewResponseIfStaticSiteWithDefaults
 
-`func NewAliasDeploymentWithDefaults() *AliasDeployment`
+`func NewResponseIfStaticSiteWithDefaults() *ResponseIfStaticSite`
 
-NewAliasDeploymentWithDefaults instantiates a new AliasDeployment object
+NewResponseIfStaticSiteWithDefaults instantiates a new ResponseIfStaticSite object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
-### GetAliasedTo
-
-`func (o *AliasDeployment) GetAliasedTo() string`
-
-GetAliasedTo returns the AliasedTo field if non-nil, zero value otherwise.
-
-### GetAliasedToOk
-
-`func (o *AliasDeployment) GetAliasedToOk() (*string, bool)`
-
-GetAliasedToOk returns a tuple with the AliasedTo field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetAliasedTo
-
-`func (o *AliasDeployment) SetAliasedTo(v string)`
-
-SetAliasedTo sets AliasedTo field to given value.
-
-### HasAliasedTo
-
-`func (o *AliasDeployment) HasAliasedTo() bool`
-
-HasAliasedTo returns a boolean if a field has been set.
-
 ### GetExternalSource
 
-`func (o *AliasDeployment) GetExternalSource() string`
+`func (o *ResponseIfStaticSite) GetExternalSource() string`
 
 GetExternalSource returns the ExternalSource field if non-nil, zero value otherwise.
 
 ### GetExternalSourceOk
 
-`func (o *AliasDeployment) GetExternalSourceOk() (*string, bool)`
+`func (o *ResponseIfStaticSite) GetExternalSourceOk() (*string, bool)`
 
 GetExternalSourceOk returns a tuple with the ExternalSource field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetExternalSource
 
-`func (o *AliasDeployment) SetExternalSource(v string)`
+`func (o *ResponseIfStaticSite) SetExternalSource(v string)`
 
 SetExternalSource sets ExternalSource field to given value.
 
 ### HasExternalSource
 
-`func (o *AliasDeployment) HasExternalSource() bool`
+`func (o *ResponseIfStaticSite) HasExternalSource() bool`
 
 HasExternalSource returns a boolean if a field has been set.
 
 ### GetExternalSourceType
 
-`func (o *AliasDeployment) GetExternalSourceType() string`
+`func (o *ResponseIfStaticSite) GetExternalSourceType() string`
 
 GetExternalSourceType returns the ExternalSourceType field if non-nil, zero value otherwise.
 
 ### GetExternalSourceTypeOk
 
-`func (o *AliasDeployment) GetExternalSourceTypeOk() (*string, bool)`
+`func (o *ResponseIfStaticSite) GetExternalSourceTypeOk() (*string, bool)`
 
 GetExternalSourceTypeOk returns a tuple with the ExternalSourceType field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetExternalSourceType
 
-`func (o *AliasDeployment) SetExternalSourceType(v string)`
+`func (o *ResponseIfStaticSite) SetExternalSourceType(v string)`
 
 SetExternalSourceType sets ExternalSourceType field to given value.
 
 ### HasExternalSourceType
 
-`func (o *AliasDeployment) HasExternalSourceType() bool`
+`func (o *ResponseIfStaticSite) HasExternalSourceType() bool`
 
 HasExternalSourceType returns a boolean if a field has been set.
 
 ### GetPreserveExternalPath
 
-`func (o *AliasDeployment) GetPreserveExternalPath() bool`
+`func (o *ResponseIfStaticSite) GetPreserveExternalPath() bool`
 
 GetPreserveExternalPath returns the PreserveExternalPath field if non-nil, zero value otherwise.
 
 ### GetPreserveExternalPathOk
 
-`func (o *AliasDeployment) GetPreserveExternalPathOk() (*bool, bool)`
+`func (o *ResponseIfStaticSite) GetPreserveExternalPathOk() (*bool, bool)`
 
 GetPreserveExternalPathOk returns a tuple with the PreserveExternalPath field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPreserveExternalPath
 
-`func (o *AliasDeployment) SetPreserveExternalPath(v bool)`
+`func (o *ResponseIfStaticSite) SetPreserveExternalPath(v bool)`
 
 SetPreserveExternalPath sets PreserveExternalPath field to given value.
 
 ### HasPreserveExternalPath
 
-`func (o *AliasDeployment) HasPreserveExternalPath() bool`
+`func (o *ResponseIfStaticSite) HasPreserveExternalPath() bool`
 
 HasPreserveExternalPath returns a boolean if a field has been set.
 
-### GetRedirect
+### GetServerContentLocation
 
-`func (o *AliasDeployment) GetRedirect() bool`
+`func (o *ResponseIfStaticSite) GetServerContentLocation() string`
 
-GetRedirect returns the Redirect field if non-nil, zero value otherwise.
+GetServerContentLocation returns the ServerContentLocation field if non-nil, zero value otherwise.
 
-### GetRedirectOk
+### GetServerContentLocationOk
 
-`func (o *AliasDeployment) GetRedirectOk() (*bool, bool)`
+`func (o *ResponseIfStaticSite) GetServerContentLocationOk() (*string, bool)`
 
-GetRedirectOk returns a tuple with the Redirect field if it's non-nil, zero value otherwise
+GetServerContentLocationOk returns a tuple with the ServerContentLocation field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetRedirect
+### SetServerContentLocation
 
-`func (o *AliasDeployment) SetRedirect(v bool)`
+`func (o *ResponseIfStaticSite) SetServerContentLocation(v string)`
 
-SetRedirect sets Redirect field to given value.
+SetServerContentLocation sets ServerContentLocation field to given value.
 
-### HasRedirect
+### HasServerContentLocation
 
-`func (o *AliasDeployment) HasRedirect() bool`
+`func (o *ResponseIfStaticSite) HasServerContentLocation() bool`
 
-HasRedirect returns a boolean if a field has been set.
+HasServerContentLocation returns a boolean if a field has been set.
+
+### GetSpaMode
+
+`func (o *ResponseIfStaticSite) GetSpaMode() bool`
+
+GetSpaMode returns the SpaMode field if non-nil, zero value otherwise.
+
+### GetSpaModeOk
+
+`func (o *ResponseIfStaticSite) GetSpaModeOk() (*bool, bool)`
+
+GetSpaModeOk returns a tuple with the SpaMode field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetSpaMode
+
+`func (o *ResponseIfStaticSite) SetSpaMode(v bool)`
+
+SetSpaMode sets SpaMode field to given value.
+
+### HasSpaMode
+
+`func (o *ResponseIfStaticSite) HasSpaMode() bool`
+
+HasSpaMode returns a boolean if a field has been set.
 
 ### GetTags
 
-`func (o *AliasDeployment) GetTags() []string`
+`func (o *ResponseIfStaticSite) GetTags() []string`
 
 GetTags returns the Tags field if non-nil, zero value otherwise.
 
 ### GetTagsOk
 
-`func (o *AliasDeployment) GetTagsOk() (*[]string, bool)`
+`func (o *ResponseIfStaticSite) GetTagsOk() (*[]string, bool)`
 
 GetTagsOk returns a tuple with the Tags field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTags
 
-`func (o *AliasDeployment) SetTags(v []string)`
+`func (o *ResponseIfStaticSite) SetTags(v []string)`
 
 SetTags sets Tags field to given value.
 
 ### HasTags
 
-`func (o *AliasDeployment) HasTags() bool`
+`func (o *ResponseIfStaticSite) HasTags() bool`
 
 HasTags returns a boolean if a field has been set.
 
 ### SetTagsNil
 
-`func (o *AliasDeployment) SetTagsNil(b bool)`
+`func (o *ResponseIfStaticSite) SetTagsNil(b bool)`
 
  SetTagsNil sets the value for Tags to be an explicit nil
 
 ### UnsetTags
-`func (o *AliasDeployment) UnsetTags()`
+`func (o *ResponseIfStaticSite) UnsetTags()`
 
 UnsetTags ensures that no value is present for Tags, not even an explicit nil
 ### GetType
 
-`func (o *AliasDeployment) GetType() string`
+`func (o *ResponseIfStaticSite) GetType() string`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *AliasDeployment) GetTypeOk() (*string, bool)`
+`func (o *ResponseIfStaticSite) GetTypeOk() (*string, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *AliasDeployment) SetType(v string)`
+`func (o *ResponseIfStaticSite) SetType(v string)`
 
 SetType sets Type field to given value.
 
 
 ### GetUrl
 
-`func (o *AliasDeployment) GetUrl() string`
+`func (o *ResponseIfStaticSite) GetUrl() string`
 
 GetUrl returns the Url field if non-nil, zero value otherwise.
 
 ### GetUrlOk
 
-`func (o *AliasDeployment) GetUrlOk() (*string, bool)`
+`func (o *ResponseIfStaticSite) GetUrlOk() (*string, bool)`
 
 GetUrlOk returns a tuple with the Url field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetUrl
 
-`func (o *AliasDeployment) SetUrl(v string)`
+`func (o *ResponseIfStaticSite) SetUrl(v string)`
 
 SetUrl sets Url field to given value.
 

@@ -33,8 +33,8 @@ type AliasDeployment struct {
 	Redirect *bool `json:"redirect,omitempty"`
 	// Tags used for metadata.
 	Tags []string `json:"tags,omitempty"`
-	// Type of deployment contents; can be StaticSite, Alias, or Empty.
-	Type *string `json:"type,omitempty"`
+	// Type of deployment contents.
+	Type string `json:"type"`
 	// URL that this deployment will appear at. The DNS for the domain has to be set up first.
 	Url string `json:"url"`
 }
@@ -45,8 +45,9 @@ type _AliasDeployment AliasDeployment
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAliasDeployment(url string) *AliasDeployment {
+func NewAliasDeployment(type_ string, url string) *AliasDeployment {
 	this := AliasDeployment{}
+	this.Type = type_
 	this.Url = url
 	return &this
 }
@@ -252,36 +253,28 @@ func (o *AliasDeployment) SetTags(v []string) {
 	o.Tags = v
 }
 
-// GetType returns the Type field value if set, zero value otherwise.
+// GetType returns the Type field value
 func (o *AliasDeployment) GetType() string {
-	if o == nil || IsNil(o.Type) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Type
+
+	return o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *AliasDeployment) GetTypeOk() (*string, bool) {
-	if o == nil || IsNil(o.Type) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Type, true
+	return &o.Type, true
 }
 
-// HasType returns a boolean if a field has been set.
-func (o *AliasDeployment) HasType() bool {
-	if o != nil && !IsNil(o.Type) {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
+// SetType sets field value
 func (o *AliasDeployment) SetType(v string) {
-	o.Type = &v
+	o.Type = v
 }
 
 // GetUrl returns the Url field value
@@ -336,9 +329,7 @@ func (o AliasDeployment) ToMap() (map[string]interface{}, error) {
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
 	}
-	if !IsNil(o.Type) {
-		toSerialize["type"] = o.Type
-	}
+	toSerialize["type"] = o.Type
 	toSerialize["url"] = o.Url
 	return toSerialize, nil
 }
@@ -348,6 +339,7 @@ func (o *AliasDeployment) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
+		"type",
 		"url",
 	}
 
