@@ -33,6 +33,9 @@ func urlToPageContent(url string, t *testing.T) string {
 		t.Fatalf("request to %s failed", url)
 		return ""
 	}
+	if resp.StatusCode != 200 {
+		return ""
+	}
 	body, bodyErr := io.ReadAll(resp.Body)
 	if bodyErr != nil {
 		t.Fatal(bodyErr)

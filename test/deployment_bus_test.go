@@ -58,10 +58,6 @@ func busCleanup() {
 }
 
 func assertUrlEmpty(url string, t *testing.T) {
-	// TODO: should this return an error? the caddy Routes type says "By
-	// default, all unrouted requests receive a 200 OK response to indicate the
-	// server is working." maybe i should add a catch-all non-persisted route
-	// with default content? but with, like, a 404 status code?
 	blankResp := urlToPageContent(url, t)
 	if len(blankResp) > 0 {
 		t.Fatal("deployment already existed at beginning of test")

@@ -21,20 +21,38 @@ type DeployContainerInput struct {
 	}
 }
 
+type DeploymentCreateBody struct {
+	db.DeploymentMetadata
+	// the DeploymentMetadata type already has a Url field, but that uses
+	// the internal Url type. this just receives a string so that the
+	// internal Url type is hidden from the outside world
+	Url string `json:"url"`
+}
+type DeploymentCreateInput struct {
+	Body struct{ DeploymentCreateBody }
+}
+
+type DeployFilesBody struct {
+	Url                    string        `form:"url" required:"true"`
+	Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
+	KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
+	PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
+}
+type DeployFilesInput struct {
+	RawBody huma.MultipartFormFiles[DeployFilesBody]
+}
+
+type DeployAdminDashBody struct {
+	Url string `json:"url" required:"true"`
+}
+type DeployAdminDashInput struct {
+	Body DeployAdminDashBody
+}
+
 func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 
 	// TODO: abstract out permissions checks, which are currently very repetitive
 
-	type DeploymentCreateBody struct {
-		db.DeploymentMetadata
-		// the DeploymentMetadata type already has a Url field, but that uses
-		// the internal Url type. this just receives a string so that the
-		// internal Url type is hidden from the outside world
-		Url string `json:"url"`
-	}
-	type DeploymentCreateInput struct {
-		Body struct{ DeploymentCreateBody }
-	}
 	huma.Put(api, "/deploy/new", func(
 		ctx context.Context, input *DeploymentCreateInput,
 	) (*SuccessOutput, error) {
@@ -93,15 +111,6 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 		return &output, nil
 	})
 
-	type DeployFilesBody struct {
-		Url                    string        `form:"url" required:"true"`
-		Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
-		KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
-		PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
-	}
-	type DeployFilesInput struct {
-		RawBody huma.MultipartFormFiles[DeployFilesBody]
-	}
 	huma.Put(
 		api,
 		"/deploy/files",
@@ -143,12 +152,6 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 			return &output, nil
 		})
 
-	type DeployAdminDashBody struct {
-		Url string `json:"url" required:"true"`
-	}
-	type DeployAdminDashInput struct {
-		Body DeployAdminDashBody
-	}
 	huma.Put(api, "/admin-dash", func(ctx context.Context, input *DeployAdminDashInput) (*SuccessOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
 		if !permissionsOk {
