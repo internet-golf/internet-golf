@@ -34,9 +34,6 @@ type BearerToken struct {
 	// deploymentsTheyHaveAccessTo []string
 }
 
-// TODO: since this is used by the Huma API, it probably should have more docs
-// and stuff in the struct tags
-
 type DeploymentMetadata struct {
 	Url Url `json:"" storm:"id"`
 
@@ -69,6 +66,9 @@ type DeploymentContent struct {
 	// path; for a reverse proxy, this is a host and port (probably "localhost:[port]")
 	ServedThing     string          `json:"servedThing"`
 	ServedThingType ServedThingType `json:"servedThingType"`
+
+	// this only makes sense for static site content:
+	SpaMode bool `json:"spaMode"`
 }
 
 type Deployment struct {

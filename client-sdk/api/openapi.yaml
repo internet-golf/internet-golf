@@ -5,6 +5,29 @@ info:
 servers:
 - url: /
 paths:
+  /admin-dash:
+    put:
+      operationId: put-admin-dash
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeployAdminDashBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Put admin DASH
   /alive:
     get:
       operationId: get-alive
@@ -57,31 +80,6 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Put deploy files
-  /deploy/init/{domain}:
-    put:
-      operationId: put-deploy-init-by-domain
-      parameters:
-      - explode: false
-        in: path
-        name: domain
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessOutputBody"
-          description: OK
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ErrorModel"
-          description: Error
-      summary: Put deploy init by domain
   /deploy/new:
     put:
       operationId: put-deploy-new
@@ -229,6 +227,21 @@ components:
           type: string
       required:
       - token
+    DeployAdminDashBody:
+      additionalProperties: false
+      example:
+        $schema: https://openapi-generator.tech
+        url: url
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          readOnly: true
+          type: string
+        url:
+          type: string
+      required:
+      - url
     DeploymentCreateInputBody:
       additionalProperties: false
       example:
@@ -310,6 +323,7 @@ components:
     GetDeploymentOutputBody:
       additionalProperties: false
       example:
+        spaMode: true
         $schema: https://openapi-generator.tech
         hasContent: true
         externalSourceType: externalSourceType
@@ -343,6 +357,8 @@ components:
           type: string
         servedThingType:
           type: string
+        spaMode:
+          type: boolean
         tags:
           items:
             type: string
@@ -353,6 +369,7 @@ components:
       - hasContent
       - servedThing
       - servedThingType
+      - spaMode
     HealthCheckOutputBody:
       additionalProperties: false
       example:

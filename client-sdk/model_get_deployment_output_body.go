@@ -30,6 +30,7 @@ type GetDeploymentOutputBody struct {
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	ServedThing string `json:"servedThing"`
 	ServedThingType string `json:"servedThingType"`
+	SpaMode bool `json:"spaMode"`
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -39,12 +40,13 @@ type _GetDeploymentOutputBody GetDeploymentOutputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetDeploymentOutputBody(url Url, hasContent bool, servedThing string, servedThingType string) *GetDeploymentOutputBody {
+func NewGetDeploymentOutputBody(url Url, hasContent bool, servedThing string, servedThingType string, spaMode bool) *GetDeploymentOutputBody {
 	this := GetDeploymentOutputBody{}
 	this.Url = url
 	this.HasContent = hasContent
 	this.ServedThing = servedThing
 	this.ServedThingType = servedThingType
+	this.SpaMode = spaMode
 	return &this
 }
 
@@ -280,6 +282,30 @@ func (o *GetDeploymentOutputBody) SetServedThingType(v string) {
 	o.ServedThingType = v
 }
 
+// GetSpaMode returns the SpaMode field value
+func (o *GetDeploymentOutputBody) GetSpaMode() bool {
+	if o == nil {
+		var ret bool
+		return ret
+	}
+
+	return o.SpaMode
+}
+
+// GetSpaModeOk returns a tuple with the SpaMode field value
+// and a boolean to check if the value has been set.
+func (o *GetDeploymentOutputBody) GetSpaModeOk() (*bool, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.SpaMode, true
+}
+
+// SetSpaMode sets field value
+func (o *GetDeploymentOutputBody) SetSpaMode(v bool) {
+	o.SpaMode = v
+}
+
 // GetTags returns the Tags field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *GetDeploymentOutputBody) GetTags() []string {
 	if o == nil {
@@ -339,6 +365,7 @@ func (o GetDeploymentOutputBody) ToMap() (map[string]interface{}, error) {
 	}
 	toSerialize["servedThing"] = o.ServedThing
 	toSerialize["servedThingType"] = o.ServedThingType
+	toSerialize["spaMode"] = o.SpaMode
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
 	}
@@ -354,6 +381,7 @@ func (o *GetDeploymentOutputBody) UnmarshalJSON(data []byte) (err error) {
 		"hasContent",
 		"servedThing",
 		"servedThingType",
+		"spaMode",
 	}
 
 	allProperties := make(map[string]interface{})

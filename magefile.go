@@ -31,16 +31,17 @@ func SetExtension() {
 	}
 }
 
-func BuildWithCodegen() {
-	mg.Deps(BuildClientWithCodegen, BuildServer)
-}
-
 func Build() {
 	mg.Deps(BuildClient, BuildServer)
 }
 
+func BuildDash() error {
+	fmt.Println("Building dashboard...")
+	return sh.Run("docker", "build", "-o", "./pkg/resources/dash-dist/", "./admin-dash/")
+}
+
 func BuildServer() error {
-	mg.Deps(SetExtension, InstallDeps)
+	mg.Deps(SetExtension, InstallDeps, BuildDash)
 	fmt.Println("Building server...")
 	return sh.Run("go", "build", "-o", "golf-server"+extension, "./cmd")
 }
@@ -146,22 +147,12 @@ func GenerateClientSdk() error {
 	}
 
 	return nil
-
-}
-
-func BuildClientWithoutDeps() error {
-	fmt.Println("Building client...")
-	return sh.Run("go", "build", "-o", "golf"+extension, "./client-cmd")
 }
 
 func BuildClient() error {
-	mg.Deps(SetExtension, InstallDeps)
-	return BuildClientWithoutDeps()
-}
-
-func BuildClientWithCodegen() error {
 	mg.Deps(SetExtension, InstallDeps, GenerateClientSdk)
-	return BuildClientWithoutDeps()
+	fmt.Println("Building client...")
+	return sh.Run("go", "build", "-o", "golf"+extension, "./client-cmd")
 }
 
 func InstallDeps() error {

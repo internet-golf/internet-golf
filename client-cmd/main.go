@@ -144,23 +144,13 @@ func createDeploymentCommand() *cobra.Command {
 			var externalSource string
 
 			if len(github) > 0 {
-				// TODO: would be nice to use ExternalSourceType somehow
+				// TODO: would be nice to use the ExternalSourceType enum-ish
+				// thing somehow, instead of this string literal
 				externalSourceType = "GithubRepo"
 				externalSource = github
 			}
 
 			client := createClient(args[0])
-
-			var urls []golfsdk.Url
-			for _, arg := range args {
-				firstSlash := strings.Index(arg, "/")
-				if firstSlash == -1 {
-					urls = append(urls, golfsdk.Url{Domain: arg})
-				} else {
-					path := arg[firstSlash:]
-					urls = append(urls, golfsdk.Url{Domain: arg[0:firstSlash], Path: &path})
-				}
-			}
 
 			body, resp, respError := client.
 				DefaultAPI.PutDeployNew(context.TODO()).
@@ -190,6 +180,40 @@ func createDeploymentCommand() *cobra.Command {
 	createDeployment.Flags().StringVar(
 		&github, "github", "", "Specify a Github Repo: repoOwner/repoName",
 	)
+
+	return &createDeployment
+}
+
+func deployAdminDash() *cobra.Command {
+	createDeployment := cobra.Command{
+		Use:     "deploy-admin-dash domain",
+		Example: "deploy-admin-dash dash.example.com",
+		Short:   "Deploys the Internet Golf Admin Dashboard to a specific URL",
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			client := createClient(args[0])
+
+			body, resp, respError := client.
+				DefaultAPI.PutAdminDash(context.TODO()).
+				DeployAdminDashBody(golfsdk.DeployAdminDashBody{Url: args[0]}).
+				Execute()
+
+			if body == nil || respError != nil {
+				responseBody, responseBodyErr := io.ReadAll(resp.Body)
+				if responseBodyErr != nil || len(responseBody) == 0 {
+					if respError != nil {
+						fmt.Println(respError.Error())
+					} else {
+						fmt.Println("ERROR: Could not get response body")
+					}
+					return
+				}
+				fmt.Println(string(responseBody))
+				return
+			}
+			fmt.Println(body.Message)
+		},
+	}
 
 	return &createDeployment
 }
@@ -329,6 +353,7 @@ func main() {
 	golfCmds := [](*cobra.Command){
 		createDeploymentCommand(), deployContentCommand(),
 		registerExternalUserCommand(), createBearerTokenCommand(),
+		deployAdminDash(),
 	}
 	for _, cmd := range golfCmds {
 		cmd.GroupID = "IG"

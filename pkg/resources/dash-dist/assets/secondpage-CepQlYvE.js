@@ -1,0 +1,1 @@
+import{w as e,p as t}from"./chunk-JMJ3UQ3L-DlypuG4Y.js";function s({}){return[{title:"A Second Page"},{name:"description",content:"Here is a Second Page!"}]}const a=e(function(){return t.jsx("p",{children:"This page is not the home page!"})});export{a as default,s as meta};

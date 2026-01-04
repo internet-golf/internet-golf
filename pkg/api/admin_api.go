@@ -21,6 +21,14 @@ import (
 // context
 func readAuth(api huma.API, authManager *AuthManager) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
+
+		// special case: don't try to determine user permissions if they're just
+		// getting a health check
+		if ctx.URL().Path == "/alive" {
+			next(ctx)
+			return
+		}
+
 		// this header is set by the internal caddy reverse-proxy when it is
 		// forwarding a request - we don't want to mistake those for "true"
 		// localhost requests
@@ -31,35 +39,15 @@ func readAuth(api huma.API, authManager *AuthManager) func(huma.Context, func(hu
 		authHeader := ctx.Header("Authorization")
 
 		// TODO: recover from any panics in getPermissionForRequest?
-		permissions, _ := authManager.GetPermissionsForRequest(remoteAddr, authHeader)
-		ctx = huma.WithValue(ctx, "permissions", permissions)
+		permissions, error := authManager.GetPermissionsForRequest(remoteAddr, authHeader)
+		if error != nil {
+			fmt.Fprintf(os.Stderr, "Error getting permissions for request: %s\n", error.Error())
+		} else {
+			ctx = huma.WithValue(ctx, "permissions", permissions)
+		}
 
 		next(ctx)
 	}
-}
-
-type DeploymentCreateBody struct {
-	db.DeploymentMetadata
-	// the DeploymentMetadata type already has a Url field, but that uses
-	// the internal Url type. this just receives a string so that the
-	// internal Url type is hidden from the outside world
-	Url string `json:"url"`
-}
-
-type DeploymentCreateInput struct {
-	Body struct {
-		DeploymentCreateBody
-	}
-}
-
-type DeployFilesBody struct {
-	Url                    string        `form:"url" required:"true"`
-	Contents               huma.FormFile `form:"contents" contentType:"application/gzip,application/octet-stream"`
-	KeepLeadingDirectories bool          `form:"keepLeadingDirectories"`
-	PreserveExistingFiles  bool          `form:"preserveExistingFiles"`
-}
-type DeployFilesInput struct {
-	RawBody huma.MultipartFormFiles[DeployFilesBody]
 }
 
 type AddExternalUserBody struct {
@@ -90,15 +78,6 @@ type CreateBearerTokenOutput struct {
 	}
 }
 
-type DeployContainerInput struct {
-	Body struct {
-		// should this be json even though the static deployment input is form data??
-		ContainerUrl    string `json:"containerUrl"`
-		InternalAppPort int    `json:"internalAppPort"`
-		Id              string `json:"id" required:"false"`
-	}
-}
-
 type SuccessOutput struct {
 	Body struct {
 		Success bool   `json:"success"`
@@ -109,12 +88,6 @@ type SuccessOutput struct {
 type HealthCheckOutput struct {
 	Body struct {
 		Ok bool `json:"ok"`
-	}
-}
-
-type GetDeploymentOutput struct {
-	Body struct {
-		db.Deployment
 	}
 }
 
@@ -147,101 +120,10 @@ func (a *AdminApi) addRoutes(api huma.API) {
 			return resp, nil
 		})
 
-	huma.Put(api, "/deploy/new", func(
-		ctx context.Context, input *DeploymentCreateInput,
-	) (*SuccessOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
-		if !permissionsOk {
-			return nil, huma.Error500InternalServerError("Auth check failed somehow")
-		}
+	a.addDeploymentRoutes(api)
 
-		if !permissions.CanCreateDeployment() {
-			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
-		}
-
-		input.Body.DeploymentMetadata.Url = urlFromString(input.Body.Url)
-
-		putDeploymentErr := a.web.SetupDeployment(input.Body.DeploymentMetadata)
-		if putDeploymentErr != nil {
-			return nil, putDeploymentErr
-		}
-		var output SuccessOutput
-		output.Body.Success = true
-		output.Body.Message = fmt.Sprintf("Created deployment with url %s", input.Body.Url)
-		return &output, nil
-	})
-
-	huma.Get(api, "/deployment/{url}", func(ctx context.Context, input *struct {
-		Url string `path:"url"`
-	}) (*GetDeploymentOutput, error) {
-		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
-		if !permissionsOk {
-			return nil, fmt.Errorf("Auth check failed somehow")
-		}
-
-		url := urlFromString(input.Url)
-
-		deployment, err := a.web.GetDeploymentByUrl(&url)
-		if err != nil {
-			return nil, huma.Error404NotFound(
-				fmt.Sprintf("Could not find deployment with URL \"%s\"", url),
-			)
-		}
-
-		if !permissions.CanViewDeployment(&deployment) {
-			return nil, huma.Error403Forbidden(
-				fmt.Sprintf(
-					"You are not authorized to view the deployment \"%s\"",
-					url,
-				),
-			)
-		}
-
-		var output GetDeploymentOutput
-		output.Body.Deployment = deployment
-		return &output, nil
-	})
-
-	huma.Put(
-		api,
-		"/deploy/files",
-		func(
-			ctx context.Context, input *DeployFilesInput,
-		) (*SuccessOutput, error) {
-			formData := input.RawBody.Data()
-
-			permissions, permissionsOk := ctx.Value("permissions").(Permissions)
-			if !permissionsOk {
-				return nil, fmt.Errorf("Auth check failed somehow")
-			}
-
-			url := urlFromString(formData.Url)
-			deployment, findDeploymentError := a.web.GetDeploymentByUrl(&url)
-			if findDeploymentError != nil {
-				return nil, huma.Error404NotFound(
-					fmt.Sprintf("could not find deployment with URL \"%s\"", url),
-				)
-			}
-
-			if !permissions.CanModifyDeployment(&deployment) {
-				return nil, huma.Error403Forbidden(
-					fmt.Sprintf("insufficient permissions to modify deployment \"%s\"", url),
-				)
-			}
-
-			filesErr := a.web.PutStaticFilesForDeployment(deployment, formData.Contents, formData.KeepLeadingDirectories)
-
-			if filesErr != nil {
-				return nil, huma.Error500InternalServerError(
-					"Error occurred while unpacking uploaded files: " + filesErr.Error(),
-				)
-			}
-
-			output := SuccessOutput{}
-			output.Body.Success = true
-			output.Body.Message = "Updated content for " + url.String()
-			return &output, nil
-		})
+	// TODO: separate out user/deployment routes, just like deployment routes
+	// have their own file and method
 
 	huma.Put(api, "/user/register", func(ctx context.Context, input *AddExternalUserInput) (*SuccessOutput, error) {
 		permissions, permissionsOk := ctx.Value("permissions").(Permissions)

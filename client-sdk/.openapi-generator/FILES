@@ -9,6 +9,7 @@ docs/AddExternalUserInputBody.md
 docs/CreateBearerTokenInputBody.md
 docs/CreateBearerTokenOutputBody.md
 docs/DefaultAPI.md
+docs/DeployAdminDashBody.md
 docs/DeploymentCreateInputBody.md
 docs/ErrorDetail.md
 docs/ErrorModel.md
@@ -20,6 +21,7 @@ git_push.sh
 model_add_external_user_input_body.go
 model_create_bearer_token_input_body.go
 model_create_bearer_token_output_body.go
+model_deploy_admin_dash_body.go
 model_deployment_create_input_body.go
 model_error_detail.go
 model_error_model.go

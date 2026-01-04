@@ -10,7 +10,7 @@ Download the "docker-usage" folder from this repository. From that folder, run `
 
 ## Deploying Stuff from Github Actions
 
-This section under construction.
+This section is under construction.
 
 ## Development
 
@@ -22,29 +22,35 @@ Install dependencies:
 go get .
 ```
 
-The build is controlled by [Mage](https://magefile.org/).
+The build is controlled by [Mage](https://magefile.org/). It also requires Docker, since the Admin Dashboard and codegen build steps use a Docker container.
 
-- This command makes sure all generated artifacts are up to date (which requires Docker, to run the OpenAPI code generation step), and then builds the result:
+- This command builds the server, including the Admin Dashboard that it can deploy:
 
 ```
-go tool mage buildwithcodegen
+go tool mage buildserver
 ```
 
-- This command just builds what's there:
+- This command builds the client, including generating code from the server's OpenAPI specification for it:
+
+```
+go tool mage buildclient
+```
+
+- This command builds everything:
 
 ```
 go tool mage build
 ```
 
-- This command generates just the OpenAPI spec (golf-openapi.yaml) and client SDK (./client-sdk/) without running the full build, which is useful to run whenever the API changes during development (but does also require Docker):
+- This command generates just the OpenAPI spec (golf-openapi.yaml) and client SDK (./client-sdk/) without running the full build, which is useful to run whenever the API changes during development:
 
 ```
 go tool mage generateclientsdk
 ```
 
-## Usage
+## Running Stuff for Development
 
-Run server by itself (during dev, you probably just want it to bind to localhost):
+Run server by itself (during dev, you probably just want it to bind to localhost; also, without this option, it will try to force https for everything, which is hard to make work locally):
 
 ```
 go run ./cmd --local
@@ -54,6 +60,15 @@ Run client by itself (-h gives you the available commands):
 
 ```
 go run ./client-cmd -h
+```
+
+Run the admin dashboard by itself:
+
+```
+cd admin-dash
+corepack enable
+pnpm i
+pnpm dev
 ```
 
 ## Tests
