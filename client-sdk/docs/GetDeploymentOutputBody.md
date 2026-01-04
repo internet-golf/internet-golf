@@ -12,13 +12,14 @@ Name | Type | Description | Notes
 **PreserveExternalPath** | Pointer to **bool** |  | [optional] 
 **ServedThing** | **string** |  | 
 **ServedThingType** | **string** |  | 
+**SpaMode** | **bool** |  | 
 **Tags** | Pointer to **[]string** |  | [optional] 
 
 ## Methods
 
 ### NewGetDeploymentOutputBody
 
-`func NewGetDeploymentOutputBody(url Url, hasContent bool, servedThing string, servedThingType string, ) *GetDeploymentOutputBody`
+`func NewGetDeploymentOutputBody(url Url, hasContent bool, servedThing string, servedThingType string, spaMode bool, ) *GetDeploymentOutputBody`
 
 NewGetDeploymentOutputBody instantiates a new GetDeploymentOutputBody object
 This constructor will assign default values to properties that have it defined,
@@ -211,6 +212,26 @@ and a boolean to check if the value has been set.
 `func (o *GetDeploymentOutputBody) SetServedThingType(v string)`
 
 SetServedThingType sets ServedThingType field to given value.
+
+
+### GetSpaMode
+
+`func (o *GetDeploymentOutputBody) GetSpaMode() bool`
+
+GetSpaMode returns the SpaMode field if non-nil, zero value otherwise.
+
+### GetSpaModeOk
+
+`func (o *GetDeploymentOutputBody) GetSpaModeOk() (*bool, bool)`
+
+GetSpaModeOk returns a tuple with the SpaMode field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetSpaMode
+
+`func (o *GetDeploymentOutputBody) SetSpaMode(v bool)`
+
+SetSpaMode sets SpaMode field to given value.
 
 
 ### GetTags

@@ -323,6 +323,7 @@ components:
     GetDeploymentOutputBody:
       additionalProperties: false
       example:
+        spaMode: true
         $schema: https://openapi-generator.tech
         hasContent: true
         externalSourceType: externalSourceType
@@ -356,6 +357,8 @@ components:
           type: string
         servedThingType:
           type: string
+        spaMode:
+          type: boolean
         tags:
           items:
             type: string
@@ -366,6 +369,7 @@ components:
       - hasContent
       - servedThing
       - servedThingType
+      - spaMode
     HealthCheckOutputBody:
       additionalProperties: false
       example:
