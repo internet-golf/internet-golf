@@ -291,12 +291,11 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 			return nil, huma.Error401Unauthorized("Not authorized to create deployments")
 		}
 
-		err := a.web.PutDeploymentContentByUrl(urlFromString(input.Body.Url), db.DeploymentContent{
-			HasContent:      true,
-			ServedThingType: db.Alias,
-			AliasedTo:       urlFromString(*input.Body.AliasedTo),
-			Redirect:        *input.Body.Redirect,
-		})
+		err := a.web.PutAliasDeployment(
+			urlFromString(input.Body.Url),
+			urlFromString(*input.Body.AliasBase.AliasedTo),
+			*input.Body.AliasBase.Redirect,
+		)
 
 		if err != nil {
 			return nil, huma.Error500InternalServerError(err.Error())

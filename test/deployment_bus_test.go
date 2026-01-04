@@ -74,6 +74,10 @@ func getFixturePath(fixture string) string {
 		strings.ReplaceAll(cwd, "\\", "/"), "fixtures", fixture)
 }
 
+// TODO: these tests mostly use PutDeploymentContentByUrl, but they really
+// should be testing the higher-level convenience methods like
+// PutStaticFilesForDeployment, PutAdminDash, and PutAliasDeployment
+
 func TestDeploymentPlaceholderContent(t *testing.T) {
 
 	deploymentBus := createBus()
@@ -183,4 +187,70 @@ func TestStaticDeploymentWithPreservedPath(t *testing.T) {
 	if bodyStr != "stuff 3\n" {
 		t.Fatalf("expected stuff 3\\n, got %v", []byte(bodyStr))
 	}
+}
+
+func TestAliasDeployment(t *testing.T) {
+
+	deploymentBus := createBus()
+	defer deploymentBus.Stop()
+
+	staticUrl := "http://" + BasicTestHost
+	aliasUrl := "http://" + OtherTestHost
+
+	// create a deployment that serves the static-site fixture at
+	// http://internet-golf-test.local
+
+	assertUrlEmpty(staticUrl, t)
+	assertUrlEmpty(aliasUrl, t)
+
+	if err := deploymentBus.SetupDeployment(db.DeploymentMetadata{
+		Url: db.Url{Domain: BasicTestHost},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := deploymentBus.PutDeploymentContentByUrl(
+		db.Url{Domain: BasicTestHost},
+		db.DeploymentContent{
+			ServedThingType: db.StaticFiles,
+			ServedThing:     getFixturePath("static-site"),
+		}); err != nil {
+		t.Fatal(err)
+	}
+
+	// create an alias deployment that points to the static-site deployment
+	if err := deploymentBus.SetupDeployment(db.DeploymentMetadata{
+		Url: db.Url{Domain: OtherTestHost},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := deploymentBus.PutAliasDeployment(
+		db.Url{Domain: OtherTestHost},
+		db.Url{Domain: BasicTestHost},
+		false,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	bodyStr := urlToPageContent(aliasUrl, t)
+	if bodyStr != "stuff\n" {
+		t.Fatalf("expected stuff\\n, got %v", []byte(bodyStr))
+	}
+
+	// create another alias deployment that points to the first alias deployment
+	err := deploymentBus.SetupDeployment(db.DeploymentMetadata{
+		Url: db.Url{Domain: "shouldntwork.internet-golf-test.local"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = deploymentBus.PutAliasDeployment(
+		db.Url{Domain: "shouldntwork.internet-golf-test.local"},
+		db.Url{Domain: OtherTestHost},
+		false,
+	)
+	if err == nil {
+		t.Fatal("PutAliasDeployment should have returned an error for an alias to an alias")
+	}
+
 }

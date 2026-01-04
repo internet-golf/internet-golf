@@ -18,6 +18,7 @@ import (
 
 const (
 	BasicTestHost = "internet-golf-test.local"
+	OtherTestHost = "other.internet-golf-test.local"
 )
 
 func TestMain(m *testing.M) {

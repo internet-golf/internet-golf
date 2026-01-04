@@ -153,6 +153,20 @@ func (bus *DeploymentBus) PutAdminDash(url db.Url) error {
 	})
 }
 
+func (bus *DeploymentBus) PutAliasDeployment(from db.Url, to db.Url, redirect bool) error {
+	existingDeployment, err := bus.GetDeploymentByUrl(&to)
+	if err == nil && existingDeployment.ServedThingType == db.Alias {
+		return fmt.Errorf("Cannot create alias to an alias")
+	}
+
+	return bus.PutDeploymentContentByUrl(from, db.DeploymentContent{
+		HasContent:      true,
+		ServedThingType: db.Alias,
+		AliasedTo:       to,
+		Redirect:        redirect,
+	})
+}
+
 // updates the content of the deployment at the given index, pushes the
 // deployments to the public web server, and then saves them
 func (bus *DeploymentBus) updateDeploymentContentByIndex(
