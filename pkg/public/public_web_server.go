@@ -45,8 +45,63 @@ type CaddyServer struct {
 const httpAppServerName = "internetgolf"
 
 func NewPublicWebServer(config *utils.Config, files *resources.FileManager) (PublicWebServer, error) {
-
 	return &CaddyServer{config: config, dataPath: files.CaddyDataPath}, nil
+}
+
+func getCaddyRoute(deployment db.Deployment, allDeployments []db.Deployment) ([]caddyhttp.Route, error) {
+	type deploymentToCaddyRouteConverter = func(d db.Deployment) ([]caddyhttp.Route, error)
+	var internalGetCaddyRoute deploymentToCaddyRouteConverter
+
+	// if the deployment has no content, substitute in this placeholder
+	// content. this is actually load-bearing if not using auto tls,
+	// since in that case, caddy will not generate an https cert for
+	// this url until it's serving *something*, and until it sets up
+	// https, we can't deploy actual content to this url from
+	// non-localhost places
+	internalGetCaddyRoute = func(d db.Deployment) ([]caddyhttp.Route, error) {
+		return GetCaddyTextContentRoute(
+			db.Deployment{
+				DeploymentMetadata: d.DeploymentMetadata,
+			}, "server initialized",
+		)
+	}
+
+	// if the deployment does have content, make a route for it
+	if deployment.DeploymentContent.HasContent {
+		switch deployment.ServedThingType {
+		case db.StaticFiles:
+			internalGetCaddyRoute = GetCaddyStaticRoutes
+		case db.ReverseProxy:
+			internalGetCaddyRoute = GetCaddyReverseProxyRoute
+		case db.Alias:
+			internalGetCaddyRoute = func(d db.Deployment) ([]caddyhttp.Route, error) {
+				aliasedToIndex := slices.IndexFunc(allDeployments, func(e db.Deployment) bool {
+					return d.AliasedTo.Equals(&e.Url)
+				})
+				if aliasedToIndex == -1 || d.Redirect {
+					return GetCaddyRedirectRoute(d)
+				}
+				aliasedToDeployment := allDeployments[aliasedToIndex]
+				if aliasedToDeployment.ServedThingType == db.Alias {
+					return GetCaddyTextContentRoute(
+						db.Deployment{
+							DeploymentMetadata: d.DeploymentMetadata,
+						}, "aliases to aliases are not allowed",
+					)
+				}
+				// this is maybe a little bit too clever
+				return getCaddyRoute(db.Deployment{
+					DeploymentMetadata: d.DeploymentMetadata,
+					DeploymentContent:  aliasedToDeployment.DeploymentContent,
+				}, allDeployments)
+			}
+
+		default:
+			fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
+		}
+	}
+
+	return internalGetCaddyRoute(deployment)
 }
 
 // caddy requires a huge JSON configuration object to be conveyed to it, which
@@ -93,36 +148,7 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 	}
 
 	for _, deployment := range deployments {
-		type deploymentToCaddyRouteConverter = func(d db.Deployment) ([]caddyhttp.Route, error)
-		var getCaddyRoute deploymentToCaddyRouteConverter
-
-		if !deployment.DeploymentContent.HasContent {
-			// if the deployment has no content, substitute in this placeholder
-			// content. this is actually load-bearing if not using auto tls,
-			// since in that case, caddy will not generate an https cert for
-			// this url until it's serving *something*, and until it sets up
-			// https, we can't deploy actual content to this url from
-			// non-localhost places
-			getCaddyRoute = func(d db.Deployment) ([]caddyhttp.Route, error) {
-				return GetCaddyTextContentRoute(
-					db.Deployment{
-						DeploymentMetadata: d.DeploymentMetadata,
-					},
-				)
-			}
-		} else {
-			switch deployment.ServedThingType {
-			case db.StaticFiles:
-				getCaddyRoute = GetCaddyStaticRoutes
-			case db.ReverseProxy:
-				getCaddyRoute = GetCaddyReverseProxyRoute
-			default:
-				fmt.Printf("could not process deployment with type %s\n", deployment.ServedThingType)
-				continue
-			}
-		}
-
-		if routes, err := getCaddyRoute(deployment); err != nil {
+		if routes, err := getCaddyRoute(deployment, deployments); err != nil {
 			fmt.Printf("encountered error: %v", err)
 		} else {
 			httpApp.Servers[httpAppServerName].Routes = append(

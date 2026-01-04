@@ -133,6 +133,7 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 func createDeploymentCommand() *cobra.Command {
 
 	var github string
+	// TODO: preserve external path option
 
 	createDeployment := cobra.Command{
 		Use:     "create-deployment domain",
@@ -153,21 +154,23 @@ func createDeploymentCommand() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.PutDeployNew(context.TODO()).
+				DefaultAPI.CreateDeployment(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Url:                args[0],
 					ExternalSourceType: &externalSourceType,
 					ExternalSource:     &externalSource,
+					Tags:               []string{},
 				}).
 				Execute()
 
-			if respError != nil {
-				panic(respError.Error())
-			}
-			if body == nil {
+			if body == nil || respError != nil {
 				responseBody, responseBodyErr := io.ReadAll(resp.Body)
 				if responseBodyErr != nil || len(responseBody) == 0 {
-					fmt.Println("ERROR: Could not get response body")
+					if respError != nil {
+						fmt.Println(respError.Error())
+					} else {
+						fmt.Println("ERROR: Could not get response body")
+					}
 					return
 				}
 				fmt.Println(string(responseBody))
@@ -194,7 +197,7 @@ func deployAdminDash() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.PutAdminDash(context.TODO()).
+				DefaultAPI.DeployAdminDash(context.TODO()).
 				DeployAdminDashBody(golfsdk.DeployAdminDashBody{Url: args[0]}).
 				Execute()
 
@@ -216,6 +219,68 @@ func deployAdminDash() *cobra.Command {
 	}
 
 	return &createDeployment
+}
+
+func deployAliasCommand() *cobra.Command {
+	var redirect bool
+
+	deployAlias := cobra.Command{
+		Use:     "create-alias from to",
+		Example: "create-alias from.example.com to.example.com",
+		Short:   "Creates an alias from one deployment to another. Optionally, redirect the visitor. If the \"to\" URL is not a known deployment, it will always redirect.",
+		Args:    cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			client := createClient(args[0])
+
+			body, resp, respError := client.
+				DefaultAPI.CreateDeployment(context.TODO()).
+				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
+					Url: args[0],
+				}).Execute()
+
+			if body == nil || respError != nil {
+				responseBody, responseBodyErr := io.ReadAll(resp.Body)
+				if responseBodyErr != nil || len(responseBody) == 0 {
+					if respError != nil {
+						fmt.Println(respError.Error())
+					} else {
+						fmt.Println("ERROR: Could not get response body")
+					}
+					return
+				}
+				fmt.Println(string(responseBody))
+				return
+			}
+
+			body, resp, respError = client.
+				DefaultAPI.PutAlias(context.TODO()).
+				DeployAliasBody(golfsdk.DeployAliasBody{
+					Url: args[0], AliasedTo: &args[1], Redirect: &redirect,
+				}).Execute()
+
+			if body == nil || respError != nil {
+				responseBody, responseBodyErr := io.ReadAll(resp.Body)
+				if responseBodyErr != nil || len(responseBody) == 0 {
+					if respError != nil {
+						fmt.Println(respError.Error())
+					} else {
+						fmt.Println("ERROR: Could not get response body")
+					}
+					return
+				}
+				fmt.Println(string(responseBody))
+				return
+			}
+			fmt.Println(body.Message)
+		},
+	}
+
+	deployAlias.Flags().BoolVar(
+		&redirect, "redirect", false,
+		"Redirect the visitor to the aliased-to URL.",
+	)
+
+	return &deployAlias
 }
 
 func deployContentCommand() *cobra.Command {
@@ -254,7 +319,7 @@ func deployContentCommand() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.PutDeployFiles(context.TODO()).
+				DefaultAPI.DeployFiles(context.TODO()).
 				Url(args[0]).
 				Contents(tempFile).
 				Execute()
@@ -353,7 +418,7 @@ func main() {
 	golfCmds := [](*cobra.Command){
 		createDeploymentCommand(), deployContentCommand(),
 		registerExternalUserCommand(), createBearerTokenCommand(),
-		deployAdminDash(),
+		deployAdminDash(), deployAliasCommand(),
 	}
 	for _, cmd := range golfCmds {
 		cmd.GroupID = "IG"

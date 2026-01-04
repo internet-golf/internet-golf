@@ -4,14 +4,220 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**CreateDeployment**](DefaultAPI.md#CreateDeployment) | **Put** /deploy/new | 
+[**DeployAdminDash**](DefaultAPI.md#DeployAdminDash) | **Put** /admin-dash | 
+[**DeployFiles**](DefaultAPI.md#DeployFiles) | **Put** /deploy/files | 
 [**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
-[**GetDeploymentByUrl**](DefaultAPI.md#GetDeploymentByUrl) | **Get** /deployment/{url} | Get deployment by URL
+[**GetDeployment**](DefaultAPI.md#GetDeployment) | **Get** /deployment/{url} | 
+[**GetDeployments**](DefaultAPI.md#GetDeployments) | **Get** /deployments | 
 [**PostTokenGenerate**](DefaultAPI.md#PostTokenGenerate) | **Post** /token/generate | Post token generate
-[**PutAdminDash**](DefaultAPI.md#PutAdminDash) | **Put** /admin-dash | Put admin DASH
-[**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
-[**PutDeployNew**](DefaultAPI.md#PutDeployNew) | **Put** /deploy/new | Put deploy new
+[**PutAlias**](DefaultAPI.md#PutAlias) | **Put** /deploy/alias | 
 [**PutUserRegister**](DefaultAPI.md#PutUserRegister) | **Put** /user/register | Put user register
 
+
+
+## CreateDeployment
+
+> SuccessOutputBody CreateDeployment(ctx).DeploymentCreateInputBody(deploymentCreateInputBody).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody("Url_example") // DeploymentCreateInputBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.CreateDeployment(context.Background()).DeploymentCreateInputBody(deploymentCreateInputBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.CreateDeployment``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `CreateDeployment`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.CreateDeployment`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiCreateDeploymentRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **deploymentCreateInputBody** | [**DeploymentCreateInputBody**](DeploymentCreateInputBody.md) |  | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## DeployAdminDash
+
+> SuccessOutputBody DeployAdminDash(ctx).DeployAdminDashBody(deployAdminDashBody).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	deployAdminDashBody := *openapiclient.NewDeployAdminDashBody("Url_example") // DeployAdminDashBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.DeployAdminDash(context.Background()).DeployAdminDashBody(deployAdminDashBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.DeployAdminDash``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `DeployAdminDash`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.DeployAdminDash`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiDeployAdminDashRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **deployAdminDashBody** | [**DeployAdminDashBody**](DeployAdminDashBody.md) |  | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## DeployFiles
+
+> SuccessOutputBody DeployFiles(ctx).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	url := "url_example" // string | The URL of the deployment that you're updating.
+	contents := os.NewFile(1234, "some_file") // *os.File | A .tar.gz that contains the files to be deployed. (optional)
+	keepLeadingDirectories := true // bool | By default, if you upload a .tar.gz whose contents are all in one folder, the contents of that folder will be used instead of the folder itself. For example, if you upload a folder called 'dist' for the deployment 'mysite.com', the URL of your site content will not be at 'mysite.com/dist'. Setting this to true turns off that auto-unpacking. (optional) (default to false)
+	preserveExistingFiles := true // bool | Leave the existing files for the current deployment in place instead of completely replacing them. (optional)
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.DeployFiles(context.Background()).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.DeployFiles``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `DeployFiles`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.DeployFiles`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiDeployFilesRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **url** | **string** | The URL of the deployment that you&#39;re updating. | 
+ **contents** | ***os.File** | A .tar.gz that contains the files to be deployed. | 
+ **keepLeadingDirectories** | **bool** | By default, if you upload a .tar.gz whose contents are all in one folder, the contents of that folder will be used instead of the folder itself. For example, if you upload a folder called &#39;dist&#39; for the deployment &#39;mysite.com&#39;, the URL of your site content will not be at &#39;mysite.com/dist&#39;. Setting this to true turns off that auto-unpacking. | [default to false]
+ **preserveExistingFiles** | **bool** | Leave the existing files for the current deployment in place instead of completely replacing them. | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: multipart/form-data
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## GetAlive
@@ -73,11 +279,13 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## GetDeploymentByUrl
+## GetDeployment
 
-> GetDeploymentOutputBody GetDeploymentByUrl(ctx, url).Execute()
+> GetDeployment200Response GetDeployment(ctx, url).Execute()
 
-Get deployment by URL
+
+
+
 
 ### Example
 
@@ -96,13 +304,13 @@ func main() {
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.GetDeploymentByUrl(context.Background(), url).Execute()
+	resp, r, err := apiClient.DefaultAPI.GetDeployment(context.Background(), url).Execute()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeploymentByUrl``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeployment``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `GetDeploymentByUrl`: GetDeploymentOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeploymentByUrl`: %v\n", resp)
+	// response from `GetDeployment`: GetDeployment200Response
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeployment`: %v\n", resp)
 }
 ```
 
@@ -116,7 +324,7 @@ Name | Type | Description  | Notes
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiGetDeploymentByUrlRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiGetDeploymentRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -125,7 +333,68 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetDeploymentOutputBody**](GetDeploymentOutputBody.md)
+[**GetDeployment200Response**](GetDeployment200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## GetDeployments
+
+> GetDeployments200Response GetDeployments(ctx).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.GetDeployments(context.Background()).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeployments``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `GetDeployments`: GetDeployments200Response
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeployments`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+This endpoint does not need any parameter.
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiGetDeploymentsRequest struct via the builder pattern
+
+
+### Return type
+
+[**GetDeployments200Response**](GetDeployments200Response.md)
 
 ### Authorization
 
@@ -205,11 +474,13 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## PutAdminDash
+## PutAlias
 
-> SuccessOutputBody PutAdminDash(ctx).DeployAdminDashBody(deployAdminDashBody).Execute()
+> SuccessOutputBody PutAlias(ctx).DeployAliasBody(deployAliasBody).Execute()
 
-Put admin DASH
+
+
+
 
 ### Example
 
@@ -224,17 +495,17 @@ import (
 )
 
 func main() {
-	deployAdminDashBody := *openapiclient.NewDeployAdminDashBody("Url_example") // DeployAdminDashBody | 
+	deployAliasBody := *openapiclient.NewDeployAliasBody("Url_example") // DeployAliasBody | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.PutAdminDash(context.Background()).DeployAdminDashBody(deployAdminDashBody).Execute()
+	resp, r, err := apiClient.DefaultAPI.PutAlias(context.Background()).DeployAliasBody(deployAliasBody).Execute()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutAdminDash``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutAlias``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `PutAdminDash`: SuccessOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutAdminDash`: %v\n", resp)
+	// response from `PutAlias`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutAlias`: %v\n", resp)
 }
 ```
 
@@ -244,146 +515,12 @@ func main() {
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiPutAdminDashRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiPutAliasRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **deployAdminDashBody** | [**DeployAdminDashBody**](DeployAdminDashBody.md) |  | 
-
-### Return type
-
-[**SuccessOutputBody**](SuccessOutputBody.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: application/json, application/problem+json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## PutDeployFiles
-
-> SuccessOutputBody PutDeployFiles(ctx).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
-
-Put deploy files
-
-### Example
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
-)
-
-func main() {
-	url := "url_example" // string | 
-	contents := os.NewFile(1234, "some_file") // *os.File |  (optional)
-	keepLeadingDirectories := true // bool |  (optional)
-	preserveExistingFiles := true // bool |  (optional)
-
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.PutDeployFiles(context.Background()).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutDeployFiles``: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-	}
-	// response from `PutDeployFiles`: SuccessOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutDeployFiles`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiPutDeployFilesRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **url** | **string** |  | 
- **contents** | ***os.File** |  | 
- **keepLeadingDirectories** | **bool** |  | 
- **preserveExistingFiles** | **bool** |  | 
-
-### Return type
-
-[**SuccessOutputBody**](SuccessOutputBody.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: multipart/form-data
-- **Accept**: application/json, application/problem+json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## PutDeployNew
-
-> SuccessOutputBody PutDeployNew(ctx).DeploymentCreateInputBody(deploymentCreateInputBody).Execute()
-
-Put deploy new
-
-### Example
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
-)
-
-func main() {
-	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody("Url_example") // DeploymentCreateInputBody | 
-
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.PutDeployNew(context.Background()).DeploymentCreateInputBody(deploymentCreateInputBody).Execute()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutDeployNew``: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-	}
-	// response from `PutDeployNew`: SuccessOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutDeployNew`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiPutDeployNewRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **deploymentCreateInputBody** | [**DeploymentCreateInputBody**](DeploymentCreateInputBody.md) |  | 
+ **deployAliasBody** | [**DeployAliasBody**](DeployAliasBody.md) |  | 
 
 ### Return type
 

@@ -78,28 +78,36 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*DefaultAPI* | [**CreateDeployment**](docs/DefaultAPI.md#createdeployment) | **Put** /deploy/new | 
+*DefaultAPI* | [**DeployAdminDash**](docs/DefaultAPI.md#deployadmindash) | **Put** /admin-dash | 
+*DefaultAPI* | [**DeployFiles**](docs/DefaultAPI.md#deployfiles) | **Put** /deploy/files | 
 *DefaultAPI* | [**GetAlive**](docs/DefaultAPI.md#getalive) | **Get** /alive | Get alive
-*DefaultAPI* | [**GetDeploymentByUrl**](docs/DefaultAPI.md#getdeploymentbyurl) | **Get** /deployment/{url} | Get deployment by URL
+*DefaultAPI* | [**GetDeployment**](docs/DefaultAPI.md#getdeployment) | **Get** /deployment/{url} | 
+*DefaultAPI* | [**GetDeployments**](docs/DefaultAPI.md#getdeployments) | **Get** /deployments | 
 *DefaultAPI* | [**PostTokenGenerate**](docs/DefaultAPI.md#posttokengenerate) | **Post** /token/generate | Post token generate
-*DefaultAPI* | [**PutAdminDash**](docs/DefaultAPI.md#putadmindash) | **Put** /admin-dash | Put admin DASH
-*DefaultAPI* | [**PutDeployFiles**](docs/DefaultAPI.md#putdeployfiles) | **Put** /deploy/files | Put deploy files
-*DefaultAPI* | [**PutDeployNew**](docs/DefaultAPI.md#putdeploynew) | **Put** /deploy/new | Put deploy new
+*DefaultAPI* | [**PutAlias**](docs/DefaultAPI.md#putalias) | **Put** /deploy/alias | 
 *DefaultAPI* | [**PutUserRegister**](docs/DefaultAPI.md#putuserregister) | **Put** /user/register | Put user register
 
 
 ## Documentation For Models
 
  - [AddExternalUserInputBody](docs/AddExternalUserInputBody.md)
+ - [AliasDeployment](docs/AliasDeployment.md)
  - [CreateBearerTokenInputBody](docs/CreateBearerTokenInputBody.md)
  - [CreateBearerTokenOutputBody](docs/CreateBearerTokenOutputBody.md)
  - [DeployAdminDashBody](docs/DeployAdminDashBody.md)
+ - [DeployAliasBody](docs/DeployAliasBody.md)
  - [DeploymentCreateInputBody](docs/DeploymentCreateInputBody.md)
+ - [DeploymentModel](docs/DeploymentModel.md)
+ - [EmptyDeployment](docs/EmptyDeployment.md)
  - [ErrorDetail](docs/ErrorDetail.md)
  - [ErrorModel](docs/ErrorModel.md)
- - [GetDeploymentOutputBody](docs/GetDeploymentOutputBody.md)
+ - [GetDeployment200Response](docs/GetDeployment200Response.md)
+ - [GetDeployments200Response](docs/GetDeployments200Response.md)
+ - [GetDeploymentsOutputBody](docs/GetDeploymentsOutputBody.md)
  - [HealthCheckOutputBody](docs/HealthCheckOutputBody.md)
+ - [StaticSiteDeployment](docs/StaticSiteDeployment.md)
  - [SuccessOutputBody](docs/SuccessOutputBody.md)
- - [Url](docs/Url.md)
 
 
 ## Documentation For Authorization

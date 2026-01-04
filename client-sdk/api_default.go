@@ -24,6 +24,402 @@ import (
 // DefaultAPIService DefaultAPI service
 type DefaultAPIService service
 
+type ApiCreateDeploymentRequest struct {
+	ctx context.Context
+	ApiService *DefaultAPIService
+	deploymentCreateInputBody *DeploymentCreateInputBody
+}
+
+func (r ApiCreateDeploymentRequest) DeploymentCreateInputBody(deploymentCreateInputBody DeploymentCreateInputBody) ApiCreateDeploymentRequest {
+	r.deploymentCreateInputBody = &deploymentCreateInputBody
+	return r
+}
+
+func (r ApiCreateDeploymentRequest) Execute() (*SuccessOutputBody, *http.Response, error) {
+	return r.ApiService.CreateDeploymentExecute(r)
+}
+
+/*
+CreateDeployment Method for CreateDeployment
+
+Create a new deployment.
+
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return ApiCreateDeploymentRequest
+*/
+func (a *DefaultAPIService) CreateDeployment(ctx context.Context) ApiCreateDeploymentRequest {
+	return ApiCreateDeploymentRequest{
+		ApiService: a,
+		ctx: ctx,
+	}
+}
+
+// Execute executes the request
+//  @return SuccessOutputBody
+func (a *DefaultAPIService) CreateDeploymentExecute(r ApiCreateDeploymentRequest) (*SuccessOutputBody, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPut
+		localVarPostBody     interface{}
+		formFiles            []formFile
+		localVarReturnValue  *SuccessOutputBody
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.CreateDeployment")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/deploy/new"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.deploymentCreateInputBody == nil {
+		return localVarReturnValue, nil, reportError("deploymentCreateInputBody is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.deploymentCreateInputBody
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+			var v ErrorModel
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+					newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type ApiDeployAdminDashRequest struct {
+	ctx context.Context
+	ApiService *DefaultAPIService
+	deployAdminDashBody *DeployAdminDashBody
+}
+
+func (r ApiDeployAdminDashRequest) DeployAdminDashBody(deployAdminDashBody DeployAdminDashBody) ApiDeployAdminDashRequest {
+	r.deployAdminDashBody = &deployAdminDashBody
+	return r
+}
+
+func (r ApiDeployAdminDashRequest) Execute() (*SuccessOutputBody, *http.Response, error) {
+	return r.ApiService.DeployAdminDashExecute(r)
+}
+
+/*
+DeployAdminDash Method for DeployAdminDash
+
+Deploy the admin dashboard to a specified URL.
+
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return ApiDeployAdminDashRequest
+*/
+func (a *DefaultAPIService) DeployAdminDash(ctx context.Context) ApiDeployAdminDashRequest {
+	return ApiDeployAdminDashRequest{
+		ApiService: a,
+		ctx: ctx,
+	}
+}
+
+// Execute executes the request
+//  @return SuccessOutputBody
+func (a *DefaultAPIService) DeployAdminDashExecute(r ApiDeployAdminDashRequest) (*SuccessOutputBody, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPut
+		localVarPostBody     interface{}
+		formFiles            []formFile
+		localVarReturnValue  *SuccessOutputBody
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.DeployAdminDash")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/admin-dash"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.deployAdminDashBody == nil {
+		return localVarReturnValue, nil, reportError("deployAdminDashBody is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.deployAdminDashBody
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+			var v ErrorModel
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+					newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type ApiDeployFilesRequest struct {
+	ctx context.Context
+	ApiService *DefaultAPIService
+	url *string
+	contents *os.File
+	keepLeadingDirectories *bool
+	preserveExistingFiles *bool
+}
+
+// The URL of the deployment that you&#39;re updating.
+func (r ApiDeployFilesRequest) Url(url string) ApiDeployFilesRequest {
+	r.url = &url
+	return r
+}
+
+// A .tar.gz that contains the files to be deployed.
+func (r ApiDeployFilesRequest) Contents(contents *os.File) ApiDeployFilesRequest {
+	r.contents = contents
+	return r
+}
+
+// By default, if you upload a .tar.gz whose contents are all in one folder, the contents of that folder will be used instead of the folder itself. For example, if you upload a folder called &#39;dist&#39; for the deployment &#39;mysite.com&#39;, the URL of your site content will not be at &#39;mysite.com/dist&#39;. Setting this to true turns off that auto-unpacking.
+func (r ApiDeployFilesRequest) KeepLeadingDirectories(keepLeadingDirectories bool) ApiDeployFilesRequest {
+	r.keepLeadingDirectories = &keepLeadingDirectories
+	return r
+}
+
+// Leave the existing files for the current deployment in place instead of completely replacing them.
+func (r ApiDeployFilesRequest) PreserveExistingFiles(preserveExistingFiles bool) ApiDeployFilesRequest {
+	r.preserveExistingFiles = &preserveExistingFiles
+	return r
+}
+
+func (r ApiDeployFilesRequest) Execute() (*SuccessOutputBody, *http.Response, error) {
+	return r.ApiService.DeployFilesExecute(r)
+}
+
+/*
+DeployFiles Method for DeployFiles
+
+Put files in an existing deployment.
+
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return ApiDeployFilesRequest
+*/
+func (a *DefaultAPIService) DeployFiles(ctx context.Context) ApiDeployFilesRequest {
+	return ApiDeployFilesRequest{
+		ApiService: a,
+		ctx: ctx,
+	}
+}
+
+// Execute executes the request
+//  @return SuccessOutputBody
+func (a *DefaultAPIService) DeployFilesExecute(r ApiDeployFilesRequest) (*SuccessOutputBody, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPut
+		localVarPostBody     interface{}
+		formFiles            []formFile
+		localVarReturnValue  *SuccessOutputBody
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.DeployFiles")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/deploy/files"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.url == nil {
+		return localVarReturnValue, nil, reportError("url is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"multipart/form-data"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	var contentsLocalVarFormFileName string
+	var contentsLocalVarFileName     string
+	var contentsLocalVarFileBytes    []byte
+
+	contentsLocalVarFormFileName = "contents"
+	contentsLocalVarFile := r.contents
+
+	if contentsLocalVarFile != nil {
+		fbs, _ := io.ReadAll(contentsLocalVarFile)
+
+		contentsLocalVarFileBytes = fbs
+		contentsLocalVarFileName = contentsLocalVarFile.Name()
+		contentsLocalVarFile.Close()
+		formFiles = append(formFiles, formFile{fileBytes: contentsLocalVarFileBytes, fileName: contentsLocalVarFileName, formFileName: contentsLocalVarFormFileName})
+	}
+	if r.keepLeadingDirectories != nil {
+		parameterAddToHeaderOrQuery(localVarFormParams, "keepLeadingDirectories", r.keepLeadingDirectories, "form", "")
+	}
+	if r.preserveExistingFiles != nil {
+		parameterAddToHeaderOrQuery(localVarFormParams, "preserveExistingFiles", r.preserveExistingFiles, "form", "")
+	}
+	parameterAddToHeaderOrQuery(localVarFormParams, "url", r.url, "form", "")
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+			var v ErrorModel
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+					newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type ApiGetAliveRequest struct {
 	ctx context.Context
 	ApiService *DefaultAPIService
@@ -129,25 +525,27 @@ func (a *DefaultAPIService) GetAliveExecute(r ApiGetAliveRequest) (*HealthCheckO
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiGetDeploymentByUrlRequest struct {
+type ApiGetDeploymentRequest struct {
 	ctx context.Context
 	ApiService *DefaultAPIService
 	url string
 }
 
-func (r ApiGetDeploymentByUrlRequest) Execute() (*GetDeploymentOutputBody, *http.Response, error) {
-	return r.ApiService.GetDeploymentByUrlExecute(r)
+func (r ApiGetDeploymentRequest) Execute() (*GetDeployment200Response, *http.Response, error) {
+	return r.ApiService.GetDeploymentExecute(r)
 }
 
 /*
-GetDeploymentByUrl Get deployment by URL
+GetDeployment Method for GetDeployment
+
+Retrieve an active deployment.
 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  @param url
- @return ApiGetDeploymentByUrlRequest
+ @return ApiGetDeploymentRequest
 */
-func (a *DefaultAPIService) GetDeploymentByUrl(ctx context.Context, url string) ApiGetDeploymentByUrlRequest {
-	return ApiGetDeploymentByUrlRequest{
+func (a *DefaultAPIService) GetDeployment(ctx context.Context, url string) ApiGetDeploymentRequest {
+	return ApiGetDeploymentRequest{
 		ApiService: a,
 		ctx: ctx,
 		url: url,
@@ -155,22 +553,129 @@ func (a *DefaultAPIService) GetDeploymentByUrl(ctx context.Context, url string) 
 }
 
 // Execute executes the request
-//  @return GetDeploymentOutputBody
-func (a *DefaultAPIService) GetDeploymentByUrlExecute(r ApiGetDeploymentByUrlRequest) (*GetDeploymentOutputBody, *http.Response, error) {
+//  @return GetDeployment200Response
+func (a *DefaultAPIService) GetDeploymentExecute(r ApiGetDeploymentRequest) (*GetDeployment200Response, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		formFiles            []formFile
-		localVarReturnValue  *GetDeploymentOutputBody
+		localVarReturnValue  *GetDeployment200Response
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.GetDeploymentByUrl")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.GetDeployment")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/deployment/{url}"
 	localVarPath = strings.Replace(localVarPath, "{"+"url"+"}", url.PathEscape(parameterValueToString(r.url, "url")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+			var v ErrorModel
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+					newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type ApiGetDeploymentsRequest struct {
+	ctx context.Context
+	ApiService *DefaultAPIService
+}
+
+func (r ApiGetDeploymentsRequest) Execute() (*GetDeployments200Response, *http.Response, error) {
+	return r.ApiService.GetDeploymentsExecute(r)
+}
+
+/*
+GetDeployments Method for GetDeployments
+
+Retrieve all active deployments.
+
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return ApiGetDeploymentsRequest
+*/
+func (a *DefaultAPIService) GetDeployments(ctx context.Context) ApiGetDeploymentsRequest {
+	return ApiGetDeploymentsRequest{
+		ApiService: a,
+		ctx: ctx,
+	}
+}
+
+// Execute executes the request
+//  @return GetDeployments200Response
+func (a *DefaultAPIService) GetDeploymentsExecute(r ApiGetDeploymentsRequest) (*GetDeployments200Response, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		formFiles            []formFile
+		localVarReturnValue  *GetDeployments200Response
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.GetDeployments")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/deployments"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -354,29 +859,31 @@ func (a *DefaultAPIService) PostTokenGenerateExecute(r ApiPostTokenGenerateReque
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiPutAdminDashRequest struct {
+type ApiPutAliasRequest struct {
 	ctx context.Context
 	ApiService *DefaultAPIService
-	deployAdminDashBody *DeployAdminDashBody
+	deployAliasBody *DeployAliasBody
 }
 
-func (r ApiPutAdminDashRequest) DeployAdminDashBody(deployAdminDashBody DeployAdminDashBody) ApiPutAdminDashRequest {
-	r.deployAdminDashBody = &deployAdminDashBody
+func (r ApiPutAliasRequest) DeployAliasBody(deployAliasBody DeployAliasBody) ApiPutAliasRequest {
+	r.deployAliasBody = &deployAliasBody
 	return r
 }
 
-func (r ApiPutAdminDashRequest) Execute() (*SuccessOutputBody, *http.Response, error) {
-	return r.ApiService.PutAdminDashExecute(r)
+func (r ApiPutAliasRequest) Execute() (*SuccessOutputBody, *http.Response, error) {
+	return r.ApiService.PutAliasExecute(r)
 }
 
 /*
-PutAdminDash Put admin DASH
+PutAlias Method for PutAlias
+
+Create an alias deployment.
 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiPutAdminDashRequest
+ @return ApiPutAliasRequest
 */
-func (a *DefaultAPIService) PutAdminDash(ctx context.Context) ApiPutAdminDashRequest {
-	return ApiPutAdminDashRequest{
+func (a *DefaultAPIService) PutAlias(ctx context.Context) ApiPutAliasRequest {
+	return ApiPutAliasRequest{
 		ApiService: a,
 		ctx: ctx,
 	}
@@ -384,7 +891,7 @@ func (a *DefaultAPIService) PutAdminDash(ctx context.Context) ApiPutAdminDashReq
 
 // Execute executes the request
 //  @return SuccessOutputBody
-func (a *DefaultAPIService) PutAdminDashExecute(r ApiPutAdminDashRequest) (*SuccessOutputBody, *http.Response, error) {
+func (a *DefaultAPIService) PutAliasExecute(r ApiPutAliasRequest) (*SuccessOutputBody, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPut
 		localVarPostBody     interface{}
@@ -392,18 +899,18 @@ func (a *DefaultAPIService) PutAdminDashExecute(r ApiPutAdminDashRequest) (*Succ
 		localVarReturnValue  *SuccessOutputBody
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.PutAdminDash")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.PutAlias")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/admin-dash"
+	localVarPath := localBasePath + "/deploy/alias"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.deployAdminDashBody == nil {
-		return localVarReturnValue, nil, reportError("deployAdminDashBody is required and must be specified")
+	if r.deployAliasBody == nil {
+		return localVarReturnValue, nil, reportError("deployAliasBody is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -424,277 +931,7 @@ func (a *DefaultAPIService) PutAdminDashExecute(r ApiPutAdminDashRequest) (*Succ
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.deployAdminDashBody
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-			var v ErrorModel
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
-type ApiPutDeployFilesRequest struct {
-	ctx context.Context
-	ApiService *DefaultAPIService
-	url *string
-	contents *os.File
-	keepLeadingDirectories *bool
-	preserveExistingFiles *bool
-}
-
-func (r ApiPutDeployFilesRequest) Url(url string) ApiPutDeployFilesRequest {
-	r.url = &url
-	return r
-}
-
-func (r ApiPutDeployFilesRequest) Contents(contents *os.File) ApiPutDeployFilesRequest {
-	r.contents = contents
-	return r
-}
-
-func (r ApiPutDeployFilesRequest) KeepLeadingDirectories(keepLeadingDirectories bool) ApiPutDeployFilesRequest {
-	r.keepLeadingDirectories = &keepLeadingDirectories
-	return r
-}
-
-func (r ApiPutDeployFilesRequest) PreserveExistingFiles(preserveExistingFiles bool) ApiPutDeployFilesRequest {
-	r.preserveExistingFiles = &preserveExistingFiles
-	return r
-}
-
-func (r ApiPutDeployFilesRequest) Execute() (*SuccessOutputBody, *http.Response, error) {
-	return r.ApiService.PutDeployFilesExecute(r)
-}
-
-/*
-PutDeployFiles Put deploy files
-
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiPutDeployFilesRequest
-*/
-func (a *DefaultAPIService) PutDeployFiles(ctx context.Context) ApiPutDeployFilesRequest {
-	return ApiPutDeployFilesRequest{
-		ApiService: a,
-		ctx: ctx,
-	}
-}
-
-// Execute executes the request
-//  @return SuccessOutputBody
-func (a *DefaultAPIService) PutDeployFilesExecute(r ApiPutDeployFilesRequest) (*SuccessOutputBody, *http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *SuccessOutputBody
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.PutDeployFiles")
-	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/deploy/files"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-	if r.url == nil {
-		return localVarReturnValue, nil, reportError("url is required and must be specified")
-	}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"multipart/form-data"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	var contentsLocalVarFormFileName string
-	var contentsLocalVarFileName     string
-	var contentsLocalVarFileBytes    []byte
-
-	contentsLocalVarFormFileName = "contents"
-	contentsLocalVarFile := r.contents
-
-	if contentsLocalVarFile != nil {
-		fbs, _ := io.ReadAll(contentsLocalVarFile)
-
-		contentsLocalVarFileBytes = fbs
-		contentsLocalVarFileName = contentsLocalVarFile.Name()
-		contentsLocalVarFile.Close()
-		formFiles = append(formFiles, formFile{fileBytes: contentsLocalVarFileBytes, fileName: contentsLocalVarFileName, formFileName: contentsLocalVarFormFileName})
-	}
-	if r.keepLeadingDirectories != nil {
-		parameterAddToHeaderOrQuery(localVarFormParams, "keepLeadingDirectories", r.keepLeadingDirectories, "form", "")
-	}
-	if r.preserveExistingFiles != nil {
-		parameterAddToHeaderOrQuery(localVarFormParams, "preserveExistingFiles", r.preserveExistingFiles, "form", "")
-	}
-	parameterAddToHeaderOrQuery(localVarFormParams, "url", r.url, "form", "")
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-			var v ErrorModel
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
-type ApiPutDeployNewRequest struct {
-	ctx context.Context
-	ApiService *DefaultAPIService
-	deploymentCreateInputBody *DeploymentCreateInputBody
-}
-
-func (r ApiPutDeployNewRequest) DeploymentCreateInputBody(deploymentCreateInputBody DeploymentCreateInputBody) ApiPutDeployNewRequest {
-	r.deploymentCreateInputBody = &deploymentCreateInputBody
-	return r
-}
-
-func (r ApiPutDeployNewRequest) Execute() (*SuccessOutputBody, *http.Response, error) {
-	return r.ApiService.PutDeployNewExecute(r)
-}
-
-/*
-PutDeployNew Put deploy new
-
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiPutDeployNewRequest
-*/
-func (a *DefaultAPIService) PutDeployNew(ctx context.Context) ApiPutDeployNewRequest {
-	return ApiPutDeployNewRequest{
-		ApiService: a,
-		ctx: ctx,
-	}
-}
-
-// Execute executes the request
-//  @return SuccessOutputBody
-func (a *DefaultAPIService) PutDeployNewExecute(r ApiPutDeployNewRequest) (*SuccessOutputBody, *http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodPut
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *SuccessOutputBody
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "DefaultAPIService.PutDeployNew")
-	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/deploy/new"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-	if r.deploymentCreateInputBody == nil {
-		return localVarReturnValue, nil, reportError("deploymentCreateInputBody is required and must be specified")
-	}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	localVarPostBody = r.deploymentCreateInputBody
+	localVarPostBody = r.deployAliasBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

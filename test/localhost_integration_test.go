@@ -67,7 +67,7 @@ type NewDeploymentTestCase struct {
 	CliApiTestCase
 	// expected body for the API request that the client CLI will make to the
 	// server
-	apiBody api.DeploymentCreateBody
+	apiBody api.DeploymentBase
 }
 
 var deploymentCreateTestCases = []NewDeploymentTestCase{
@@ -78,14 +78,18 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 			apiPath:    "/deploy/new",
 			apiMethod:  "PUT",
 			deploymentTest: func(t *testing.T, client *golfsdk.APIClient) {
-				output, _, _ := client.DefaultAPI.GetDeploymentByUrl(context.TODO(), "example.com").Execute()
-				if output.Url.Domain != "example.com" {
+				output, _, err := client.DefaultAPI.GetDeployment(context.TODO(), "example.com").Execute()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if (output.EmptyDeployment.Type != "Empty") || output.EmptyDeployment.Url != "example.com" {
 					t.Fail()
 				}
 			},
 		},
-		apiBody: api.DeploymentCreateBody{
-			Url: "example.com",
+		apiBody: api.DeploymentBase{
+			Url:  "example.com",
+			Tags: []string{},
 		},
 	},
 	// TODO: URLs with paths, other settings
@@ -327,14 +331,17 @@ func TestClientCli(t *testing.T) {
 				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
 			}
 
-			var contents api.DeploymentCreateBody
+			var contents api.DeploymentBase
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())
 			}
 
 			if !reflect.DeepEqual(contents, testCase.apiBody) {
-				t.Fatalf("%s failed; expected %+v, got %+v", testCase.name, testCase.apiBody, contents)
+				// it's actually quite a bit easier to see some differences in
+				// the JSON versions
+				apiBodyJson, _ := json.Marshal(testCase.apiBody)
+				t.Fatalf("%s failed; expected %+v, got %+v", testCase.name, string(apiBodyJson), string(intercepted.Body))
 			}
 
 			// forward the intercepted request to the real server

@@ -3,10 +3,11 @@ package db
 type ServedThingType string
 
 const (
-	StaticFiles     ServedThingType = "StaticFiles"
-	DockerContainer ServedThingType = "DockerContainer"
+	StaticFiles ServedThingType = "StaticFiles"
+	Alias       ServedThingType = "Alias"
+
 	// not implemented yet
-	Redirect ServedThingType = "Redirect"
+	DockerContainer ServedThingType = "DockerContainer"
 	// low-level deployment type; currently just used to expose the admin api
 	ReverseProxy ServedThingType = "ReverseProxy"
 )
@@ -35,40 +36,43 @@ type BearerToken struct {
 }
 
 type DeploymentMetadata struct {
-	Url Url `json:"" storm:"id"`
+	Url Url `storm:"id"`
 
-	// assuming that there won't be multiple external sources...
-	// TODO: probably move this to the auth section?
 	// for github repos, the ExternalSource has the format "repoOwner/repoName"
 	// or "repoOwner/repoName#branch-name"
-	ExternalSource     string             `json:"externalSource,omitempty"`
-	ExternalSourceType ExternalSourceType `json:"externalSourceType,omitempty"`
+	ExternalSource     string
+	ExternalSourceType ExternalSourceType
 
-	Tags []string `json:"tags,omitempty"`
+	Tags []string
 
 	// if this is true and the deployment is at the path "/thing", then the
 	// "/thing" in the path will be transparently passed through to the
 	// underlying resource instead of being removed (which is the default)
-	PreserveExternalPath bool `json:"preserveExternalPath,omitempty"`
+	PreserveExternalPath bool
 
-	// this is `true` for internal deployments like the one for the admin API
-	DontPersist bool `json:"-"`
+	// this is `true` for internal deployments like the one for the admin API.
+	// TODO: rename to "internal" because it probably shouldn't be in the API either
+	DontPersist bool
 }
 
 type DeploymentContent struct {
 	// this is false if no actual content has been added to the deployment
-	// (yet). TODO: exclude from API, but do not exclude from DB. (does this
-	// even need to exist? why not just use len(ServedThing) > 0, or build in a
-	// "NotSureYet" value for ServedThingType?)
-	HasContent bool `json:"hasContent"`
+	// (yet). (does this even need to exist? why not just use len(ServedThing)
+	// > 0, or build in a "NotSureYet" value for ServedThingType?)
+	HasContent bool
 	// for static files, this is the path to a local directory; for a docker
 	// container, this is a port number (?); for a redirect, this is a url or url
 	// path; for a reverse proxy, this is a host and port (probably "localhost:[port]")
-	ServedThing     string          `json:"servedThing"`
-	ServedThingType ServedThingType `json:"servedThingType"`
+	ServedThing     string
+	ServedThingType ServedThingType
 
-	// this only makes sense for static site content:
-	SpaMode bool `json:"spaMode"`
+	// this only makes sense for static site content and needs to be moved to a
+	// separate type for that content:
+	SpaMode bool
+
+	// these only makes sense for aliases:
+	AliasedTo Url
+	Redirect  bool
 }
 
 type Deployment struct {
