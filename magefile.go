@@ -31,10 +31,6 @@ func SetExtension() {
 	}
 }
 
-func BuildWithCodegen() {
-	mg.Deps(BuildClientWithCodegen, BuildServer)
-}
-
 func Build() {
 	mg.Deps(BuildClient, BuildServer)
 }
@@ -151,22 +147,12 @@ func GenerateClientSdk() error {
 	}
 
 	return nil
-
-}
-
-func BuildClientWithoutDeps() error {
-	fmt.Println("Building client...")
-	return sh.Run("go", "build", "-o", "golf"+extension, "./client-cmd")
 }
 
 func BuildClient() error {
-	mg.Deps(SetExtension, InstallDeps)
-	return BuildClientWithoutDeps()
-}
-
-func BuildClientWithCodegen() error {
 	mg.Deps(SetExtension, InstallDeps, GenerateClientSdk)
-	return BuildClientWithoutDeps()
+	fmt.Println("Building client...")
+	return sh.Run("go", "build", "-o", "golf"+extension, "./client-cmd")
 }
 
 func InstallDeps() error {
