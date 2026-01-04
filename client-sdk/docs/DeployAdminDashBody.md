@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schema** | Pointer to **string** | A URL to the JSON Schema for this object. | [optional] [readonly] 
-**Url** | **string** |  | 
+**Url** | **string** | The URL that you want to deploy the admin dashboard to. | 
 
 ## Methods
 

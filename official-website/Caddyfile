@@ -1,0 +1,144 @@
+{
+	email mitchjacov@gmail.com
+	log {
+                output file caddylog.json
+                format json
+        }
+}
+
+(file-server) {
+	file_server browse
+	encode zstd gzip
+	@index {
+		path */
+	}
+	header @index {
+		Cache-Control "max-age=0,no-store"
+	}
+}
+(monitor) {
+	log {
+		output file caddyhttp.json
+		format json
+	}
+}
+
+cassieis.gay {
+	root * /root/my-documents/standalone-content/cassieisgay/
+	import file-server
+	import monitor
+}
+
+audio.mitch.com.net.biz.org.zone.place {
+	root * /root/my-documents/standalone-content/audio/
+	import file-server
+	import monitor
+}
+
+mitch.com.net.biz.org.zone.place {
+	handle /mail/ {
+		reverse_proxy localhost:4004
+	}
+	handle_path /catullus/* {
+		root * /root/my-documents/generated-content/catullus/
+	}
+	handle {
+		header {
+			Access-Control-Allow-Origin *
+		        Access-Control-Allow-Credentials true
+		        Access-Control-Allow-Methods *
+		        Access-Control-Allow-Headers *
+		        defer
+		}
+		root * /root/my-documents/standalone-content/zoneplace/
+	}
+	import file-server
+	import monitor
+}
+
+mitchbot.cloud {
+	import monitor
+	handle /mail/box {
+		reverse_proxy localhost:8090
+	}
+	handle_path /mail/* {
+		root * /root/program-files/servers/send-a-postcard/
+		import file-server
+	}
+	handle_path /bee/* {
+		root * /root/program-files/services/spellingbeebot/webpage/
+		import file-server
+	}
+	uri strip_prefix /stream
+	reverse_proxy localhost:8080 {
+		header_up Host {host}
+		header_up X-Real-IP {remote}
+	}
+}
+
+stream.mitch.website {
+	import monitor
+	uri strip_prefix /stream
+        reverse_proxy localhost:8080 {
+                header_up Host {host}
+                header_up X-Real-IP {remote}
+        }
+}
+
+corncob.world {
+	root * /root/my-documents/standalone-content/corn/
+	import file-server
+	import monitor
+}
+
+corncob.world.corncob.world {
+	root * /root/my-documents/standalone-content/corn/
+	import file-server
+	import monitor
+}
+
+3d.corncob.world {
+	root * /root/my-documents/generated-content/corn3d/
+	import file-server
+	import monitor
+}
+
+mitch.website {
+	import monitor
+	handle_path /spellingbeegallery* {
+		root * /root/my-documents/generated-content/spellingbeegallery/
+		import file-server
+	}
+	handle_path /perspective* {
+		root * /root/my-documents/generated-content/perspective/
+		import file-server
+	}
+	handle_path /minecraft* {
+		root * /root/my-documents/generated-content/minecraft-map-frame-public/
+		import file-server
+	}
+	handle {
+		root * /root/my-documents/generated-content/self-discovery/
+		header Access-Control-Allow-Origin *
+		import file-server
+	}
+}
+
+redirect.zone.place {
+    import monitor
+    root * /root/my-documents/standalone-content/redirect/
+    import file-server
+}
+
+http://http-test.mitch.website {
+	reverse_proxy localhost:8000	
+}
+
+rss.zone.place {
+	reverse_proxy localhost:7070
+}
+singlehanded.mitch.website {
+    import monitor
+    root * /root/my-documents/standalone-content/SingleHandedTypist/singlehanded/dist/
+    import file-server
+}

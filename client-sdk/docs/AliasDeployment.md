@@ -1,212 +1,238 @@
-# DeploymentCreateInputBody
+# AliasDeployment
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Schema** | Pointer to **string** | A URL to the JSON Schema for this object. | [optional] [readonly] 
+**AliasedTo** | Pointer to **string** | The URL that this deployment is an alias for. | [optional] 
 **ExternalSource** | Pointer to **string** | Original repository for this deployment&#39;s source. Can include a branch name. | [optional] 
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
 **PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
+**Redirect** | Pointer to **bool** | If this is true, visitors to this deployment&#39;s URL will be completely redirected to the URL that this alias is for. | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
 **Type** | Pointer to **string** | Type of deployment contents; can be StaticSite, Alias, or Empty. | [optional] 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 
 ## Methods
 
-### NewDeploymentCreateInputBody
+### NewAliasDeployment
 
-`func NewDeploymentCreateInputBody(url string, ) *DeploymentCreateInputBody`
+`func NewAliasDeployment(url string, ) *AliasDeployment`
 
-NewDeploymentCreateInputBody instantiates a new DeploymentCreateInputBody object
+NewAliasDeployment instantiates a new AliasDeployment object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewDeploymentCreateInputBodyWithDefaults
+### NewAliasDeploymentWithDefaults
 
-`func NewDeploymentCreateInputBodyWithDefaults() *DeploymentCreateInputBody`
+`func NewAliasDeploymentWithDefaults() *AliasDeployment`
 
-NewDeploymentCreateInputBodyWithDefaults instantiates a new DeploymentCreateInputBody object
+NewAliasDeploymentWithDefaults instantiates a new AliasDeployment object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
-### GetSchema
+### GetAliasedTo
 
-`func (o *DeploymentCreateInputBody) GetSchema() string`
+`func (o *AliasDeployment) GetAliasedTo() string`
 
-GetSchema returns the Schema field if non-nil, zero value otherwise.
+GetAliasedTo returns the AliasedTo field if non-nil, zero value otherwise.
 
-### GetSchemaOk
+### GetAliasedToOk
 
-`func (o *DeploymentCreateInputBody) GetSchemaOk() (*string, bool)`
+`func (o *AliasDeployment) GetAliasedToOk() (*string, bool)`
 
-GetSchemaOk returns a tuple with the Schema field if it's non-nil, zero value otherwise
+GetAliasedToOk returns a tuple with the AliasedTo field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetSchema
+### SetAliasedTo
 
-`func (o *DeploymentCreateInputBody) SetSchema(v string)`
+`func (o *AliasDeployment) SetAliasedTo(v string)`
 
-SetSchema sets Schema field to given value.
+SetAliasedTo sets AliasedTo field to given value.
 
-### HasSchema
+### HasAliasedTo
 
-`func (o *DeploymentCreateInputBody) HasSchema() bool`
+`func (o *AliasDeployment) HasAliasedTo() bool`
 
-HasSchema returns a boolean if a field has been set.
+HasAliasedTo returns a boolean if a field has been set.
 
 ### GetExternalSource
 
-`func (o *DeploymentCreateInputBody) GetExternalSource() string`
+`func (o *AliasDeployment) GetExternalSource() string`
 
 GetExternalSource returns the ExternalSource field if non-nil, zero value otherwise.
 
 ### GetExternalSourceOk
 
-`func (o *DeploymentCreateInputBody) GetExternalSourceOk() (*string, bool)`
+`func (o *AliasDeployment) GetExternalSourceOk() (*string, bool)`
 
 GetExternalSourceOk returns a tuple with the ExternalSource field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetExternalSource
 
-`func (o *DeploymentCreateInputBody) SetExternalSource(v string)`
+`func (o *AliasDeployment) SetExternalSource(v string)`
 
 SetExternalSource sets ExternalSource field to given value.
 
 ### HasExternalSource
 
-`func (o *DeploymentCreateInputBody) HasExternalSource() bool`
+`func (o *AliasDeployment) HasExternalSource() bool`
 
 HasExternalSource returns a boolean if a field has been set.
 
 ### GetExternalSourceType
 
-`func (o *DeploymentCreateInputBody) GetExternalSourceType() string`
+`func (o *AliasDeployment) GetExternalSourceType() string`
 
 GetExternalSourceType returns the ExternalSourceType field if non-nil, zero value otherwise.
 
 ### GetExternalSourceTypeOk
 
-`func (o *DeploymentCreateInputBody) GetExternalSourceTypeOk() (*string, bool)`
+`func (o *AliasDeployment) GetExternalSourceTypeOk() (*string, bool)`
 
 GetExternalSourceTypeOk returns a tuple with the ExternalSourceType field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetExternalSourceType
 
-`func (o *DeploymentCreateInputBody) SetExternalSourceType(v string)`
+`func (o *AliasDeployment) SetExternalSourceType(v string)`
 
 SetExternalSourceType sets ExternalSourceType field to given value.
 
 ### HasExternalSourceType
 
-`func (o *DeploymentCreateInputBody) HasExternalSourceType() bool`
+`func (o *AliasDeployment) HasExternalSourceType() bool`
 
 HasExternalSourceType returns a boolean if a field has been set.
 
 ### GetPreserveExternalPath
 
-`func (o *DeploymentCreateInputBody) GetPreserveExternalPath() bool`
+`func (o *AliasDeployment) GetPreserveExternalPath() bool`
 
 GetPreserveExternalPath returns the PreserveExternalPath field if non-nil, zero value otherwise.
 
 ### GetPreserveExternalPathOk
 
-`func (o *DeploymentCreateInputBody) GetPreserveExternalPathOk() (*bool, bool)`
+`func (o *AliasDeployment) GetPreserveExternalPathOk() (*bool, bool)`
 
 GetPreserveExternalPathOk returns a tuple with the PreserveExternalPath field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPreserveExternalPath
 
-`func (o *DeploymentCreateInputBody) SetPreserveExternalPath(v bool)`
+`func (o *AliasDeployment) SetPreserveExternalPath(v bool)`
 
 SetPreserveExternalPath sets PreserveExternalPath field to given value.
 
 ### HasPreserveExternalPath
 
-`func (o *DeploymentCreateInputBody) HasPreserveExternalPath() bool`
+`func (o *AliasDeployment) HasPreserveExternalPath() bool`
 
 HasPreserveExternalPath returns a boolean if a field has been set.
 
+### GetRedirect
+
+`func (o *AliasDeployment) GetRedirect() bool`
+
+GetRedirect returns the Redirect field if non-nil, zero value otherwise.
+
+### GetRedirectOk
+
+`func (o *AliasDeployment) GetRedirectOk() (*bool, bool)`
+
+GetRedirectOk returns a tuple with the Redirect field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRedirect
+
+`func (o *AliasDeployment) SetRedirect(v bool)`
+
+SetRedirect sets Redirect field to given value.
+
+### HasRedirect
+
+`func (o *AliasDeployment) HasRedirect() bool`
+
+HasRedirect returns a boolean if a field has been set.
+
 ### GetTags
 
-`func (o *DeploymentCreateInputBody) GetTags() []string`
+`func (o *AliasDeployment) GetTags() []string`
 
 GetTags returns the Tags field if non-nil, zero value otherwise.
 
 ### GetTagsOk
 
-`func (o *DeploymentCreateInputBody) GetTagsOk() (*[]string, bool)`
+`func (o *AliasDeployment) GetTagsOk() (*[]string, bool)`
 
 GetTagsOk returns a tuple with the Tags field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTags
 
-`func (o *DeploymentCreateInputBody) SetTags(v []string)`
+`func (o *AliasDeployment) SetTags(v []string)`
 
 SetTags sets Tags field to given value.
 
 ### HasTags
 
-`func (o *DeploymentCreateInputBody) HasTags() bool`
+`func (o *AliasDeployment) HasTags() bool`
 
 HasTags returns a boolean if a field has been set.
 
 ### SetTagsNil
 
-`func (o *DeploymentCreateInputBody) SetTagsNil(b bool)`
+`func (o *AliasDeployment) SetTagsNil(b bool)`
 
  SetTagsNil sets the value for Tags to be an explicit nil
 
 ### UnsetTags
-`func (o *DeploymentCreateInputBody) UnsetTags()`
+`func (o *AliasDeployment) UnsetTags()`
 
 UnsetTags ensures that no value is present for Tags, not even an explicit nil
 ### GetType
 
-`func (o *DeploymentCreateInputBody) GetType() string`
+`func (o *AliasDeployment) GetType() string`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *DeploymentCreateInputBody) GetTypeOk() (*string, bool)`
+`func (o *AliasDeployment) GetTypeOk() (*string, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *DeploymentCreateInputBody) SetType(v string)`
+`func (o *AliasDeployment) SetType(v string)`
 
 SetType sets Type field to given value.
 
 ### HasType
 
-`func (o *DeploymentCreateInputBody) HasType() bool`
+`func (o *AliasDeployment) HasType() bool`
 
 HasType returns a boolean if a field has been set.
 
 ### GetUrl
 
-`func (o *DeploymentCreateInputBody) GetUrl() string`
+`func (o *AliasDeployment) GetUrl() string`
 
 GetUrl returns the Url field if non-nil, zero value otherwise.
 
 ### GetUrlOk
 
-`func (o *DeploymentCreateInputBody) GetUrlOk() (*string, bool)`
+`func (o *AliasDeployment) GetUrlOk() (*string, bool)`
 
 GetUrlOk returns a tuple with the Url field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetUrl
 
-`func (o *DeploymentCreateInputBody) SetUrl(v string)`
+`func (o *AliasDeployment) SetUrl(v string)`
 
 SetUrl sets Url field to given value.
 

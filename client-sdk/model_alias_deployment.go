@@ -16,19 +16,21 @@ import (
 	"fmt"
 )
 
-// checks if the DeploymentCreateInputBody type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &DeploymentCreateInputBody{}
+// checks if the AliasDeployment type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &AliasDeployment{}
 
-// DeploymentCreateInputBody struct for DeploymentCreateInputBody
-type DeploymentCreateInputBody struct {
-	// A URL to the JSON Schema for this object.
-	Schema *string `json:"$schema,omitempty"`
+// AliasDeployment struct for AliasDeployment
+type AliasDeployment struct {
+	// The URL that this deployment is an alias for.
+	AliasedTo *string `json:"aliasedTo,omitempty"`
 	// Original repository for this deployment's source. Can include a branch name.
 	ExternalSource *string `json:"externalSource,omitempty"`
 	// Place where the original repository lives.
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
 	// if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
+	// If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
+	Redirect *bool `json:"redirect,omitempty"`
 	// Tags used for metadata.
 	Tags []string `json:"tags,omitempty"`
 	// Type of deployment contents; can be StaticSite, Alias, or Empty.
@@ -37,60 +39,60 @@ type DeploymentCreateInputBody struct {
 	Url string `json:"url"`
 }
 
-type _DeploymentCreateInputBody DeploymentCreateInputBody
+type _AliasDeployment AliasDeployment
 
-// NewDeploymentCreateInputBody instantiates a new DeploymentCreateInputBody object
+// NewAliasDeployment instantiates a new AliasDeployment object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeploymentCreateInputBody(url string) *DeploymentCreateInputBody {
-	this := DeploymentCreateInputBody{}
+func NewAliasDeployment(url string) *AliasDeployment {
+	this := AliasDeployment{}
 	this.Url = url
 	return &this
 }
 
-// NewDeploymentCreateInputBodyWithDefaults instantiates a new DeploymentCreateInputBody object
+// NewAliasDeploymentWithDefaults instantiates a new AliasDeployment object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewDeploymentCreateInputBodyWithDefaults() *DeploymentCreateInputBody {
-	this := DeploymentCreateInputBody{}
+func NewAliasDeploymentWithDefaults() *AliasDeployment {
+	this := AliasDeployment{}
 	return &this
 }
 
-// GetSchema returns the Schema field value if set, zero value otherwise.
-func (o *DeploymentCreateInputBody) GetSchema() string {
-	if o == nil || IsNil(o.Schema) {
+// GetAliasedTo returns the AliasedTo field value if set, zero value otherwise.
+func (o *AliasDeployment) GetAliasedTo() string {
+	if o == nil || IsNil(o.AliasedTo) {
 		var ret string
 		return ret
 	}
-	return *o.Schema
+	return *o.AliasedTo
 }
 
-// GetSchemaOk returns a tuple with the Schema field value if set, nil otherwise
+// GetAliasedToOk returns a tuple with the AliasedTo field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetSchemaOk() (*string, bool) {
-	if o == nil || IsNil(o.Schema) {
+func (o *AliasDeployment) GetAliasedToOk() (*string, bool) {
+	if o == nil || IsNil(o.AliasedTo) {
 		return nil, false
 	}
-	return o.Schema, true
+	return o.AliasedTo, true
 }
 
-// HasSchema returns a boolean if a field has been set.
-func (o *DeploymentCreateInputBody) HasSchema() bool {
-	if o != nil && !IsNil(o.Schema) {
+// HasAliasedTo returns a boolean if a field has been set.
+func (o *AliasDeployment) HasAliasedTo() bool {
+	if o != nil && !IsNil(o.AliasedTo) {
 		return true
 	}
 
 	return false
 }
 
-// SetSchema gets a reference to the given string and assigns it to the Schema field.
-func (o *DeploymentCreateInputBody) SetSchema(v string) {
-	o.Schema = &v
+// SetAliasedTo gets a reference to the given string and assigns it to the AliasedTo field.
+func (o *AliasDeployment) SetAliasedTo(v string) {
+	o.AliasedTo = &v
 }
 
 // GetExternalSource returns the ExternalSource field value if set, zero value otherwise.
-func (o *DeploymentCreateInputBody) GetExternalSource() string {
+func (o *AliasDeployment) GetExternalSource() string {
 	if o == nil || IsNil(o.ExternalSource) {
 		var ret string
 		return ret
@@ -100,7 +102,7 @@ func (o *DeploymentCreateInputBody) GetExternalSource() string {
 
 // GetExternalSourceOk returns a tuple with the ExternalSource field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetExternalSourceOk() (*string, bool) {
+func (o *AliasDeployment) GetExternalSourceOk() (*string, bool) {
 	if o == nil || IsNil(o.ExternalSource) {
 		return nil, false
 	}
@@ -108,7 +110,7 @@ func (o *DeploymentCreateInputBody) GetExternalSourceOk() (*string, bool) {
 }
 
 // HasExternalSource returns a boolean if a field has been set.
-func (o *DeploymentCreateInputBody) HasExternalSource() bool {
+func (o *AliasDeployment) HasExternalSource() bool {
 	if o != nil && !IsNil(o.ExternalSource) {
 		return true
 	}
@@ -117,12 +119,12 @@ func (o *DeploymentCreateInputBody) HasExternalSource() bool {
 }
 
 // SetExternalSource gets a reference to the given string and assigns it to the ExternalSource field.
-func (o *DeploymentCreateInputBody) SetExternalSource(v string) {
+func (o *AliasDeployment) SetExternalSource(v string) {
 	o.ExternalSource = &v
 }
 
 // GetExternalSourceType returns the ExternalSourceType field value if set, zero value otherwise.
-func (o *DeploymentCreateInputBody) GetExternalSourceType() string {
+func (o *AliasDeployment) GetExternalSourceType() string {
 	if o == nil || IsNil(o.ExternalSourceType) {
 		var ret string
 		return ret
@@ -132,7 +134,7 @@ func (o *DeploymentCreateInputBody) GetExternalSourceType() string {
 
 // GetExternalSourceTypeOk returns a tuple with the ExternalSourceType field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetExternalSourceTypeOk() (*string, bool) {
+func (o *AliasDeployment) GetExternalSourceTypeOk() (*string, bool) {
 	if o == nil || IsNil(o.ExternalSourceType) {
 		return nil, false
 	}
@@ -140,7 +142,7 @@ func (o *DeploymentCreateInputBody) GetExternalSourceTypeOk() (*string, bool) {
 }
 
 // HasExternalSourceType returns a boolean if a field has been set.
-func (o *DeploymentCreateInputBody) HasExternalSourceType() bool {
+func (o *AliasDeployment) HasExternalSourceType() bool {
 	if o != nil && !IsNil(o.ExternalSourceType) {
 		return true
 	}
@@ -149,12 +151,12 @@ func (o *DeploymentCreateInputBody) HasExternalSourceType() bool {
 }
 
 // SetExternalSourceType gets a reference to the given string and assigns it to the ExternalSourceType field.
-func (o *DeploymentCreateInputBody) SetExternalSourceType(v string) {
+func (o *AliasDeployment) SetExternalSourceType(v string) {
 	o.ExternalSourceType = &v
 }
 
 // GetPreserveExternalPath returns the PreserveExternalPath field value if set, zero value otherwise.
-func (o *DeploymentCreateInputBody) GetPreserveExternalPath() bool {
+func (o *AliasDeployment) GetPreserveExternalPath() bool {
 	if o == nil || IsNil(o.PreserveExternalPath) {
 		var ret bool
 		return ret
@@ -164,7 +166,7 @@ func (o *DeploymentCreateInputBody) GetPreserveExternalPath() bool {
 
 // GetPreserveExternalPathOk returns a tuple with the PreserveExternalPath field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetPreserveExternalPathOk() (*bool, bool) {
+func (o *AliasDeployment) GetPreserveExternalPathOk() (*bool, bool) {
 	if o == nil || IsNil(o.PreserveExternalPath) {
 		return nil, false
 	}
@@ -172,7 +174,7 @@ func (o *DeploymentCreateInputBody) GetPreserveExternalPathOk() (*bool, bool) {
 }
 
 // HasPreserveExternalPath returns a boolean if a field has been set.
-func (o *DeploymentCreateInputBody) HasPreserveExternalPath() bool {
+func (o *AliasDeployment) HasPreserveExternalPath() bool {
 	if o != nil && !IsNil(o.PreserveExternalPath) {
 		return true
 	}
@@ -181,12 +183,44 @@ func (o *DeploymentCreateInputBody) HasPreserveExternalPath() bool {
 }
 
 // SetPreserveExternalPath gets a reference to the given bool and assigns it to the PreserveExternalPath field.
-func (o *DeploymentCreateInputBody) SetPreserveExternalPath(v bool) {
+func (o *AliasDeployment) SetPreserveExternalPath(v bool) {
 	o.PreserveExternalPath = &v
 }
 
+// GetRedirect returns the Redirect field value if set, zero value otherwise.
+func (o *AliasDeployment) GetRedirect() bool {
+	if o == nil || IsNil(o.Redirect) {
+		var ret bool
+		return ret
+	}
+	return *o.Redirect
+}
+
+// GetRedirectOk returns a tuple with the Redirect field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AliasDeployment) GetRedirectOk() (*bool, bool) {
+	if o == nil || IsNil(o.Redirect) {
+		return nil, false
+	}
+	return o.Redirect, true
+}
+
+// HasRedirect returns a boolean if a field has been set.
+func (o *AliasDeployment) HasRedirect() bool {
+	if o != nil && !IsNil(o.Redirect) {
+		return true
+	}
+
+	return false
+}
+
+// SetRedirect gets a reference to the given bool and assigns it to the Redirect field.
+func (o *AliasDeployment) SetRedirect(v bool) {
+	o.Redirect = &v
+}
+
 // GetTags returns the Tags field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *DeploymentCreateInputBody) GetTags() []string {
+func (o *AliasDeployment) GetTags() []string {
 	if o == nil {
 		var ret []string
 		return ret
@@ -197,7 +231,7 @@ func (o *DeploymentCreateInputBody) GetTags() []string {
 // GetTagsOk returns a tuple with the Tags field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *DeploymentCreateInputBody) GetTagsOk() ([]string, bool) {
+func (o *AliasDeployment) GetTagsOk() ([]string, bool) {
 	if o == nil || IsNil(o.Tags) {
 		return nil, false
 	}
@@ -205,7 +239,7 @@ func (o *DeploymentCreateInputBody) GetTagsOk() ([]string, bool) {
 }
 
 // HasTags returns a boolean if a field has been set.
-func (o *DeploymentCreateInputBody) HasTags() bool {
+func (o *AliasDeployment) HasTags() bool {
 	if o != nil && !IsNil(o.Tags) {
 		return true
 	}
@@ -214,12 +248,12 @@ func (o *DeploymentCreateInputBody) HasTags() bool {
 }
 
 // SetTags gets a reference to the given []string and assigns it to the Tags field.
-func (o *DeploymentCreateInputBody) SetTags(v []string) {
+func (o *AliasDeployment) SetTags(v []string) {
 	o.Tags = v
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
-func (o *DeploymentCreateInputBody) GetType() string {
+func (o *AliasDeployment) GetType() string {
 	if o == nil || IsNil(o.Type) {
 		var ret string
 		return ret
@@ -229,7 +263,7 @@ func (o *DeploymentCreateInputBody) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetTypeOk() (*string, bool) {
+func (o *AliasDeployment) GetTypeOk() (*string, bool) {
 	if o == nil || IsNil(o.Type) {
 		return nil, false
 	}
@@ -237,7 +271,7 @@ func (o *DeploymentCreateInputBody) GetTypeOk() (*string, bool) {
 }
 
 // HasType returns a boolean if a field has been set.
-func (o *DeploymentCreateInputBody) HasType() bool {
+func (o *AliasDeployment) HasType() bool {
 	if o != nil && !IsNil(o.Type) {
 		return true
 	}
@@ -246,12 +280,12 @@ func (o *DeploymentCreateInputBody) HasType() bool {
 }
 
 // SetType gets a reference to the given string and assigns it to the Type field.
-func (o *DeploymentCreateInputBody) SetType(v string) {
+func (o *AliasDeployment) SetType(v string) {
 	o.Type = &v
 }
 
 // GetUrl returns the Url field value
-func (o *DeploymentCreateInputBody) GetUrl() string {
+func (o *AliasDeployment) GetUrl() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -262,7 +296,7 @@ func (o *DeploymentCreateInputBody) GetUrl() string {
 
 // GetUrlOk returns a tuple with the Url field value
 // and a boolean to check if the value has been set.
-func (o *DeploymentCreateInputBody) GetUrlOk() (*string, bool) {
+func (o *AliasDeployment) GetUrlOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -270,11 +304,11 @@ func (o *DeploymentCreateInputBody) GetUrlOk() (*string, bool) {
 }
 
 // SetUrl sets field value
-func (o *DeploymentCreateInputBody) SetUrl(v string) {
+func (o *AliasDeployment) SetUrl(v string) {
 	o.Url = v
 }
 
-func (o DeploymentCreateInputBody) MarshalJSON() ([]byte, error) {
+func (o AliasDeployment) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -282,10 +316,10 @@ func (o DeploymentCreateInputBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o DeploymentCreateInputBody) ToMap() (map[string]interface{}, error) {
+func (o AliasDeployment) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Schema) {
-		toSerialize["$schema"] = o.Schema
+	if !IsNil(o.AliasedTo) {
+		toSerialize["aliasedTo"] = o.AliasedTo
 	}
 	if !IsNil(o.ExternalSource) {
 		toSerialize["externalSource"] = o.ExternalSource
@@ -295,6 +329,9 @@ func (o DeploymentCreateInputBody) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.PreserveExternalPath) {
 		toSerialize["preserveExternalPath"] = o.PreserveExternalPath
+	}
+	if !IsNil(o.Redirect) {
+		toSerialize["redirect"] = o.Redirect
 	}
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
@@ -306,7 +343,7 @@ func (o DeploymentCreateInputBody) ToMap() (map[string]interface{}, error) {
 	return toSerialize, nil
 }
 
-func (o *DeploymentCreateInputBody) UnmarshalJSON(data []byte) (err error) {
+func (o *AliasDeployment) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -328,53 +365,53 @@ func (o *DeploymentCreateInputBody) UnmarshalJSON(data []byte) (err error) {
 		}
 	}
 
-	varDeploymentCreateInputBody := _DeploymentCreateInputBody{}
+	varAliasDeployment := _AliasDeployment{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varDeploymentCreateInputBody)
+	err = decoder.Decode(&varAliasDeployment)
 
 	if err != nil {
 		return err
 	}
 
-	*o = DeploymentCreateInputBody(varDeploymentCreateInputBody)
+	*o = AliasDeployment(varAliasDeployment)
 
 	return err
 }
 
-type NullableDeploymentCreateInputBody struct {
-	value *DeploymentCreateInputBody
+type NullableAliasDeployment struct {
+	value *AliasDeployment
 	isSet bool
 }
 
-func (v NullableDeploymentCreateInputBody) Get() *DeploymentCreateInputBody {
+func (v NullableAliasDeployment) Get() *AliasDeployment {
 	return v.value
 }
 
-func (v *NullableDeploymentCreateInputBody) Set(val *DeploymentCreateInputBody) {
+func (v *NullableAliasDeployment) Set(val *AliasDeployment) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableDeploymentCreateInputBody) IsSet() bool {
+func (v NullableAliasDeployment) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableDeploymentCreateInputBody) Unset() {
+func (v *NullableAliasDeployment) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableDeploymentCreateInputBody(val *DeploymentCreateInputBody) *NullableDeploymentCreateInputBody {
-	return &NullableDeploymentCreateInputBody{value: val, isSet: true}
+func NewNullableAliasDeployment(val *AliasDeployment) *NullableAliasDeployment {
+	return &NullableAliasDeployment{value: val, isSet: true}
 }
 
-func (v NullableDeploymentCreateInputBody) MarshalJSON() ([]byte, error) {
+func (v NullableAliasDeployment) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableDeploymentCreateInputBody) UnmarshalJSON(src []byte) error {
+func (v *NullableAliasDeployment) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

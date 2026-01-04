@@ -23,6 +23,7 @@ var _ MappedNullable = &DeployAdminDashBody{}
 type DeployAdminDashBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty"`
+	// The URL that you want to deploy the admin dashboard to.
 	Url string `json:"url"`
 }
 

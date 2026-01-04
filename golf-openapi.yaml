@@ -19,6 +19,44 @@ components:
       required:
         - externalUserSource
       type: object
+    AliasDeployment:
+      additionalProperties: false
+      properties:
+        aliasedTo:
+          description: The URL that this deployment is an alias for.
+          type: string
+        externalSource:
+          description: Original repository for this deployment's source. Can include a branch name.
+          examples:
+            - user/repo or user/repo#branch-name
+          type: string
+        externalSourceType:
+          description: Place where the original repository lives.
+          type: string
+        preserveExternalPath:
+          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          type: boolean
+        redirect:
+          description: If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
+          type: boolean
+        tags:
+          description: Tags used for metadata.
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        type:
+          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
+          type: string
+        url:
+          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
+          examples:
+            - mysite.mydomain.com
+          type: string
+      required:
+        - url
+      type: object
     CreateBearerTokenInputBody:
       additionalProperties: false
       properties:
@@ -60,6 +98,107 @@ components:
           readOnly: true
           type: string
         url:
+          description: The URL that you want to deploy the admin dashboard to.
+          examples:
+            - dash.mydomain.com
+          type: string
+      required:
+        - url
+      type: object
+    DeployAliasBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/DeployAliasBody.json
+          format: uri
+          readOnly: true
+          type: string
+        Url:
+          description: The URL of the deployment that you're updating.
+          examples:
+            - mysite.mydomain.com
+          type: string
+        aliasedTo:
+          description: The URL that this deployment is an alias for.
+          type: string
+        redirect:
+          description: If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
+          type: boolean
+      required:
+        - Url
+      type: object
+    DeploymentBase:
+      additionalProperties: false
+      properties:
+        externalSource:
+          description: Original repository for this deployment's source. Can include a branch name.
+          examples:
+            - user/repo or user/repo#branch-name
+          type: string
+        externalSourceType:
+          description: Place where the original repository lives.
+          type: string
+        preserveExternalPath:
+          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          type: boolean
+        tags:
+          description: Tags used for metadata.
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        type:
+          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
+          type: string
+        url:
+          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
+          examples:
+            - mysite.mydomain.com
+          type: string
+      required:
+        - url
+      type: object
+    DeploymentBody:
+      additionalProperties: false
+      properties:
+        aliasedTo:
+          description: The URL that this deployment is an alias for.
+          type: string
+        externalSource:
+          description: Original repository for this deployment's source. Can include a branch name.
+          examples:
+            - user/repo or user/repo#branch-name
+          type: string
+        externalSourceType:
+          description: Place where the original repository lives.
+          type: string
+        preserveExternalPath:
+          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          type: boolean
+        redirect:
+          description: If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
+          type: boolean
+        serverContentLocation:
+          type: string
+        spaMode:
+          type: boolean
+        tags:
+          description: Tags used for metadata.
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        type:
+          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
+          type: string
+        url:
+          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
+          examples:
+            - mysite.mydomain.com
           type: string
       required:
         - url
@@ -75,18 +214,30 @@ components:
           readOnly: true
           type: string
         externalSource:
+          description: Original repository for this deployment's source. Can include a branch name.
+          examples:
+            - user/repo or user/repo#branch-name
           type: string
         externalSourceType:
+          description: Place where the original repository lives.
           type: string
         preserveExternalPath:
+          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
         tags:
+          description: Tags used for metadata.
           items:
             type: string
           type:
             - array
             - "null"
+        type:
+          description: Type of deployment contents; can be StaticSite, Alias, or Empty.
+          type: string
         url:
+          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
+          examples:
+            - mysite.mydomain.com
           type: string
       required:
         - url
@@ -150,44 +301,17 @@ components:
           format: uri
           type: string
       type: object
-    GetDeploymentOutputBody:
+    GetDeploymentsOutputBody:
       additionalProperties: false
       properties:
-        $schema:
-          description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/GetDeploymentOutputBody.json
-          format: uri
-          readOnly: true
-          type: string
-        Url:
-          $ref: "#/components/schemas/Url"
-        externalSource:
-          type: string
-        externalSourceType:
-          type: string
-        hasContent:
-          type: boolean
-        preserveExternalPath:
-          type: boolean
-        servedThing:
-          type: string
-        servedThingType:
-          type: string
-        spaMode:
-          type: boolean
-        tags:
+        deployments:
           items:
-            type: string
+            $ref: "#/components/schemas/DeploymentBody"
           type:
             - array
             - "null"
       required:
-        - Url
-        - hasContent
-        - servedThing
-        - servedThingType
-        - spaMode
+        - deployments
       type: object
     HealthCheckOutputBody:
       additionalProperties: false
@@ -203,6 +327,45 @@ components:
           type: boolean
       required:
         - ok
+      type: object
+    StaticSiteDeployment:
+      additionalProperties: false
+      properties:
+        externalSource:
+          description: Original repository for this deployment's source. Can include a branch name.
+          examples:
+            - user/repo or user/repo#branch-name
+          type: string
+        externalSourceType:
+          description: Place where the original repository lives.
+          type: string
+        preserveExternalPath:
+          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          type: boolean
+        serverContentLocation:
+          type: string
+        spaMode:
+          type: boolean
+        tags:
+          description: Tags used for metadata.
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        type:
+          enum:
+            - StaticSite
+            - Alias
+          type: string
+        url:
+          description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
+          examples:
+            - mysite.mydomain.com
+          type: string
+      required:
+        - type
+        - url
       type: object
     SuccessOutputBody:
       additionalProperties: false
@@ -221,16 +384,6 @@ components:
       required:
         - success
         - message
-      type: object
-    Url:
-      additionalProperties: false
-      properties:
-        domain:
-          type: string
-        path:
-          type: string
-      required:
-        - domain
       type: object
 info:
   title: Internet Golf API
@@ -277,6 +430,29 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get alive
+  /deploy/alias:
+    put:
+      description: Create an alias deployment.
+      operationId: PutAlias
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeployAliasBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
   /deploy/files:
     put:
       operationId: put-deploy-files
@@ -297,13 +473,20 @@ paths:
                 contents:
                   contentEncoding: binary
                   contentMediaType: application/octet-stream
+                  description: A .tar.gz that contains the files to be deployed.
                   format: binary
                   type: string
                 keepLeadingDirectories:
+                  default: false
+                  description: By default, if you upload a .tar.gz whose contents are all in one folder, the contents of that folder will be used instead of the folder itself. For example, if you upload a folder called 'dist' for the deployment 'mysite.com', the URL of your site content will not be at 'mysite.com/dist'. Setting this to true turns off that auto-unpacking.
                   type: boolean
                 preserveExistingFiles:
+                  description: Leave the existing files for the current deployment in place instead of completely replacing them.
                   type: boolean
                 url:
+                  description: The URL of the deployment that you're updating.
+                  examples:
+                    - mysite.mydomain.com
                   type: string
               required:
                 - url
@@ -347,7 +530,8 @@ paths:
       summary: Put deploy new
   /deployment/{url}:
     get:
-      operationId: get-deployment-by-url
+      description: Retrieve an active deployment.
+      operationId: GetDeployment
       parameters:
         - in: path
           name: url
@@ -359,7 +543,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetDeploymentOutputBody"
+                discriminator:
+                  mapping:
+                    Alias: "#/components/schemas/AliasDeployment"
+                    Empty: "#/components/schemas/DeploymentBase"
+                    StaticSite: "#/components/schemas/StaticSiteDeployment"
+                  propertyName: type
+                oneOf:
+                  - $ref: "#/components/schemas/StaticSiteDeployment"
+                  - $ref: "#/components/schemas/AliasDeployment"
+                  - $ref: "#/components/schemas/DeploymentBase"
           description: OK
         default:
           content:
@@ -367,7 +560,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
-      summary: Get deployment by URL
+  /deployments:
+    get:
+      description: Retrieve all active deployments.
+      operationId: GetDeployments
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  deployments:
+                    items:
+                      discriminator:
+                        mapping:
+                          Alias: "#/components/schemas/AliasDeployment"
+                          Empty: "#/components/schemas/DeploymentBase"
+                          StaticSite: "#/components/schemas/StaticSiteDeployment"
+                        propertyName: type
+                      oneOf:
+                        - $ref: "#/components/schemas/StaticSiteDeployment"
+                        - $ref: "#/components/schemas/AliasDeployment"
+                        - $ref: "#/components/schemas/DeploymentBase"
+                    type: array
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
   /token/generate:
     post:
       operationId: post-token-generate

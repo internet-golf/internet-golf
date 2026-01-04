@@ -1,0 +1,848 @@
+{
+  "apps": {
+    "http": {
+      "servers": {
+        "srv0": {
+          "listen": [":443"],
+          "routes": [
+            {
+              "match": [{ "host": ["audio.mitch.com.net.biz.org.zone.place"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "vars",
+                          "root": "/root/my-documents/standalone-content/audio/"
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        },
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["mitch.com.net.biz.org.zone.place"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        }
+                      ]
+                    },
+                    {
+                      "group": "group11",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [{ "handler": "rewrite", "strip_path_prefix": "/catullus" }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/my-documents/generated-content/catullus/"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/catullus/*"] }]
+                    },
+                    {
+                      "group": "group11",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                {
+                                  "handler": "reverse_proxy",
+                                  "upstreams": [{ "dial": "localhost:4004" }]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/mail/"] }]
+                    },
+                    {
+                      "group": "group11",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/my-documents/standalone-content/zoneplace/"
+                                },
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "deferred": true,
+                                    "set": {
+                                      "Access-Control-Allow-Credentials": ["true"],
+                                      "Access-Control-Allow-Headers": ["*"],
+                                      "Access-Control-Allow-Methods": ["*"],
+                                      "Access-Control-Allow-Origin": ["*"]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["corncob.world.corncob.world"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "vars",
+                          "root": "/root/my-documents/standalone-content/corn/"
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        },
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["singlehanded.mitch.website"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "vars",
+                          "root": "/root/my-documents/standalone-content/SingleHandedTypist/singlehanded/dist/"
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        },
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["stream.mitch.website"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        { "handler": "rewrite", "strip_path_prefix": "/stream" },
+                        {
+                          "handler": "reverse_proxy",
+                          "headers": {
+                            "request": {
+                              "set": {
+                                "Host": ["{http.request.host}"],
+                                "X-Real-Ip": ["{http.request.remote}"]
+                              }
+                            }
+                          },
+                          "upstreams": [{ "dial": "localhost:8080" }]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["redirect.zone.place"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "vars",
+                          "root": "/root/my-documents/standalone-content/redirect/"
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        },
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["3d.corncob.world"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "vars",
+                          "root": "/root/my-documents/generated-content/corn3d/"
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        },
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["mitchbot.cloud"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    { "handle": [{ "handler": "rewrite", "strip_path_prefix": "/stream" }] },
+                    {
+                      "group": "group18",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                {
+                                  "handler": "reverse_proxy",
+                                  "upstreams": [{ "dial": "localhost:8090" }]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/mail/box"] }]
+                    },
+                    {
+                      "group": "group18",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [{ "handler": "rewrite", "strip_path_prefix": "/mail" }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/program-files/servers/send-a-postcard/"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": { "Cache-Control": ["max-age=0,no-store"] }
+                                  }
+                                }
+                              ],
+                              "match": [{ "path": ["*/"] }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "encodings": { "gzip": {}, "zstd": {} },
+                                  "handler": "encode",
+                                  "prefer": ["zstd", "gzip"]
+                                },
+                                {
+                                  "browse": {},
+                                  "handler": "file_server",
+                                  "hide": [".\\Caddyfile"]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/mail/*"] }]
+                    },
+                    {
+                      "group": "group18",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            { "handle": [{ "handler": "rewrite", "strip_path_prefix": "/bee" }] },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/program-files/services/spellingbeebot/webpage/"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": { "Cache-Control": ["max-age=0,no-store"] }
+                                  }
+                                }
+                              ],
+                              "match": [{ "path": ["*/"] }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "encodings": { "gzip": {}, "zstd": {} },
+                                  "handler": "encode",
+                                  "prefer": ["zstd", "gzip"]
+                                },
+                                {
+                                  "browse": {},
+                                  "handler": "file_server",
+                                  "hide": [".\\Caddyfile"]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/bee/*"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "reverse_proxy",
+                          "headers": {
+                            "request": {
+                              "set": {
+                                "Host": ["{http.request.host}"],
+                                "X-Real-Ip": ["{http.request.remote}"]
+                              }
+                            }
+                          },
+                          "upstreams": [{ "dial": "localhost:8080" }]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["rss.zone.place"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "reverse_proxy",
+                          "upstreams": [{ "dial": "localhost:7070" }]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["corncob.world"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "vars",
+                          "root": "/root/my-documents/standalone-content/corn/"
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        },
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["mitch.website"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "group": "group22",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                {
+                                  "handler": "rewrite",
+                                  "strip_path_prefix": "/spellingbeegallery"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/my-documents/generated-content/spellingbeegallery/"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": { "Cache-Control": ["max-age=0,no-store"] }
+                                  }
+                                }
+                              ],
+                              "match": [{ "path": ["*/"] }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "encodings": { "gzip": {}, "zstd": {} },
+                                  "handler": "encode",
+                                  "prefer": ["zstd", "gzip"]
+                                },
+                                {
+                                  "browse": {},
+                                  "handler": "file_server",
+                                  "hide": [".\\Caddyfile"]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/spellingbeegallery*"] }]
+                    },
+                    {
+                      "group": "group22",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                { "handler": "rewrite", "strip_path_prefix": "/perspective" }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/my-documents/generated-content/perspective/"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": { "Cache-Control": ["max-age=0,no-store"] }
+                                  }
+                                }
+                              ],
+                              "match": [{ "path": ["*/"] }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "encodings": { "gzip": {}, "zstd": {} },
+                                  "handler": "encode",
+                                  "prefer": ["zstd", "gzip"]
+                                },
+                                {
+                                  "browse": {},
+                                  "handler": "file_server",
+                                  "hide": [".\\Caddyfile"]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/perspective*"] }]
+                    },
+                    {
+                      "group": "group22",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                { "handler": "rewrite", "strip_path_prefix": "/minecraft" }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/my-documents/generated-content/minecraft-map-frame-public/"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": { "Cache-Control": ["max-age=0,no-store"] }
+                                  }
+                                }
+                              ],
+                              "match": [{ "path": ["*/"] }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "encodings": { "gzip": {}, "zstd": {} },
+                                  "handler": "encode",
+                                  "prefer": ["zstd", "gzip"]
+                                },
+                                {
+                                  "browse": {},
+                                  "handler": "file_server",
+                                  "hide": [".\\Caddyfile"]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [{ "path": ["/minecraft*"] }]
+                    },
+                    {
+                      "group": "group22",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                {
+                                  "handler": "vars",
+                                  "root": "/root/my-documents/generated-content/self-discovery/"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": { "Cache-Control": ["max-age=0,no-store"] }
+                                  }
+                                }
+                              ],
+                              "match": [{ "path": ["*/"] }]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": { "set": { "Access-Control-Allow-Origin": ["*"] } }
+                                },
+                                {
+                                  "encodings": { "gzip": {}, "zstd": {} },
+                                  "handler": "encode",
+                                  "prefer": ["zstd", "gzip"]
+                                },
+                                {
+                                  "browse": {},
+                                  "handler": "file_server",
+                                  "hide": [".\\Caddyfile"]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["cassieis.gay"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "vars",
+                          "root": "/root/my-documents/standalone-content/cassieisgay/"
+                        }
+                      ]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "handler": "headers",
+                          "response": { "set": { "Cache-Control": ["max-age=0,no-store"] } }
+                        }
+                      ],
+                      "match": [{ "path": ["*/"] }]
+                    },
+                    {
+                      "handle": [
+                        {
+                          "encodings": { "gzip": {}, "zstd": {} },
+                          "handler": "encode",
+                          "prefer": ["zstd", "gzip"]
+                        },
+                        { "browse": {}, "handler": "file_server", "hide": [".\\Caddyfile"] }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            }
+          ],
+          "logs": {
+            "logger_names": {
+              "3d.corncob.world": ["log7"],
+              "audio.mitch.com.net.biz.org.zone.place": ["log1"],
+              "cassieis.gay": ["log0"],
+              "corncob.world": ["log5"],
+              "corncob.world.corncob.world": ["log6"],
+              "mitch.com.net.biz.org.zone.place": ["log2"],
+              "mitch.website": ["log8"],
+              "mitchbot.cloud": ["log3"],
+              "redirect.zone.place": ["log9"],
+              "singlehanded.mitch.website": ["log10"],
+              "stream.mitch.website": ["log4"]
+            },
+            "skip_hosts": ["rss.zone.place"]
+          }
+        },
+        "srv1": {
+          "listen": [":80"],
+          "routes": [
+            {
+              "match": [{ "host": ["http-test.mitch.website"] }],
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "reverse_proxy",
+                          "upstreams": [{ "dial": "localhost:8000" }]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            }
+          ]
+        }
+      }
+    },
+    "tls": {
+      "automation": {
+        "policies": [
+          {
+            "subjects": [
+              "audio.mitch.com.net.biz.org.zone.place",
+              "mitch.com.net.biz.org.zone.place",
+              "corncob.world.corncob.world",
+              "singlehanded.mitch.website",
+              "stream.mitch.website",
+              "redirect.zone.place",
+              "3d.corncob.world",
+              "mitchbot.cloud",
+              "rss.zone.place",
+              "corncob.world",
+              "mitch.website",
+              "cassieis.gay"
+            ],
+            "issuers": [
+              { "email": "mitchjacov@gmail.com", "module": "acme" },
+              {
+                "ca": "https://acme.zerossl.com/v2/DV90",
+                "email": "mitchjacov@gmail.com",
+                "module": "acme"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

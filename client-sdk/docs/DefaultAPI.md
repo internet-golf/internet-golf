@@ -5,9 +5,11 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
-[**GetDeploymentByUrl**](DefaultAPI.md#GetDeploymentByUrl) | **Get** /deployment/{url} | Get deployment by URL
+[**GetDeployment**](DefaultAPI.md#GetDeployment) | **Get** /deployment/{url} | 
+[**GetDeployments**](DefaultAPI.md#GetDeployments) | **Get** /deployments | 
 [**PostTokenGenerate**](DefaultAPI.md#PostTokenGenerate) | **Post** /token/generate | Post token generate
 [**PutAdminDash**](DefaultAPI.md#PutAdminDash) | **Put** /admin-dash | Put admin DASH
+[**PutAlias**](DefaultAPI.md#PutAlias) | **Put** /deploy/alias | 
 [**PutDeployFiles**](DefaultAPI.md#PutDeployFiles) | **Put** /deploy/files | Put deploy files
 [**PutDeployNew**](DefaultAPI.md#PutDeployNew) | **Put** /deploy/new | Put deploy new
 [**PutUserRegister**](DefaultAPI.md#PutUserRegister) | **Put** /user/register | Put user register
@@ -73,11 +75,13 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## GetDeploymentByUrl
+## GetDeployment
 
-> GetDeploymentOutputBody GetDeploymentByUrl(ctx, url).Execute()
+> GetDeployment200Response GetDeployment(ctx, url).Execute()
 
-Get deployment by URL
+
+
+
 
 ### Example
 
@@ -96,13 +100,13 @@ func main() {
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.GetDeploymentByUrl(context.Background(), url).Execute()
+	resp, r, err := apiClient.DefaultAPI.GetDeployment(context.Background(), url).Execute()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeploymentByUrl``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeployment``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `GetDeploymentByUrl`: GetDeploymentOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeploymentByUrl`: %v\n", resp)
+	// response from `GetDeployment`: GetDeployment200Response
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeployment`: %v\n", resp)
 }
 ```
 
@@ -116,7 +120,7 @@ Name | Type | Description  | Notes
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiGetDeploymentByUrlRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiGetDeploymentRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -125,7 +129,68 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetDeploymentOutputBody**](GetDeploymentOutputBody.md)
+[**GetDeployment200Response**](GetDeployment200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## GetDeployments
+
+> GetDeployments200Response GetDeployments(ctx).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.GetDeployments(context.Background()).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetDeployments``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `GetDeployments`: GetDeployments200Response
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetDeployments`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+This endpoint does not need any parameter.
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiGetDeploymentsRequest struct via the builder pattern
+
+
+### Return type
+
+[**GetDeployments200Response**](GetDeployments200Response.md)
 
 ### Authorization
 
@@ -269,6 +334,72 @@ No authorization required
 [[Back to README]](../README.md)
 
 
+## PutAlias
+
+> SuccessOutputBody PutAlias(ctx).DeployAliasBody(deployAliasBody).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	deployAliasBody := *openapiclient.NewDeployAliasBody("Url_example") // DeployAliasBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.PutAlias(context.Background()).DeployAliasBody(deployAliasBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutAlias``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PutAlias`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutAlias`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPutAliasRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **deployAliasBody** | [**DeployAliasBody**](DeployAliasBody.md) |  | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## PutDeployFiles
 
 > SuccessOutputBody PutDeployFiles(ctx).Url(url).Contents(contents).KeepLeadingDirectories(keepLeadingDirectories).PreserveExistingFiles(preserveExistingFiles).Execute()
@@ -288,10 +419,10 @@ import (
 )
 
 func main() {
-	url := "url_example" // string | 
-	contents := os.NewFile(1234, "some_file") // *os.File |  (optional)
-	keepLeadingDirectories := true // bool |  (optional)
-	preserveExistingFiles := true // bool |  (optional)
+	url := "url_example" // string | The URL of the deployment that you're updating.
+	contents := os.NewFile(1234, "some_file") // *os.File | A .tar.gz that contains the files to be deployed. (optional)
+	keepLeadingDirectories := true // bool | By default, if you upload a .tar.gz whose contents are all in one folder, the contents of that folder will be used instead of the folder itself. For example, if you upload a folder called 'dist' for the deployment 'mysite.com', the URL of your site content will not be at 'mysite.com/dist'. Setting this to true turns off that auto-unpacking. (optional) (default to false)
+	preserveExistingFiles := true // bool | Leave the existing files for the current deployment in place instead of completely replacing them. (optional)
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -316,10 +447,10 @@ Other parameters are passed through a pointer to a apiPutDeployFilesRequest stru
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **url** | **string** |  | 
- **contents** | ***os.File** |  | 
- **keepLeadingDirectories** | **bool** |  | 
- **preserveExistingFiles** | **bool** |  | 
+ **url** | **string** | The URL of the deployment that you&#39;re updating. | 
+ **contents** | ***os.File** | A .tar.gz that contains the files to be deployed. | 
+ **keepLeadingDirectories** | **bool** | By default, if you upload a .tar.gz whose contents are all in one folder, the contents of that folder will be used instead of the folder itself. For example, if you upload a folder called &#39;dist&#39; for the deployment &#39;mysite.com&#39;, the URL of your site content will not be at &#39;mysite.com/dist&#39;. Setting this to true turns off that auto-unpacking. | [default to false]
+ **preserveExistingFiles** | **bool** | Leave the existing files for the current deployment in place instead of completely replacing them. | 
 
 ### Return type
 

@@ -12,85 +12,53 @@ package golfsdk
 
 import (
 	"encoding/json"
+	"bytes"
 	"fmt"
 )
 
-// checks if the GetDeploymentOutputBody type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &GetDeploymentOutputBody{}
+// checks if the StaticSiteDeployment type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &StaticSiteDeployment{}
 
-// GetDeploymentOutputBody struct for GetDeploymentOutputBody
-type GetDeploymentOutputBody struct {
-	// The URL that this deployment is an alias for.
-	AliasedTo string `json:"aliasedTo"`
+// StaticSiteDeployment struct for StaticSiteDeployment
+type StaticSiteDeployment struct {
 	// Original repository for this deployment's source. Can include a branch name.
 	ExternalSource *string `json:"externalSource,omitempty"`
 	// Place where the original repository lives.
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
 	// if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
-	// If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
-	Redirect bool `json:"redirect"`
-	ServerContentLocation string `json:"serverContentLocation"`
-	SpaMode bool `json:"spaMode"`
+	ServerContentLocation *string `json:"serverContentLocation,omitempty"`
+	SpaMode *bool `json:"spaMode,omitempty"`
 	// Tags used for metadata.
 	Tags []string `json:"tags,omitempty"`
 	Type string `json:"type"`
 	// URL that this deployment will appear at. The DNS for the domain has to be set up first.
 	Url string `json:"url"`
-	AdditionalProperties map[string]interface{}
 }
 
-type _GetDeploymentOutputBody GetDeploymentOutputBody
+type _StaticSiteDeployment StaticSiteDeployment
 
-// NewGetDeploymentOutputBody instantiates a new GetDeploymentOutputBody object
+// NewStaticSiteDeployment instantiates a new StaticSiteDeployment object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetDeploymentOutputBody(aliasedTo string, redirect bool, serverContentLocation string, spaMode bool, type_ string, url string) *GetDeploymentOutputBody {
-	this := GetDeploymentOutputBody{}
-	this.AliasedTo = aliasedTo
-	this.Redirect = redirect
-	this.ServerContentLocation = serverContentLocation
-	this.SpaMode = spaMode
+func NewStaticSiteDeployment(type_ string, url string) *StaticSiteDeployment {
+	this := StaticSiteDeployment{}
 	this.Type = type_
 	this.Url = url
 	return &this
 }
 
-// NewGetDeploymentOutputBodyWithDefaults instantiates a new GetDeploymentOutputBody object
+// NewStaticSiteDeploymentWithDefaults instantiates a new StaticSiteDeployment object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewGetDeploymentOutputBodyWithDefaults() *GetDeploymentOutputBody {
-	this := GetDeploymentOutputBody{}
+func NewStaticSiteDeploymentWithDefaults() *StaticSiteDeployment {
+	this := StaticSiteDeployment{}
 	return &this
 }
 
-// GetAliasedTo returns the AliasedTo field value
-func (o *GetDeploymentOutputBody) GetAliasedTo() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.AliasedTo
-}
-
-// GetAliasedToOk returns a tuple with the AliasedTo field value
-// and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetAliasedToOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.AliasedTo, true
-}
-
-// SetAliasedTo sets field value
-func (o *GetDeploymentOutputBody) SetAliasedTo(v string) {
-	o.AliasedTo = v
-}
-
 // GetExternalSource returns the ExternalSource field value if set, zero value otherwise.
-func (o *GetDeploymentOutputBody) GetExternalSource() string {
+func (o *StaticSiteDeployment) GetExternalSource() string {
 	if o == nil || IsNil(o.ExternalSource) {
 		var ret string
 		return ret
@@ -100,7 +68,7 @@ func (o *GetDeploymentOutputBody) GetExternalSource() string {
 
 // GetExternalSourceOk returns a tuple with the ExternalSource field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetExternalSourceOk() (*string, bool) {
+func (o *StaticSiteDeployment) GetExternalSourceOk() (*string, bool) {
 	if o == nil || IsNil(o.ExternalSource) {
 		return nil, false
 	}
@@ -108,7 +76,7 @@ func (o *GetDeploymentOutputBody) GetExternalSourceOk() (*string, bool) {
 }
 
 // HasExternalSource returns a boolean if a field has been set.
-func (o *GetDeploymentOutputBody) HasExternalSource() bool {
+func (o *StaticSiteDeployment) HasExternalSource() bool {
 	if o != nil && !IsNil(o.ExternalSource) {
 		return true
 	}
@@ -117,12 +85,12 @@ func (o *GetDeploymentOutputBody) HasExternalSource() bool {
 }
 
 // SetExternalSource gets a reference to the given string and assigns it to the ExternalSource field.
-func (o *GetDeploymentOutputBody) SetExternalSource(v string) {
+func (o *StaticSiteDeployment) SetExternalSource(v string) {
 	o.ExternalSource = &v
 }
 
 // GetExternalSourceType returns the ExternalSourceType field value if set, zero value otherwise.
-func (o *GetDeploymentOutputBody) GetExternalSourceType() string {
+func (o *StaticSiteDeployment) GetExternalSourceType() string {
 	if o == nil || IsNil(o.ExternalSourceType) {
 		var ret string
 		return ret
@@ -132,7 +100,7 @@ func (o *GetDeploymentOutputBody) GetExternalSourceType() string {
 
 // GetExternalSourceTypeOk returns a tuple with the ExternalSourceType field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetExternalSourceTypeOk() (*string, bool) {
+func (o *StaticSiteDeployment) GetExternalSourceTypeOk() (*string, bool) {
 	if o == nil || IsNil(o.ExternalSourceType) {
 		return nil, false
 	}
@@ -140,7 +108,7 @@ func (o *GetDeploymentOutputBody) GetExternalSourceTypeOk() (*string, bool) {
 }
 
 // HasExternalSourceType returns a boolean if a field has been set.
-func (o *GetDeploymentOutputBody) HasExternalSourceType() bool {
+func (o *StaticSiteDeployment) HasExternalSourceType() bool {
 	if o != nil && !IsNil(o.ExternalSourceType) {
 		return true
 	}
@@ -149,12 +117,12 @@ func (o *GetDeploymentOutputBody) HasExternalSourceType() bool {
 }
 
 // SetExternalSourceType gets a reference to the given string and assigns it to the ExternalSourceType field.
-func (o *GetDeploymentOutputBody) SetExternalSourceType(v string) {
+func (o *StaticSiteDeployment) SetExternalSourceType(v string) {
 	o.ExternalSourceType = &v
 }
 
 // GetPreserveExternalPath returns the PreserveExternalPath field value if set, zero value otherwise.
-func (o *GetDeploymentOutputBody) GetPreserveExternalPath() bool {
+func (o *StaticSiteDeployment) GetPreserveExternalPath() bool {
 	if o == nil || IsNil(o.PreserveExternalPath) {
 		var ret bool
 		return ret
@@ -164,7 +132,7 @@ func (o *GetDeploymentOutputBody) GetPreserveExternalPath() bool {
 
 // GetPreserveExternalPathOk returns a tuple with the PreserveExternalPath field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetPreserveExternalPathOk() (*bool, bool) {
+func (o *StaticSiteDeployment) GetPreserveExternalPathOk() (*bool, bool) {
 	if o == nil || IsNil(o.PreserveExternalPath) {
 		return nil, false
 	}
@@ -172,7 +140,7 @@ func (o *GetDeploymentOutputBody) GetPreserveExternalPathOk() (*bool, bool) {
 }
 
 // HasPreserveExternalPath returns a boolean if a field has been set.
-func (o *GetDeploymentOutputBody) HasPreserveExternalPath() bool {
+func (o *StaticSiteDeployment) HasPreserveExternalPath() bool {
 	if o != nil && !IsNil(o.PreserveExternalPath) {
 		return true
 	}
@@ -181,84 +149,76 @@ func (o *GetDeploymentOutputBody) HasPreserveExternalPath() bool {
 }
 
 // SetPreserveExternalPath gets a reference to the given bool and assigns it to the PreserveExternalPath field.
-func (o *GetDeploymentOutputBody) SetPreserveExternalPath(v bool) {
+func (o *StaticSiteDeployment) SetPreserveExternalPath(v bool) {
 	o.PreserveExternalPath = &v
 }
 
-// GetRedirect returns the Redirect field value
-func (o *GetDeploymentOutputBody) GetRedirect() bool {
-	if o == nil {
-		var ret bool
-		return ret
-	}
-
-	return o.Redirect
-}
-
-// GetRedirectOk returns a tuple with the Redirect field value
-// and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetRedirectOk() (*bool, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Redirect, true
-}
-
-// SetRedirect sets field value
-func (o *GetDeploymentOutputBody) SetRedirect(v bool) {
-	o.Redirect = v
-}
-
-// GetServerContentLocation returns the ServerContentLocation field value
-func (o *GetDeploymentOutputBody) GetServerContentLocation() string {
-	if o == nil {
+// GetServerContentLocation returns the ServerContentLocation field value if set, zero value otherwise.
+func (o *StaticSiteDeployment) GetServerContentLocation() string {
+	if o == nil || IsNil(o.ServerContentLocation) {
 		var ret string
 		return ret
 	}
-
-	return o.ServerContentLocation
+	return *o.ServerContentLocation
 }
 
-// GetServerContentLocationOk returns a tuple with the ServerContentLocation field value
+// GetServerContentLocationOk returns a tuple with the ServerContentLocation field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetServerContentLocationOk() (*string, bool) {
-	if o == nil {
+func (o *StaticSiteDeployment) GetServerContentLocationOk() (*string, bool) {
+	if o == nil || IsNil(o.ServerContentLocation) {
 		return nil, false
 	}
-	return &o.ServerContentLocation, true
+	return o.ServerContentLocation, true
 }
 
-// SetServerContentLocation sets field value
-func (o *GetDeploymentOutputBody) SetServerContentLocation(v string) {
-	o.ServerContentLocation = v
+// HasServerContentLocation returns a boolean if a field has been set.
+func (o *StaticSiteDeployment) HasServerContentLocation() bool {
+	if o != nil && !IsNil(o.ServerContentLocation) {
+		return true
+	}
+
+	return false
 }
 
-// GetSpaMode returns the SpaMode field value
-func (o *GetDeploymentOutputBody) GetSpaMode() bool {
-	if o == nil {
+// SetServerContentLocation gets a reference to the given string and assigns it to the ServerContentLocation field.
+func (o *StaticSiteDeployment) SetServerContentLocation(v string) {
+	o.ServerContentLocation = &v
+}
+
+// GetSpaMode returns the SpaMode field value if set, zero value otherwise.
+func (o *StaticSiteDeployment) GetSpaMode() bool {
+	if o == nil || IsNil(o.SpaMode) {
 		var ret bool
 		return ret
 	}
-
-	return o.SpaMode
+	return *o.SpaMode
 }
 
-// GetSpaModeOk returns a tuple with the SpaMode field value
+// GetSpaModeOk returns a tuple with the SpaMode field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetSpaModeOk() (*bool, bool) {
-	if o == nil {
+func (o *StaticSiteDeployment) GetSpaModeOk() (*bool, bool) {
+	if o == nil || IsNil(o.SpaMode) {
 		return nil, false
 	}
-	return &o.SpaMode, true
+	return o.SpaMode, true
 }
 
-// SetSpaMode sets field value
-func (o *GetDeploymentOutputBody) SetSpaMode(v bool) {
-	o.SpaMode = v
+// HasSpaMode returns a boolean if a field has been set.
+func (o *StaticSiteDeployment) HasSpaMode() bool {
+	if o != nil && !IsNil(o.SpaMode) {
+		return true
+	}
+
+	return false
+}
+
+// SetSpaMode gets a reference to the given bool and assigns it to the SpaMode field.
+func (o *StaticSiteDeployment) SetSpaMode(v bool) {
+	o.SpaMode = &v
 }
 
 // GetTags returns the Tags field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *GetDeploymentOutputBody) GetTags() []string {
+func (o *StaticSiteDeployment) GetTags() []string {
 	if o == nil {
 		var ret []string
 		return ret
@@ -269,7 +229,7 @@ func (o *GetDeploymentOutputBody) GetTags() []string {
 // GetTagsOk returns a tuple with the Tags field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *GetDeploymentOutputBody) GetTagsOk() ([]string, bool) {
+func (o *StaticSiteDeployment) GetTagsOk() ([]string, bool) {
 	if o == nil || IsNil(o.Tags) {
 		return nil, false
 	}
@@ -277,7 +237,7 @@ func (o *GetDeploymentOutputBody) GetTagsOk() ([]string, bool) {
 }
 
 // HasTags returns a boolean if a field has been set.
-func (o *GetDeploymentOutputBody) HasTags() bool {
+func (o *StaticSiteDeployment) HasTags() bool {
 	if o != nil && !IsNil(o.Tags) {
 		return true
 	}
@@ -286,12 +246,12 @@ func (o *GetDeploymentOutputBody) HasTags() bool {
 }
 
 // SetTags gets a reference to the given []string and assigns it to the Tags field.
-func (o *GetDeploymentOutputBody) SetTags(v []string) {
+func (o *StaticSiteDeployment) SetTags(v []string) {
 	o.Tags = v
 }
 
 // GetType returns the Type field value
-func (o *GetDeploymentOutputBody) GetType() string {
+func (o *StaticSiteDeployment) GetType() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -302,7 +262,7 @@ func (o *GetDeploymentOutputBody) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetTypeOk() (*string, bool) {
+func (o *StaticSiteDeployment) GetTypeOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -310,12 +270,12 @@ func (o *GetDeploymentOutputBody) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *GetDeploymentOutputBody) SetType(v string) {
+func (o *StaticSiteDeployment) SetType(v string) {
 	o.Type = v
 }
 
 // GetUrl returns the Url field value
-func (o *GetDeploymentOutputBody) GetUrl() string {
+func (o *StaticSiteDeployment) GetUrl() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -326,7 +286,7 @@ func (o *GetDeploymentOutputBody) GetUrl() string {
 
 // GetUrlOk returns a tuple with the Url field value
 // and a boolean to check if the value has been set.
-func (o *GetDeploymentOutputBody) GetUrlOk() (*string, bool) {
+func (o *StaticSiteDeployment) GetUrlOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -334,11 +294,11 @@ func (o *GetDeploymentOutputBody) GetUrlOk() (*string, bool) {
 }
 
 // SetUrl sets field value
-func (o *GetDeploymentOutputBody) SetUrl(v string) {
+func (o *StaticSiteDeployment) SetUrl(v string) {
 	o.Url = v
 }
 
-func (o GetDeploymentOutputBody) MarshalJSON() ([]byte, error) {
+func (o StaticSiteDeployment) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -346,9 +306,8 @@ func (o GetDeploymentOutputBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o GetDeploymentOutputBody) ToMap() (map[string]interface{}, error) {
+func (o StaticSiteDeployment) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["aliasedTo"] = o.AliasedTo
 	if !IsNil(o.ExternalSource) {
 		toSerialize["externalSource"] = o.ExternalSource
 	}
@@ -358,31 +317,25 @@ func (o GetDeploymentOutputBody) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.PreserveExternalPath) {
 		toSerialize["preserveExternalPath"] = o.PreserveExternalPath
 	}
-	toSerialize["redirect"] = o.Redirect
-	toSerialize["serverContentLocation"] = o.ServerContentLocation
-	toSerialize["spaMode"] = o.SpaMode
+	if !IsNil(o.ServerContentLocation) {
+		toSerialize["serverContentLocation"] = o.ServerContentLocation
+	}
+	if !IsNil(o.SpaMode) {
+		toSerialize["spaMode"] = o.SpaMode
+	}
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
 	}
 	toSerialize["type"] = o.Type
 	toSerialize["url"] = o.Url
-
-	for key, value := range o.AdditionalProperties {
-		toSerialize[key] = value
-	}
-
 	return toSerialize, nil
 }
 
-func (o *GetDeploymentOutputBody) UnmarshalJSON(data []byte) (err error) {
+func (o *StaticSiteDeployment) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"aliasedTo",
-		"redirect",
-		"serverContentLocation",
-		"spaMode",
 		"type",
 		"url",
 	}
@@ -401,67 +354,53 @@ func (o *GetDeploymentOutputBody) UnmarshalJSON(data []byte) (err error) {
 		}
 	}
 
-	varGetDeploymentOutputBody := _GetDeploymentOutputBody{}
+	varStaticSiteDeployment := _StaticSiteDeployment{}
 
-	err = json.Unmarshal(data, &varGetDeploymentOutputBody)
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&varStaticSiteDeployment)
 
 	if err != nil {
 		return err
 	}
 
-	*o = GetDeploymentOutputBody(varGetDeploymentOutputBody)
-
-	additionalProperties := make(map[string]interface{})
-
-	if err = json.Unmarshal(data, &additionalProperties); err == nil {
-		delete(additionalProperties, "aliasedTo")
-		delete(additionalProperties, "externalSource")
-		delete(additionalProperties, "externalSourceType")
-		delete(additionalProperties, "preserveExternalPath")
-		delete(additionalProperties, "redirect")
-		delete(additionalProperties, "serverContentLocation")
-		delete(additionalProperties, "spaMode")
-		delete(additionalProperties, "tags")
-		delete(additionalProperties, "type")
-		delete(additionalProperties, "url")
-		o.AdditionalProperties = additionalProperties
-	}
+	*o = StaticSiteDeployment(varStaticSiteDeployment)
 
 	return err
 }
 
-type NullableGetDeploymentOutputBody struct {
-	value *GetDeploymentOutputBody
+type NullableStaticSiteDeployment struct {
+	value *StaticSiteDeployment
 	isSet bool
 }
 
-func (v NullableGetDeploymentOutputBody) Get() *GetDeploymentOutputBody {
+func (v NullableStaticSiteDeployment) Get() *StaticSiteDeployment {
 	return v.value
 }
 
-func (v *NullableGetDeploymentOutputBody) Set(val *GetDeploymentOutputBody) {
+func (v *NullableStaticSiteDeployment) Set(val *StaticSiteDeployment) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableGetDeploymentOutputBody) IsSet() bool {
+func (v NullableStaticSiteDeployment) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableGetDeploymentOutputBody) Unset() {
+func (v *NullableStaticSiteDeployment) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableGetDeploymentOutputBody(val *GetDeploymentOutputBody) *NullableGetDeploymentOutputBody {
-	return &NullableGetDeploymentOutputBody{value: val, isSet: true}
+func NewNullableStaticSiteDeployment(val *StaticSiteDeployment) *NullableStaticSiteDeployment {
+	return &NullableStaticSiteDeployment{value: val, isSet: true}
 }
 
-func (v NullableGetDeploymentOutputBody) MarshalJSON() ([]byte, error) {
+func (v NullableStaticSiteDeployment) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableGetDeploymentOutputBody) UnmarshalJSON(src []byte) error {
+func (v *NullableStaticSiteDeployment) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

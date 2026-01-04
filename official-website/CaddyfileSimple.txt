@@ -1,0 +1,11 @@
+audio.mitch.com.net.biz.org.zone.place {
+	root * /root/my-documents/standalone-content/audio/
+	file_server browse
+	encode zstd gzip
+	@index {
+		path */
+	}
+	header @index {
+		Cache-Control "max-age=0,no-store"
+	}
+}

@@ -15,6 +15,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/txn2/txeh v1.5.5
 	golang.org/x/crypto v0.42.0
+	gopkg.in/validator.v2 v2.0.1
 )
 
 require (

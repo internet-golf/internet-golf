@@ -67,7 +67,7 @@ type NewDeploymentTestCase struct {
 	CliApiTestCase
 	// expected body for the API request that the client CLI will make to the
 	// server
-	apiBody api.DeploymentCreateBody
+	apiBody api.DeploymentBase
 }
 
 var deploymentCreateTestCases = []NewDeploymentTestCase{
@@ -84,7 +84,7 @@ var deploymentCreateTestCases = []NewDeploymentTestCase{
 				}
 			},
 		},
-		apiBody: api.DeploymentCreateBody{
+		apiBody: api.DeploymentBase{
 			Url: "example.com",
 		},
 	},
@@ -327,7 +327,7 @@ func TestClientCli(t *testing.T) {
 				t.Fatalf("expected %s, got %s\n", testCase.apiMethod, req.Method)
 			}
 
-			var contents api.DeploymentCreateBody
+			var contents api.DeploymentBase
 			jsonErr := json.Unmarshal(intercepted.Body, &contents)
 			if jsonErr != nil {
 				t.Fatal(jsonErr.Error())

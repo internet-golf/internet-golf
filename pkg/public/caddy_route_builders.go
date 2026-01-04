@@ -151,7 +151,7 @@ func GetCaddyStaticRoutes(d db.Deployment) ([]caddyhttp.Route, error) {
 
 // get a route that will respond with basic text content. this does not look at
 // anything in the deployment that's passed in except the URL.
-func GetCaddyTextContentRoute(d db.Deployment) ([]caddyhttp.Route, error) {
+func GetCaddyTextContentRoute(d db.Deployment, textContent string) ([]caddyhttp.Route, error) {
 	matcher, matcherErr := urlToMatcher(d.Url, false, true)
 	if matcherErr != nil {
 		return []caddyhttp.Route{}, matcherErr
@@ -163,7 +163,32 @@ func GetCaddyTextContentRoute(d db.Deployment) ([]caddyhttp.Route, error) {
 			utils.JsonOrPanic(utils.JsonObj{
 				"handler":     "static_response",
 				"status_code": 200,
-				"body":        "server initialized",
+				"body":        textContent,
+			}),
+		},
+	}}, nil
+}
+
+func GetCaddyRedirectRoute(d db.Deployment) ([]caddyhttp.Route, error) {
+	if d.ServedThingType != db.Alias {
+		return []caddyhttp.Route{}, fmt.Errorf(
+			"deployment with URL %s passed to GetCaddyRedirectRoute despite having resource type %s",
+			d.Url, d.ServedThingType,
+		)
+	}
+
+	matcher, matcherErr := urlToMatcher(d.Url, false, true)
+	if matcherErr != nil {
+		return []caddyhttp.Route{}, matcherErr
+	}
+
+	return []caddyhttp.Route{{
+		MatcherSetsRaw: caddyhttp.RawMatcherSets{matcher},
+		HandlersRaw: []json.RawMessage{
+			utils.JsonOrPanic(utils.JsonObj{
+				"handler":     "static_response",
+				"headers":     utils.JsonObj{"Location": []string{"https://example.com"}},
+				"status_code": 302,
 			}),
 		},
 	}}, nil
