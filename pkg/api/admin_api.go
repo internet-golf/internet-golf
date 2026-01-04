@@ -113,7 +113,12 @@ var humaConfig = huma.DefaultConfig("Internet Golf API", "0.5.0")
 // the client afterward. it's easier to handle business logic in dedicated
 // entities like DeploymentBus and AuthManager.
 func (a *AdminApi) addRoutes(api huma.API) {
-	huma.Get(api, "/alive",
+	huma.Register(api, huma.Operation{
+		OperationID: "HealthCheck",
+		Description: "Find out if the server is up or not.",
+		Method:      http.MethodGet,
+		Path:        "/alive",
+	},
 		func(ctx context.Context, i *struct{}) (*HealthCheckOutput, error) {
 			resp := &HealthCheckOutput{}
 			resp.Body.Ok = true

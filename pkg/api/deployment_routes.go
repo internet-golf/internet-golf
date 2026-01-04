@@ -315,7 +315,7 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 	})
 
 	huma.Register(api, huma.Operation{
-		OperationID: "PutAlias",
+		OperationID: "CreateAlias",
 		Method:      http.MethodPut,
 		Description: "Create an alias deployment.",
 		Path:        "/deploy/alias",
