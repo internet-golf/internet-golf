@@ -186,8 +186,9 @@ func GetCaddyRedirectRoute(d db.Deployment) ([]caddyhttp.Route, error) {
 		MatcherSetsRaw: caddyhttp.RawMatcherSets{matcher},
 		HandlersRaw: []json.RawMessage{
 			utils.JsonOrPanic(utils.JsonObj{
-				"handler":     "static_response",
-				"headers":     utils.JsonObj{"Location": []string{"https://example.com"}},
+				"handler": "static_response",
+				// using "//" like this is kind of a cheat, but it works in firefox and chrome...
+				"headers":     utils.JsonObj{"Location": []string{"//" + d.AliasedTo.String()}},
 				"status_code": 302,
 			}),
 		},
