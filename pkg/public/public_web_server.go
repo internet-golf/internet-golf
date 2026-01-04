@@ -49,6 +49,15 @@ func NewPublicWebServer(config *utils.Config, files *resources.FileManager) (Pub
 	return &CaddyServer{config: config, dataPath: files.CaddyDataPath}, nil
 }
 
+// caddy requires a huge JSON configuration object to be conveyed to it, which
+// is not the easiest thing to formulate and work with. if there's a way to
+// configure it with normal go structs, i haven't found it - it clearly uses
+// such structs internally, but expects to be initialized and updated via json.
+// configuration reference: https://caddyserver.com/docs/json/. you can also
+// obtain the configuration for a given caddyfile using the `caddy adapt`
+// command, or get the configuration of a running instance of caddy by visiting
+// http://localhost:[port]/config in your browser to access its admin api
+
 // puts all the deployments on the public internet. prioritizes more specific
 // urls over less specific urls
 func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
@@ -164,6 +173,21 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 				// TODO: account for asterisks? needs testing
 				return len(b.MatcherSetsRaw[0]["path"]) - len(a.MatcherSetsRaw[0]["path"])
 			}
+		},
+	)
+
+	// put a catch-all status message at the end.
+	httpApp.Servers[httpAppServerName].Routes = append(
+		httpApp.Servers[httpAppServerName].Routes,
+		caddyhttp.Route{
+			HandlersRaw: []json.RawMessage{
+				utils.JsonOrPanic(utils.JsonObj{
+					"handler":     "static_response",
+					"status_code": 404,
+					"body": ("Hello! This domain is configured to point to an Internet Golf server. " +
+						"However, there is currently no active deployment or page for this URL available."),
+				}),
+			},
 		},
 	)
 

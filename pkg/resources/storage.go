@@ -19,7 +19,7 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
-//go:embed dash-dist/*
+//go:embed all:dash-dist/*
 var dash embed.FS
 
 type FileManager struct {

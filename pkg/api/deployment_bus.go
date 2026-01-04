@@ -149,6 +149,7 @@ func (bus *DeploymentBus) PutAdminDash(url db.Url) error {
 		HasContent:      true,
 		ServedThingType: db.StaticFiles,
 		ServedThing:     bus.files.DashSpaPath,
+		SpaMode:         true,
 	})
 }
 

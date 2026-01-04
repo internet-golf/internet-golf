@@ -78,12 +78,48 @@ func GetCaddyStaticRoutes(d db.Deployment) ([]caddyhttp.Route, error) {
 		return nil, matcherErr
 	}
 
-	standardSubroute := utils.JsonObj{
-		"handle": []utils.JsonObj{
-			{
-				"handler": "vars",
-				"root":    d.ServedThing,
+	initialSubroutes := []utils.JsonObj{
+		utils.JsonObj{
+			"handle": []utils.JsonObj{
+				{
+					"handler": "vars",
+					"root":    d.ServedThing,
+				},
 			},
+		},
+	}
+
+	cleanPath, _ := strings.CutSuffix(d.Url.Path, "*")
+	if len(cleanPath) > 0 && !d.DeploymentMetadata.PreserveExternalPath {
+		initialSubroutes = append(initialSubroutes,
+			utils.JsonObj{
+				"handle": []utils.JsonObj{
+					utils.JsonObj{"handler": "rewrite", "strip_path_prefix": cleanPath},
+				},
+			},
+		)
+	}
+
+	if d.DeploymentContent.SpaMode {
+		initialSubroutes = append(initialSubroutes,
+			utils.JsonObj{
+				"handle": []utils.JsonObj{
+					{
+
+						"handler": "rewrite", "uri": "{http.matchers.file.relative}",
+					},
+				},
+				"match": []utils.JsonObj{
+					utils.JsonObj{
+						"file": utils.JsonObj{"try_files": []string{"{http.request.uri.path}", "/index.html"}},
+					},
+				},
+			},
+		)
+	}
+
+	finalSubroute := utils.JsonObj{
+		"handle": []utils.JsonObj{
 			{
 				"handler": "encode",
 				"encodings": utils.JsonObj{
@@ -98,22 +134,10 @@ func GetCaddyStaticRoutes(d db.Deployment) ([]caddyhttp.Route, error) {
 		},
 	}
 
-	var initialSubroutes []utils.JsonObj
-	if !d.DeploymentMetadata.PreserveExternalPath {
-		cleanPath, _ := strings.CutSuffix(d.Url.Path, "*")
-		initialSubroutes = append(initialSubroutes,
-			utils.JsonObj{
-				"handle": []utils.JsonObj{
-					utils.JsonObj{"handler": "rewrite", "strip_path_prefix": cleanPath},
-				},
-			},
-		)
-	}
-
 	handlers := []json.RawMessage{
 		utils.JsonOrPanic(utils.JsonObj{
 			"handler": "subroute",
-			"routes":  slices.Concat(initialSubroutes, []utils.JsonObj{standardSubroute}),
+			"routes":  slices.Concat(initialSubroutes, []utils.JsonObj{finalSubroute}),
 		}),
 	}
 
