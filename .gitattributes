@@ -1,1 +1,2 @@
-client-sdk linguist-generated=true
+client-sdk/* linguist-generated=true
+client-sdk/**/* linguist-generated=true
