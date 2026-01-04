@@ -123,7 +123,7 @@ func setupHosts() {
 		panic(err)
 	}
 
-	requiredHosts := []string{BasicTestHost}
+	requiredHosts := []string{BasicTestHost, OtherTestHost}
 
 	// add each required host that does not already exist
 	for _, host := range requiredHosts {
