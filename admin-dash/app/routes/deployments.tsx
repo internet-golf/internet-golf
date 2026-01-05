@@ -1,4 +1,4 @@
-import type { Route } from "./+types/secondpage";
+import type { Route } from "./+types/deployments";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "A Second Page" }, { name: "description", content: "Here is a Second Page!" }];
