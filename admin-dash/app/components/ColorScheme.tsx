@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 /**
  * Provides color scheme-specific CSS config, and also a container for the
- * `children` with the logical background
+ * `children` with the logical background.
  */
 function ColorSchemeApplicator({
   children,
@@ -27,7 +27,7 @@ function ColorSchemeApplicator({
         style: { borderColor: mode === "dark" ? "var(--ant-color-text)" : undefined },
       }}
     >
-      <div className={mode === "dark" ? "bg-dark-bg" : "bg-white"}>{children}</div>
+      <div className={mode === "dark" ? "bg-gray-950" : "bg-white"}>{children}</div>
     </ConfigProvider>
   );
 }

@@ -3,9 +3,12 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --color-dark-bg: var(--color-gray-950);
+    /* since tailwind css' grays are a bit blue, which isn't the look here */
+    --color-actual-gray: #1c1c1c;
 }
 
+/* hack to get the icon color working correctly in dark mode, using class name set by <ColorSchemeApplicator /> */
 .dark-mode-icon svg {
   color: var(--ant-color-text);
+  opacity: 0.9;
 }

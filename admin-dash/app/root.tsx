@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { ConfigProvider } from "antd";
+import BaseTheme from "./components/BaseTheme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -34,27 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ConfigProvider
-          // the modal body looks cramped to me without some extra spacing around it
-          modal={{ styles: { body: { margin: "12px 0" } } }}
-          theme={{
-            token: {
-              // this makes the <Space> component (and the <Flex> component?)
-              // give less space between items by default
-              paddingXS: 6,
-            },
-            components: {
-              Modal: {
-                // i am not that enthusiastic about the woosh animation for this thing
-                motionDurationFast: "0",
-                motionDurationMid: "0",
-                motionDurationSlow: "0",
-              },
-            },
-          }}
-        >
-          {children}
-        </ConfigProvider>
+        <BaseTheme>{children}</BaseTheme>
         <ScrollRestoration />
         <Scripts />
       </body>
