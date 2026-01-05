@@ -17,7 +17,7 @@ export default function Login() {
     <ColorScheme.Dark>
       <div className="w-screen h-screen flex flex-col justify-center items-center relative">
         {/* font size override just for the initial title - `style` overrides are otherwise discouraged */}
-        <Typography.Title style={{ fontSize: "3em" }} className="text-center">
+        <Typography.Title style={{ fontSize: "3em", textAlign: "center" }}>
           Internet Golf
           <br />
           Dashboard
@@ -38,7 +38,7 @@ export default function Login() {
           onCancel={() => setIsAdvancedModalOpen(false)}
         >
           <Form layout="vertical">
-            <Form.Item label="Manually Set API URL">
+            <Form.Item label="API URL:">
               <Input placeholder="http://localhost:8888/" />
             </Form.Item>
           </Form>

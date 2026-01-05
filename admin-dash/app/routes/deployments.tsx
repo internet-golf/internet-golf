@@ -1,3 +1,4 @@
+import { Typography } from "antd";
 import type { Route } from "./+types/deployments";
 
 export function meta({}: Route.MetaArgs) {
@@ -5,5 +6,5 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  return <p>This page is not the home page!</p>;
+  return <Typography.Paragraph>This page is not the home page!</Typography.Paragraph>;
 }

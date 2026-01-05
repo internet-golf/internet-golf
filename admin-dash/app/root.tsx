@@ -39,11 +39,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
           modal={{ styles: { body: { margin: "12px 0" } } }}
           theme={{
             token: {
-              // i am not that enthusiastic about the transitions and things
-              motionDurationFast: "0",
-              motionDurationMid: "0",
-              motionDurationSlow: "0",
+              // this makes the <Space> component (and the <Flex> component?)
+              // give less space between items by default
               paddingXS: 6,
+            },
+            components: {
+              Modal: {
+                // i am not that enthusiastic about the woosh animation for this thing
+                motionDurationFast: "0",
+                motionDurationMid: "0",
+                motionDurationSlow: "0",
+              },
             },
           }}
         >
