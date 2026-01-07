@@ -203,9 +203,9 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 	}
 	deploymentSchema := &huma.Schema{
 		OneOf: []*huma.Schema{
-			registry.Schema(reflect.TypeOf(StaticSiteDeployment{}), true, ""),
-			registry.Schema(reflect.TypeOf(AliasDeployment{}), true, ""),
-			registry.Schema(reflect.TypeOf(EmptyDeployment{}), true, ""),
+			registry.Schema(reflect.TypeFor[StaticSiteDeployment](), true, ""),
+			registry.Schema(reflect.TypeFor[AliasDeployment](), true, ""),
+			registry.Schema(reflect.TypeFor[EmptyDeployment](), true, ""),
 		},
 		Discriminator: &huma.Discriminator{
 			PropertyName: "type", Mapping: map[string]string{

@@ -117,7 +117,7 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 	// half-second pause between tries) in case the server is just starting up
 	retries := 20
 	for i := range retries {
-		body, _, err := client.DefaultAPI.GetAlive(context.Background()).Execute()
+		body, _, err := client.DefaultAPI.HealthCheck(context.Background()).Execute()
 
 		if err == nil && body.Ok {
 			break
@@ -253,7 +253,7 @@ func deployAliasCommand() *cobra.Command {
 			}
 
 			body, resp, respError = client.
-				DefaultAPI.PutAlias(context.TODO()).
+				DefaultAPI.CreateAlias(context.TODO()).
 				DeployAliasBody(golfsdk.DeployAliasBody{
 					Url: args[0], AliasedTo: &args[1], Redirect: &redirect,
 				}).Execute()
