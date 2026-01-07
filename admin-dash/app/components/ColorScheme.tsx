@@ -18,7 +18,7 @@ function ColorSchemeApplicator({
       theme={{
         algorithm: mode === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
         // imo, the dark mode text looks better when it's brighter than the antd default
-        token: { colorText: mode === "dark" ? "rgba(255, 255, 255, 0.95)" : "black" },
+        token: { colorText: mode === "dark" ? "#fdfdfd" : "black" },
       }}
       // this class is used to set the icon color in app.css
       iconPrefixCls={mode === "dark" ? "dark-mode-icon" : "light-mode-icon"}

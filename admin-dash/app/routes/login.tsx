@@ -15,20 +15,15 @@ export default function Login() {
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   return (
     <ColorScheme.Dark>
-      <div className="w-screen h-screen flex flex-col justify-center items-center relative">
-        <Typography.Title style={{ fontSize: "3em", textAlign: "center" }}>
-          Internet Golf
-          <br />
-          Dashboard
+      <div className="w-screen h-screen flex flex-col justify-center items-center relative px-4">
+        <Typography.Title style={{ fontSize: "3em", textAlign: "center", textWrap: "balance" }}>
+          Internet Golf Admin
         </Typography.Title>
-        <Flex gap="middle" vertical align="center">
-          <Input.Password
-            style={{ minWidth: "300px" }}
-            placeholder="Enter authentication token..."
-          />
+        <div className="flex justify-center items-center gap-4 max-w-full">
+          <Input.Password style={{ width: "350px" }} placeholder="Enter authentication token..." />
           <Button type="primary">Login</Button>
-        </Flex>
-        <div className="fixed right-4 md:right-8 bottom-4 md:bottom-8 flex gap-2">
+        </div>
+        <div className="fixed right-4 md:right-6 bottom-4 md:bottom-6 flex gap-2">
           <Button onClick={() => setIsAdvancedModalOpen(true)}>Advanced...</Button>
           <Button onClick={() => setIsHelpModalOpen(true)}>?</Button>
         </div>

@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router";
+import { Link, Outlet, useMatch } from "react-router";
 import { Drawer, Flex, Space, theme, Typography } from "antd";
 import {
   DeploymentUnitOutlined,
@@ -10,15 +10,34 @@ import ColorScheme from "./components/ColorScheme";
 import { useRef, useState, type ReactNode } from "react";
 
 function HeaderLink({ children, to, icon }: { children: ReactNode; to: string; icon?: ReactNode }) {
+  const isCurrent = useMatch(to);
   return (
     <Space align="baseline" size="small">
       {icon}
       <Link to={to}>
-        <Typography.Title level={5} style={{ margin: 0, textDecoration: "underline" }}>
+        <Typography.Title
+          level={5}
+          style={{
+            margin: 0,
+            textDecoration: "underline",
+            textDecorationColor: isCurrent ? "var(--ant-color-primary)" : "",
+          }}
+        >
           {children}
         </Typography.Title>
       </Link>
     </Space>
+  );
+}
+
+function StatusLink() {
+  return (
+    <HeaderLink
+      to="/status"
+      icon={<div className="w-2 h-2 mx-[3px] mb-px bg-(--ant-color-success) rounded-full"> </div>}
+    >
+      Server Status
+    </HeaderLink>
   );
 }
 
@@ -27,7 +46,7 @@ function HeaderLinks({ vertical }: { vertical?: boolean }) {
     <Flex
       align={vertical ? "start" : "center"}
       vertical={vertical}
-      gap={vertical ? "small" : "middle"}
+      gap={vertical ? "small" : "large"}
     >
       <HeaderLink to="/deployments" icon={<DeploymentUnitOutlined />}>
         Deployments
@@ -43,6 +62,7 @@ function HeaderLinks({ vertical }: { vertical?: boolean }) {
           Deploy New Site
         </HeaderLink>
       </div>
+      {vertical && <StatusLink />}
     </Flex>
   );
 }
@@ -51,11 +71,12 @@ export default function LayoutComponent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerContainer = useRef<HTMLDivElement | null>(null);
   const { token } = theme.useToken();
+
   return (
     <>
       <ColorScheme.Dark>
-        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-5xl [&>div]:md:max-w-11/12">
-          <div className="mb-1 mt-3">
+        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-5xl [&>div]:max-w-full [&>div]:md:max-w-[95%]">
+          <div className="md:mb-1 mb-3 mt-3">
             <Flex align="baseline" gap="middle">
               <button className="contents md:hidden" onClick={() => setDrawerOpen((o) => !o)}>
                 <MenuOutlined style={{ fontSize: token.fontSizeHeading4 }} />
@@ -65,13 +86,8 @@ export default function LayoutComponent() {
                   Internet Golf
                 </Typography.Title>
               </Link>
-              <div className="ml-auto self-center p-2 lg:-mr-4">
-                <HeaderLink
-                  to="/status"
-                  icon={<div className="w-2 h-2 mb-px bg-green-600 rounded-full"> </div>}
-                >
-                  Server Status
-                </HeaderLink>
+              <div className="hidden md:block ml-auto self-center p-2 md:-mr-4">
+                <StatusLink />
               </div>
             </Flex>
           </div>
@@ -80,11 +96,11 @@ export default function LayoutComponent() {
           </div>
         </div>
       </ColorScheme.Dark>
-      <div ref={drawerContainer} className="absolute left-0 h-full w-full">
+      <div ref={drawerContainer} className="absolute left-0 w-full h-full">
         <Drawer
           styles={{ root: { position: "absolute" }, body: { padding: "10px" } }}
           placement="left"
-          size={350}
+          size={275}
           closable={false}
           onClose={() => setDrawerOpen(false)}
           open={drawerOpen}
@@ -94,7 +110,7 @@ export default function LayoutComponent() {
         </Drawer>
       </div>
       <ColorScheme.Light>
-        <div className="w-5xl max-w-full mx-auto py-2">
+        <div className="w-5xl max-w-[95%] mx-auto py-2">
           <Outlet />
         </div>
       </ColorScheme.Light>

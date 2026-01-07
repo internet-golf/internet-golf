@@ -7,8 +7,10 @@
     --color-actual-gray: #222;
 }
 
-/* hack to get the icon color working correctly in dark mode, using class name set by <ColorSchemeApplicator /> */
-.dark-mode-icon svg {
-  color: var(--ant-color-text);
-  opacity: 0.9;
+@layer base {
+  /* hack to get the icon color working correctly in dark mode, using class name
+  set by <ColorSchemeApplicator />, in @layer base so that this is easy to override */
+  .dark-mode-icon svg {
+    color: var(--ant-color-text);
+  }
 }
