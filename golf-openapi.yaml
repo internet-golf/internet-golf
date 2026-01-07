@@ -5,8 +5,7 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/AddExternalUserInputBody.json
+          example: https://example.com/schemas/AddExternalUserInputBody.json
           format: uri
           readOnly: true
           type: string
@@ -27,8 +26,7 @@ components:
           type: string
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
-          examples:
-            - user/repo or user/repo#branch-name
+          example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
@@ -43,9 +41,8 @@ components:
           description: Tags used for metadata.
           items:
             type: string
-          type:
-            - array
-            - "null"
+          nullable: true
+          type: array
         type:
           description: Type of deployment contents.
           enum:
@@ -55,11 +52,11 @@ components:
           type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
-          examples:
-            - mysite.mydomain.com
+          example: mysite.mydomain.com
           type: string
       required:
         - url
+        - tags
         - type
       type: object
     CreateBearerTokenInputBody:
@@ -67,8 +64,7 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/CreateBearerTokenInputBody.json
+          example: https://example.com/schemas/CreateBearerTokenInputBody.json
           format: uri
           readOnly: true
           type: string
@@ -82,8 +78,7 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/CreateBearerTokenOutputBody.json
+          example: https://example.com/schemas/CreateBearerTokenOutputBody.json
           format: uri
           readOnly: true
           type: string
@@ -97,15 +92,13 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/DeployAdminDashBody.json
+          example: https://example.com/schemas/DeployAdminDashBody.json
           format: uri
           readOnly: true
           type: string
         url:
           description: The URL that you want to deploy the admin dashboard to.
-          examples:
-            - dash.mydomain.com
+          example: dash.mydomain.com
           type: string
       required:
         - url
@@ -115,15 +108,13 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/DeployAliasBody.json
+          example: https://example.com/schemas/DeployAliasBody.json
           format: uri
           readOnly: true
           type: string
         Url:
           description: The URL of the deployment that you're updating.
-          examples:
-            - mysite.mydomain.com
+          example: mysite.mydomain.com
           type: string
         aliasedTo:
           description: The URL that this deployment is an alias for.
@@ -139,15 +130,13 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/DeploymentCreateInputBody.json
+          example: https://example.com/schemas/DeploymentCreateInputBody.json
           format: uri
           readOnly: true
           type: string
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
-          examples:
-            - user/repo or user/repo#branch-name
+          example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
@@ -159,16 +148,15 @@ components:
           description: Tags used for metadata.
           items:
             type: string
-          type:
-            - array
-            - "null"
+          nullable: true
+          type: array
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
-          examples:
-            - mysite.mydomain.com
+          example: mysite.mydomain.com
           type: string
       required:
         - url
+        - tags
       type: object
     DeploymentModel:
       additionalProperties: false
@@ -178,8 +166,7 @@ components:
           type: string
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
-          examples:
-            - user/repo or user/repo#branch-name
+          example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
@@ -203,9 +190,8 @@ components:
           description: Tags used for metadata.
           items:
             type: string
-          type:
-            - array
-            - "null"
+          nullable: true
+          type: array
         type:
           description: Type of deployment contents.
           enum:
@@ -215,11 +201,11 @@ components:
           type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
-          examples:
-            - mysite.mydomain.com
+          example: mysite.mydomain.com
           type: string
       required:
         - url
+        - tags
         - type
         - noContentYet
       type: object
@@ -228,8 +214,7 @@ components:
       properties:
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
-          examples:
-            - user/repo or user/repo#branch-name
+          example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
@@ -244,9 +229,8 @@ components:
           description: Tags used for metadata.
           items:
             type: string
-          type:
-            - array
-            - "null"
+          nullable: true
+          type: array
         type:
           description: Type of deployment contents.
           enum:
@@ -256,11 +240,11 @@ components:
           type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
-          examples:
-            - mysite.mydomain.com
+          example: mysite.mydomain.com
           type: string
       required:
         - url
+        - tags
         - type
         - noContentYet
       type: object
@@ -281,45 +265,38 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/ErrorModel.json
+          example: https://example.com/schemas/ErrorModel.json
           format: uri
           readOnly: true
           type: string
         detail:
           description: A human-readable explanation specific to this occurrence of the problem.
-          examples:
-            - Property foo is required but is missing.
+          example: Property foo is required but is missing.
           type: string
         errors:
           description: Optional list of individual error details
           items:
             $ref: "#/components/schemas/ErrorDetail"
-          type:
-            - array
-            - "null"
+          nullable: true
+          type: array
         instance:
           description: A URI reference that identifies the specific occurrence of the problem.
-          examples:
-            - https://example.com/error-log/abc123
+          example: https://example.com/error-log/abc123
           format: uri
           type: string
         status:
           description: HTTP status code
-          examples:
-            - 400
+          example: 400
           format: int64
           type: integer
         title:
           description: A short, human-readable summary of the problem type. This value should not change between occurrences of the error.
-          examples:
-            - Bad Request
+          example: Bad Request
           type: string
         type:
           default: about:blank
           description: A URI reference to human-readable documentation for the error.
-          examples:
-            - https://example.com/errors/example
+          example: https://example.com/errors/example
           format: uri
           type: string
       type: object
@@ -329,9 +306,8 @@ components:
         deployments:
           items:
             $ref: "#/components/schemas/DeploymentModel"
-          type:
-            - array
-            - "null"
+          nullable: true
+          type: array
       required:
         - deployments
       type: object
@@ -340,8 +316,7 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/HealthCheckOutputBody.json
+          example: https://example.com/schemas/HealthCheckOutputBody.json
           format: uri
           readOnly: true
           type: string
@@ -355,8 +330,7 @@ components:
       properties:
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
-          examples:
-            - user/repo or user/repo#branch-name
+          example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
@@ -374,9 +348,8 @@ components:
           description: Tags used for metadata.
           items:
             type: string
-          type:
-            - array
-            - "null"
+          nullable: true
+          type: array
         type:
           description: Type of deployment contents.
           enum:
@@ -386,11 +359,11 @@ components:
           type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
-          examples:
-            - mysite.mydomain.com
+          example: mysite.mydomain.com
           type: string
       required:
         - url
+        - tags
         - type
       type: object
     SuccessOutputBody:
@@ -398,8 +371,7 @@ components:
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          examples:
-            - https://example.com/schemas/SuccessOutputBody.json
+          example: https://example.com/schemas/SuccessOutputBody.json
           format: uri
           readOnly: true
           type: string
@@ -414,7 +386,7 @@ components:
 info:
   title: Internet Golf API
   version: 0.5.0
-openapi: 3.1.0
+openapi: 3.0.3
 paths:
   /admin-dash:
     put:
@@ -441,7 +413,8 @@ paths:
           description: Error
   /alive:
     get:
-      operationId: get-alive
+      description: Find out if the server is up or not.
+      operationId: HealthCheck
       responses:
         "200":
           content:
@@ -455,11 +428,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
-      summary: Get alive
   /deploy/alias:
     put:
       description: Create an alias deployment.
-      operationId: PutAlias
+      operationId: CreateAlias
       requestBody:
         content:
           application/json:
@@ -512,8 +484,7 @@ paths:
                   type: boolean
                 url:
                   description: The URL of the deployment that you're updating.
-                  examples:
-                    - mysite.mydomain.com
+                  example: mysite.mydomain.com
                   type: string
               required:
                 - url
