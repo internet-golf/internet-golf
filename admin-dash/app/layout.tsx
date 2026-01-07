@@ -19,8 +19,7 @@ function HeaderLink({ children, to, icon }: { children: ReactNode; to: string; i
           level={5}
           style={{
             margin: 0,
-            textDecoration: "underline",
-            textDecorationColor: isCurrent ? "var(--ant-color-primary)" : "",
+            textDecoration: isCurrent ? "none" : "underline",
           }}
         >
           {children}
@@ -86,12 +85,12 @@ export default function LayoutComponent() {
                   Internet Golf
                 </Typography.Title>
               </Link>
-              <div className="hidden md:block ml-auto self-center p-2 md:-mr-4">
+              <div className="hidden md:block ml-auto self-center p-2">
                 <StatusLink />
               </div>
             </Flex>
           </div>
-          <div className="hidden md:block bg-actual-gray rounded-lg mb-2">
+          <div className="hidden md:block bg-actual-gray rounded-lg mb-3">
             <HeaderLinks />
           </div>
         </div>

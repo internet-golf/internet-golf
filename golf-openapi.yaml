@@ -56,7 +56,6 @@ components:
           type: string
       required:
         - url
-        - tags
         - type
       type: object
     CreateBearerTokenInputBody:
@@ -156,7 +155,6 @@ components:
           type: string
       required:
         - url
-        - tags
       type: object
     DeploymentModel:
       additionalProperties: false
@@ -205,7 +203,6 @@ components:
           type: string
       required:
         - url
-        - tags
         - type
         - noContentYet
       type: object
@@ -244,7 +241,6 @@ components:
           type: string
       required:
         - url
-        - tags
         - type
         - noContentYet
       type: object
@@ -363,7 +359,6 @@ components:
           type: string
       required:
         - url
-        - tags
         - type
       type: object
     SuccessOutputBody:
