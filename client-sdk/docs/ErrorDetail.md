@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Location** | Pointer to **string** | Where the error occurred, e.g. &#39;body.items[3].tags&#39; or &#39;path.thing-id&#39; | [optional] 
 **Message** | Pointer to **string** | Error message text | [optional] 
-**Value** | Pointer to **interface{}** |  | [optional] 
+**Value** | Pointer to **interface{}** | The value at the given location | [optional] 
 
 ## Methods
 

@@ -78,14 +78,14 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*DefaultAPI* | [**CreateAlias**](docs/DefaultAPI.md#createalias) | **Put** /deploy/alias | 
 *DefaultAPI* | [**CreateDeployment**](docs/DefaultAPI.md#createdeployment) | **Put** /deploy/new | 
 *DefaultAPI* | [**DeployAdminDash**](docs/DefaultAPI.md#deployadmindash) | **Put** /admin-dash | 
 *DefaultAPI* | [**DeployFiles**](docs/DefaultAPI.md#deployfiles) | **Put** /deploy/files | 
-*DefaultAPI* | [**GetAlive**](docs/DefaultAPI.md#getalive) | **Get** /alive | Get alive
 *DefaultAPI* | [**GetDeployment**](docs/DefaultAPI.md#getdeployment) | **Get** /deployment/{url} | 
 *DefaultAPI* | [**GetDeployments**](docs/DefaultAPI.md#getdeployments) | **Get** /deployments | 
+*DefaultAPI* | [**HealthCheck**](docs/DefaultAPI.md#healthcheck) | **Get** /alive | 
 *DefaultAPI* | [**PostTokenGenerate**](docs/DefaultAPI.md#posttokengenerate) | **Post** /token/generate | Post token generate
-*DefaultAPI* | [**PutAlias**](docs/DefaultAPI.md#putalias) | **Put** /deploy/alias | 
 *DefaultAPI* | [**PutUserRegister**](docs/DefaultAPI.md#putuserregister) | **Put** /user/register | Put user register
 
 

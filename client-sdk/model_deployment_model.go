@@ -12,6 +12,7 @@ package golfsdk
 
 import (
 	"encoding/json"
+	"bytes"
 	"fmt"
 )
 
@@ -42,7 +43,6 @@ type DeploymentModel struct {
 	Type string `json:"type"`
 	// URL that this deployment will appear at. The DNS for the domain has to be set up first.
 	Url string `json:"url"`
-	AdditionalProperties map[string]interface{}
 }
 
 type _DeploymentModel DeploymentModel
@@ -433,11 +433,6 @@ func (o DeploymentModel) ToMap() (map[string]interface{}, error) {
 	}
 	toSerialize["type"] = o.Type
 	toSerialize["url"] = o.Url
-
-	for key, value := range o.AdditionalProperties {
-		toSerialize[key] = value
-	}
-
 	return toSerialize, nil
 }
 
@@ -467,30 +462,15 @@ func (o *DeploymentModel) UnmarshalJSON(data []byte) (err error) {
 
 	varDeploymentModel := _DeploymentModel{}
 
-	err = json.Unmarshal(data, &varDeploymentModel)
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&varDeploymentModel)
 
 	if err != nil {
 		return err
 	}
 
 	*o = DeploymentModel(varDeploymentModel)
-
-	additionalProperties := make(map[string]interface{})
-
-	if err = json.Unmarshal(data, &additionalProperties); err == nil {
-		delete(additionalProperties, "aliasedTo")
-		delete(additionalProperties, "externalSource")
-		delete(additionalProperties, "externalSourceType")
-		delete(additionalProperties, "noContentYet")
-		delete(additionalProperties, "preserveExternalPath")
-		delete(additionalProperties, "redirect")
-		delete(additionalProperties, "serverContentLocation")
-		delete(additionalProperties, "spaMode")
-		delete(additionalProperties, "tags")
-		delete(additionalProperties, "type")
-		delete(additionalProperties, "url")
-		o.AdditionalProperties = additionalProperties
-	}
 
 	return err
 }

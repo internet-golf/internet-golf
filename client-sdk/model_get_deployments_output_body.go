@@ -12,6 +12,7 @@ package golfsdk
 
 import (
 	"encoding/json"
+	"bytes"
 	"fmt"
 )
 
@@ -21,7 +22,6 @@ var _ MappedNullable = &GetDeploymentsOutputBody{}
 // GetDeploymentsOutputBody struct for GetDeploymentsOutputBody
 type GetDeploymentsOutputBody struct {
 	Deployments []DeploymentModel `json:"deployments"`
-	AdditionalProperties map[string]interface{}
 }
 
 type _GetDeploymentsOutputBody GetDeploymentsOutputBody
@@ -83,11 +83,6 @@ func (o GetDeploymentsOutputBody) ToMap() (map[string]interface{}, error) {
 	if o.Deployments != nil {
 		toSerialize["deployments"] = o.Deployments
 	}
-
-	for key, value := range o.AdditionalProperties {
-		toSerialize[key] = value
-	}
-
 	return toSerialize, nil
 }
 
@@ -115,20 +110,15 @@ func (o *GetDeploymentsOutputBody) UnmarshalJSON(data []byte) (err error) {
 
 	varGetDeploymentsOutputBody := _GetDeploymentsOutputBody{}
 
-	err = json.Unmarshal(data, &varGetDeploymentsOutputBody)
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&varGetDeploymentsOutputBody)
 
 	if err != nil {
 		return err
 	}
 
 	*o = GetDeploymentsOutputBody(varGetDeploymentsOutputBody)
-
-	additionalProperties := make(map[string]interface{})
-
-	if err = json.Unmarshal(data, &additionalProperties); err == nil {
-		delete(additionalProperties, "deployments")
-		o.AdditionalProperties = additionalProperties
-	}
 
 	return err
 }

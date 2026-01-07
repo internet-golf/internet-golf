@@ -4,16 +4,82 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**CreateAlias**](DefaultAPI.md#CreateAlias) | **Put** /deploy/alias | 
 [**CreateDeployment**](DefaultAPI.md#CreateDeployment) | **Put** /deploy/new | 
 [**DeployAdminDash**](DefaultAPI.md#DeployAdminDash) | **Put** /admin-dash | 
 [**DeployFiles**](DefaultAPI.md#DeployFiles) | **Put** /deploy/files | 
-[**GetAlive**](DefaultAPI.md#GetAlive) | **Get** /alive | Get alive
 [**GetDeployment**](DefaultAPI.md#GetDeployment) | **Get** /deployment/{url} | 
 [**GetDeployments**](DefaultAPI.md#GetDeployments) | **Get** /deployments | 
+[**HealthCheck**](DefaultAPI.md#HealthCheck) | **Get** /alive | 
 [**PostTokenGenerate**](DefaultAPI.md#PostTokenGenerate) | **Post** /token/generate | Post token generate
-[**PutAlias**](DefaultAPI.md#PutAlias) | **Put** /deploy/alias | 
 [**PutUserRegister**](DefaultAPI.md#PutUserRegister) | **Put** /user/register | Put user register
 
+
+
+## CreateAlias
+
+> SuccessOutputBody CreateAlias(ctx).DeployAliasBody(deployAliasBody).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	deployAliasBody := *openapiclient.NewDeployAliasBody("mysite.mydomain.com") // DeployAliasBody | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.CreateAlias(context.Background()).DeployAliasBody(deployAliasBody).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.CreateAlias``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `CreateAlias`: SuccessOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.CreateAlias`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiCreateAliasRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **deployAliasBody** | [**DeployAliasBody**](DeployAliasBody.md) |  | 
+
+### Return type
+
+[**SuccessOutputBody**](SuccessOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## CreateDeployment
@@ -37,7 +103,7 @@ import (
 )
 
 func main() {
-	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody("Url_example") // DeploymentCreateInputBody | 
+	deploymentCreateInputBody := *openapiclient.NewDeploymentCreateInputBody("mysite.mydomain.com") // DeploymentCreateInputBody | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -103,7 +169,7 @@ import (
 )
 
 func main() {
-	deployAdminDashBody := *openapiclient.NewDeployAdminDashBody("Url_example") // DeployAdminDashBody | 
+	deployAdminDashBody := *openapiclient.NewDeployAdminDashBody("dash.mydomain.com") // DeployAdminDashBody | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -213,65 +279,6 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: multipart/form-data
-- **Accept**: application/json, application/problem+json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## GetAlive
-
-> HealthCheckOutputBody GetAlive(ctx).Execute()
-
-Get alive
-
-### Example
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
-)
-
-func main() {
-
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.GetAlive(context.Background()).Execute()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.GetAlive``: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-	}
-	// response from `GetAlive`: HealthCheckOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.GetAlive`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-This endpoint does not need any parameter.
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiGetAliveRequest struct via the builder pattern
-
-
-### Return type
-
-[**HealthCheckOutputBody**](HealthCheckOutputBody.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
 - **Accept**: application/json, application/problem+json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
@@ -410,6 +417,67 @@ No authorization required
 [[Back to README]](../README.md)
 
 
+## HealthCheck
+
+> HealthCheckOutputBody HealthCheck(ctx).Execute()
+
+
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.DefaultAPI.HealthCheck(context.Background()).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.HealthCheck``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `HealthCheck`: HealthCheckOutputBody
+	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.HealthCheck`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+This endpoint does not need any parameter.
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiHealthCheckRequest struct via the builder pattern
+
+
+### Return type
+
+[**HealthCheckOutputBody**](HealthCheckOutputBody.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## PostTokenGenerate
 
 > CreateBearerTokenOutputBody PostTokenGenerate(ctx).CreateBearerTokenInputBody(createBearerTokenInputBody).Execute()
@@ -459,72 +527,6 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**CreateBearerTokenOutputBody**](CreateBearerTokenOutputBody.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: application/json, application/problem+json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## PutAlias
-
-> SuccessOutputBody PutAlias(ctx).DeployAliasBody(deployAliasBody).Execute()
-
-
-
-
-
-### Example
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
-)
-
-func main() {
-	deployAliasBody := *openapiclient.NewDeployAliasBody("Url_example") // DeployAliasBody | 
-
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.DefaultAPI.PutAlias(context.Background()).DeployAliasBody(deployAliasBody).Execute()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `DefaultAPI.PutAlias``: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-	}
-	// response from `PutAlias`: SuccessOutputBody
-	fmt.Fprintf(os.Stdout, "Response from `DefaultAPI.PutAlias`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiPutAliasRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **deployAliasBody** | [**DeployAliasBody**](DeployAliasBody.md) |  | 
-
-### Return type
-
-[**SuccessOutputBody**](SuccessOutputBody.md)
 
 ### Authorization
 

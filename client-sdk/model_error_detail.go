@@ -23,6 +23,7 @@ type ErrorDetail struct {
 	Location *string `json:"location,omitempty"`
 	// Error message text
 	Message *string `json:"message,omitempty"`
+	// The value at the given location
 	Value interface{} `json:"value,omitempty"`
 }
 
