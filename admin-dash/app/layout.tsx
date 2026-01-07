@@ -20,6 +20,7 @@ function HeaderLink({ children, to, icon }: { children: ReactNode; to: string; i
           style={{
             margin: 0,
             textDecoration: isCurrent ? "none" : "underline",
+            cursor: isCurrent ? "default" : "pointer",
           }}
         >
           {children}
@@ -74,14 +75,17 @@ export default function LayoutComponent() {
   return (
     <>
       <ColorScheme.Dark>
-        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-5xl [&>div]:max-w-full [&>div]:md:max-w-[95%]">
+        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-7xl [&>div]:max-w-full [&>div]:md:max-w-[95%]">
           <div className="md:mb-1 mb-3 mt-3">
-            <Flex align="baseline" gap="middle">
-              <button className="contents md:hidden" onClick={() => setDrawerOpen((o) => !o)}>
-                <MenuOutlined style={{ fontSize: token.fontSizeHeading4 }} />
+            <Flex align="center" gap="middle">
+              <button
+                className="block md:hidden mt-2 mr-1"
+                onClick={() => setDrawerOpen((o) => !o)}
+              >
+                <MenuOutlined style={{ fontSize: token.fontSizeHeading3 }} />
               </button>
               <Link to="/">
-                <Typography.Title level={2} style={{ margin: 0 }}>
+                <Typography.Title level={1} style={{ margin: 0 }}>
                   Internet Golf
                 </Typography.Title>
               </Link>
@@ -97,7 +101,7 @@ export default function LayoutComponent() {
       </ColorScheme.Dark>
       <div ref={drawerContainer} className="absolute left-0 w-full h-full">
         <Drawer
-          styles={{ root: { position: "absolute" }, body: { padding: "10px" } }}
+          styles={{ root: { position: "absolute" }, body: { padding: "12px 16px" } }}
           placement="left"
           size={275}
           closable={false}
@@ -105,11 +109,13 @@ export default function LayoutComponent() {
           open={drawerOpen}
           getContainer={drawerContainer.current ?? false}
         >
-          <HeaderLinks vertical />
+          <ColorScheme.Light>
+            <HeaderLinks vertical />
+          </ColorScheme.Light>
         </Drawer>
       </div>
       <ColorScheme.Light>
-        <div className="w-5xl max-w-[95%] mx-auto py-2">
+        <div className="w-7xl max-w-[95%] mx-auto py-2">
           <Outlet />
         </div>
       </ColorScheme.Light>

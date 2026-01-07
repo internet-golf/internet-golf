@@ -13,4 +13,8 @@
   .dark-mode-icon svg {
     color: var(--ant-color-text);
   }
+
+  .light-mode-icon svg {
+    opacity: 0.8;
+  }
 }
