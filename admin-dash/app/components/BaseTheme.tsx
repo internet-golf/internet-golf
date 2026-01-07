@@ -15,7 +15,6 @@ export default function BaseTheme({ children }: { children: ReactNode }) {
           // give less space between items by default
           paddingXS: 6,
           paddingSM: 7,
-          padding: 8,
         },
         components: {
           Modal: {

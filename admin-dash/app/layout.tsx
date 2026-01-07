@@ -1,5 +1,5 @@
-import { Outlet } from "react-router";
-import { Divider, Drawer, Flex, Space, theme, Typography } from "antd";
+import { Link, Outlet } from "react-router";
+import { Drawer, Flex, Space, theme, Typography } from "antd";
 import {
   DeploymentUnitOutlined,
   AppstoreAddOutlined,
@@ -11,23 +11,23 @@ import { useRef, useState, type ReactNode } from "react";
 
 function HeaderLink({ children, to, icon }: { children: ReactNode; to: string; icon?: ReactNode }) {
   return (
-    <Space align="baseline" size="middle">
+    <Space align="baseline" size="small">
       {icon}
-      <a href={to}>
+      <Link to={to}>
         <Typography.Title level={5} style={{ margin: 0, textDecoration: "underline" }}>
           {children}
         </Typography.Title>
-      </a>
+      </Link>
     </Space>
   );
 }
 
 function HeaderLinks({ vertical }: { vertical?: boolean }) {
   return (
-    <Space
+    <Flex
       align={vertical ? "start" : "center"}
       vertical={vertical}
-      size={vertical ? "small" : "large"}
+      gap={vertical ? "small" : "middle"}
     >
       <HeaderLink to="/deployments" icon={<DeploymentUnitOutlined />}>
         Deployments
@@ -35,10 +35,15 @@ function HeaderLinks({ vertical }: { vertical?: boolean }) {
       <HeaderLink to="/domains" icon={<BarsOutlined />}>
         Domains
       </HeaderLink>
-      <HeaderLink to="/new" icon={<AppstoreAddOutlined />}>
-        Deploy New Site
+      <HeaderLink to="/permissions" icon={<BarsOutlined />}>
+        Permissions
       </HeaderLink>
-    </Space>
+      <div className={vertical ? "" : "ml-auto"}>
+        <HeaderLink to="/new" icon={<AppstoreAddOutlined />}>
+          Deploy New Site
+        </HeaderLink>
+      </div>
+    </Flex>
   );
 }
 
@@ -49,26 +54,28 @@ export default function LayoutComponent() {
   return (
     <>
       <ColorScheme.Dark>
-        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-5xl [&>div]:max-w-full">
-          <div className="mb-2 mt-3">
+        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-5xl [&>div]:md:max-w-11/12">
+          <div className="mb-1 mt-3">
             <Flex align="baseline" gap="middle">
               <button className="contents md:hidden" onClick={() => setDrawerOpen((o) => !o)}>
                 <MenuOutlined style={{ fontSize: token.fontSizeHeading4 }} />
               </button>
-              <Typography.Title level={2} style={{ margin: 0 }}>
-                Internet Golf
-              </Typography.Title>
-              <div className="ml-auto bg-actual-gray rounded-lg self-center p-2 lg:-mr-4">
+              <Link to="/">
+                <Typography.Title level={2} style={{ margin: 0 }}>
+                  Internet Golf
+                </Typography.Title>
+              </Link>
+              <div className="ml-auto self-center p-2 lg:-mr-4">
                 <HeaderLink
                   to="/status"
-                  icon={<div className="w-2 h-2 mb-0.5 bg-green-600 rounded-full"> </div>}
+                  icon={<div className="w-2 h-2 mb-px bg-green-600 rounded-full"> </div>}
                 >
                   Server Status
                 </HeaderLink>
               </div>
             </Flex>
           </div>
-          <div className="hidden md:block bg-actual-gray rounded-t-lg">
+          <div className="hidden md:block bg-actual-gray rounded-lg mb-2">
             <HeaderLinks />
           </div>
         </div>

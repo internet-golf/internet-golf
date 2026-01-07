@@ -4,7 +4,7 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     /* since tailwind css' grays are a bit blue, which isn't the look here */
-    --color-actual-gray: #1c1c1c;
+    --color-actual-gray: #222;
 }
 
 /* hack to get the icon color working correctly in dark mode, using class name set by <ColorSchemeApplicator /> */

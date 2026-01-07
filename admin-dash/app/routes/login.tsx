@@ -16,15 +16,17 @@ export default function Login() {
   return (
     <ColorScheme.Dark>
       <div className="w-screen h-screen flex flex-col justify-center items-center relative">
-        {/* font size override just for the initial title - `style` overrides are otherwise discouraged */}
         <Typography.Title style={{ fontSize: "3em", textAlign: "center" }}>
           Internet Golf
           <br />
           Dashboard
         </Typography.Title>
-        <Flex gap="small">
-          <Input.Password placeholder="Login Token" />
-          <Button>Login</Button>
+        <Flex gap="middle" vertical align="center">
+          <Input.Password
+            style={{ minWidth: "300px" }}
+            placeholder="Enter authentication token..."
+          />
+          <Button type="primary">Login</Button>
         </Flex>
         <div className="fixed right-4 md:right-8 bottom-4 md:bottom-8 flex gap-2">
           <Button onClick={() => setIsAdvancedModalOpen(true)}>Advanced...</Button>
