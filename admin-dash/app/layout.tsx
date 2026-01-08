@@ -5,27 +5,41 @@ import {
   AppstoreAddOutlined,
   BarsOutlined,
   MenuOutlined,
+  ClusterOutlined,
+  CloudUploadOutlined,
+  CloudServerOutlined,
 } from "@ant-design/icons";
 import ColorScheme from "./components/ColorScheme";
 import { useRef, useState, type ReactNode } from "react";
 
-function HeaderLink({ children, to, icon }: { children: ReactNode; to: string; icon?: ReactNode }) {
+function HeaderLink({
+  children,
+  to,
+  icon,
+  iconPlacement = "left",
+}: {
+  children: ReactNode;
+  to: string;
+  icon?: ReactNode;
+  iconPlacement?: "left" | "right";
+}) {
   const isCurrent = useMatch(to);
   return (
     <Space align="baseline" size="small">
-      {icon}
+      {iconPlacement === "left" && <div className="w-4">{icon}</div>}
       <Link to={to}>
         <Typography.Title
           level={5}
+          underline={!isCurrent}
           style={{
             margin: 0,
-            textDecoration: isCurrent ? "none" : "underline",
             cursor: isCurrent ? "default" : "pointer",
           }}
         >
           {children}
         </Typography.Title>
       </Link>
+      {iconPlacement === "right" && <div className="w-4">{icon}</div>}
     </Space>
   );
 }
@@ -43,26 +57,26 @@ function StatusLink() {
 
 function HeaderLinks({ vertical }: { vertical?: boolean }) {
   return (
-    <Flex
-      align={vertical ? "start" : "center"}
-      vertical={vertical}
-      gap={vertical ? "small" : "large"}
-    >
-      <HeaderLink to="/deployments" icon={<DeploymentUnitOutlined />}>
+    <Flex align={vertical ? "start" : "center"} vertical={vertical} gap="small">
+      <HeaderLink to="/deployments" icon={<CloudServerOutlined />}>
         Deployments
       </HeaderLink>
-      <HeaderLink to="/domains" icon={<BarsOutlined />}>
+      <HeaderLink to="/domains" icon={null}>
         Domains
       </HeaderLink>
-      <HeaderLink to="/permissions" icon={<BarsOutlined />}>
+      <HeaderLink to="/permissions" icon={null}>
         Permissions
       </HeaderLink>
       <div className={vertical ? "" : "ml-auto"}>
-        <HeaderLink to="/new" icon={<AppstoreAddOutlined />}>
+        <HeaderLink
+          to="/new"
+          iconPlacement={vertical ? "left" : "right"}
+          icon={<CloudUploadOutlined />}
+        >
           Deploy New Site
         </HeaderLink>
       </div>
-      {vertical && <StatusLink />}
+      {vertical ? <StatusLink /> : null}
     </Flex>
   );
 }
@@ -75,8 +89,8 @@ export default function LayoutComponent() {
   return (
     <>
       <ColorScheme.Dark>
-        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-7xl [&>div]:max-w-full [&>div]:md:max-w-[95%]">
-          <div className="md:mb-1 mb-3 mt-3">
+        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-6xl [&>div]:max-w-full [&>div]:md:max-w-[95%]">
+          <div className="mb-3 mt-4 md:my-4">
             <Flex align="center" gap="middle">
               <button
                 className="block md:hidden mt-2 mr-1"
@@ -115,7 +129,7 @@ export default function LayoutComponent() {
         </Drawer>
       </div>
       <ColorScheme.Light>
-        <div className="w-7xl max-w-[95%] mx-auto py-2">
+        <div className="w-6xl max-w-[95%] mx-auto py-4">
           <Outlet />
         </div>
       </ColorScheme.Light>

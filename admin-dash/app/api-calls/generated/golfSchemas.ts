@@ -22,6 +22,10 @@ export type AliasDeployment = {
    */
   aliasedTo?: string;
   /**
+   * When the deployment was created (string in ISO-8601 format.)
+   */
+  createdAt: string;
+  /**
    * Original repository for this deployment's source. Can include a branch name.
    *
    * @example user/repo or user/repo#branch-name
@@ -30,7 +34,7 @@ export type AliasDeployment = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: string;
+  externalSourceType?: "GithubRepo";
   /**
    * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
@@ -47,6 +51,10 @@ export type AliasDeployment = {
    * Type of deployment contents.
    */
   type: "StaticSite" | "Alias" | "Empty";
+  /**
+   * When the deployment was last updated (string in ISO-8601 format.)
+   */
+  updatedAt: string;
   /**
    * URL that this deployment will appear at. The DNS for the domain has to be set up first.
    *
@@ -134,7 +142,7 @@ export type DeploymentCreateInputBody = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: string;
+  externalSourceType?: "GithubRepo";
   /**
    * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
@@ -157,6 +165,10 @@ export type DeploymentModel = {
    */
   aliasedTo?: string;
   /**
+   * When the deployment was created (string in ISO-8601 format.)
+   */
+  createdAt: string;
+  /**
    * Original repository for this deployment's source. Can include a branch name.
    *
    * @example user/repo or user/repo#branch-name
@@ -165,7 +177,7 @@ export type DeploymentModel = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: string;
+  externalSourceType?: "GithubRepo";
   /**
    * Set to true to indicate that this deployment has not yet been set up.
    */
@@ -195,6 +207,10 @@ export type DeploymentModel = {
    */
   type: "StaticSite" | "Alias" | "Empty";
   /**
+   * When the deployment was last updated (string in ISO-8601 format.)
+   */
+  updatedAt: string;
+  /**
    * URL that this deployment will appear at. The DNS for the domain has to be set up first.
    *
    * @example mysite.mydomain.com
@@ -204,6 +220,10 @@ export type DeploymentModel = {
 
 export type EmptyDeployment = {
   /**
+   * When the deployment was created (string in ISO-8601 format.)
+   */
+  createdAt: string;
+  /**
    * Original repository for this deployment's source. Can include a branch name.
    *
    * @example user/repo or user/repo#branch-name
@@ -212,7 +232,7 @@ export type EmptyDeployment = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: string;
+  externalSourceType?: "GithubRepo";
   /**
    * Set to true to indicate that this deployment has not yet been set up.
    */
@@ -229,6 +249,10 @@ export type EmptyDeployment = {
    * Type of deployment contents.
    */
   type: "StaticSite" | "Alias" | "Empty";
+  /**
+   * When the deployment was last updated (string in ISO-8601 format.)
+   */
+  updatedAt: string;
   /**
    * URL that this deployment will appear at. The DNS for the domain has to be set up first.
    *
@@ -317,6 +341,10 @@ export type HealthCheckOutputBody = {
 
 export type StaticSiteDeployment = {
   /**
+   * When the deployment was created (string in ISO-8601 format.)
+   */
+  createdAt: string;
+  /**
    * Original repository for this deployment's source. Can include a branch name.
    *
    * @example user/repo or user/repo#branch-name
@@ -325,7 +353,7 @@ export type StaticSiteDeployment = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: string;
+  externalSourceType?: "GithubRepo";
   /**
    * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
@@ -346,6 +374,10 @@ export type StaticSiteDeployment = {
    * Type of deployment contents.
    */
   type: "StaticSite" | "Alias" | "Empty";
+  /**
+   * When the deployment was last updated (string in ISO-8601 format.)
+   */
+  updatedAt: string;
   /**
    * URL that this deployment will appear at. The DNS for the domain has to be set up first.
    *
