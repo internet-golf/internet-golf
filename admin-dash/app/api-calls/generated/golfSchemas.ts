@@ -35,8 +35,9 @@ export type AliasDeployment = {
    * Place where the original repository lives.
    */
   externalSourceType?: "GithubRepo";
+  meta: SiteMeta;
   /**
-   * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+   * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
   preserveExternalPath?: boolean;
   /**
@@ -143,8 +144,9 @@ export type DeploymentCreateInputBody = {
    * Place where the original repository lives.
    */
   externalSourceType?: "GithubRepo";
+  meta: SiteMeta;
   /**
-   * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+   * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
   preserveExternalPath?: boolean;
   /**
@@ -178,12 +180,13 @@ export type DeploymentModel = {
    * Place where the original repository lives.
    */
   externalSourceType?: "GithubRepo";
+  meta: SiteMeta;
   /**
    * Set to true to indicate that this deployment has not yet been set up.
    */
   noContentYet: boolean;
   /**
-   * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+   * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
   preserveExternalPath?: boolean;
   /**
@@ -233,12 +236,13 @@ export type EmptyDeployment = {
    * Place where the original repository lives.
    */
   externalSourceType?: "GithubRepo";
+  meta: SiteMeta;
   /**
    * Set to true to indicate that this deployment has not yet been set up.
    */
   noContentYet: boolean;
   /**
-   * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+   * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
   preserveExternalPath?: boolean;
   /**
@@ -339,6 +343,12 @@ export type HealthCheckOutputBody = {
   ok: boolean;
 };
 
+export type SiteMeta = {
+  description: string;
+  image: string;
+  title: string;
+};
+
 export type StaticSiteDeployment = {
   /**
    * When the deployment was created (string in ISO-8601 format.)
@@ -354,8 +364,9 @@ export type StaticSiteDeployment = {
    * Place where the original repository lives.
    */
   externalSourceType?: "GithubRepo";
+  meta: SiteMeta;
   /**
-   * if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+   * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
   preserveExternalPath?: boolean;
   /**

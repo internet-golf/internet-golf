@@ -5,9 +5,10 @@ import {
   GithubOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Flex, Typography } from "antd";
+import { Button, Card, Flex, Tag, theme, Typography } from "antd";
 import type { ReactNode } from "react";
 import type { GetDeploymentResponse } from "~/api-calls/generated/golfComponents";
+import { allowBreakingOnDots } from "~/utils/utils";
 
 function ExternalSourceLink({
   externalSource,
@@ -34,6 +35,8 @@ const TypeLabel = ({ icon, children }: { icon: ReactNode; children: ReactNode })
 );
 
 export function DeploymentCard({ deployment }: { deployment: GetDeploymentResponse }) {
+  const { token } = theme.useToken();
+
   const type = {
     Alias: <TypeLabel icon={<ReloadOutlined />}>Alias</TypeLabel>,
     Empty: (
@@ -60,38 +63,45 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
 
   return (
     <Card
-      title={
-        <Flex vertical>
-          <Typography.Text type="secondary">{type}</Typography.Text>
-          <Typography.Title underline level={5} style={{ margin: 0 }}>
-            {deployment.url}
-          </Typography.Title>
-        </Flex>
-      }
       styles={{
         root: { width: "100%", display: "flex", flexDirection: "column" },
-        title: { paddingTop: 12, paddingBottom: 12 },
-        body: { paddingTop: 12, paddingBottom: 12, minHeight: 0, flexGrow: "1" },
+        title: { padding: 0 },
+        header: { padding: "12px 16px" },
+        body: { padding: 16, minHeight: 0, flexGrow: "1" },
       }}
       actions={actionButtons}
     >
-      <div className="flex flex-col justify-evenly pt-1 gap-1 h-full">
-        {deployment.type === "Alias" && (
-          <Typography.Text>
-            {deployment.redirect ? "Redirect" : "Alias"} to <strong>{deployment.aliasedTo}</strong>
-          </Typography.Text>
-        )}
-        {!!deployment.externalSource && <ExternalSourceLink {...deployment} />}
-        {!!deployment.tags?.length && (
-          <Typography.Text type="secondary">
-            Tags: <Typography.Text>{(deployment.tags ?? []).join(", ")}</Typography.Text>
-          </Typography.Text>
-        )}
-        <Typography.Text type="secondary" title={new Date(deployment.updatedAt).toLocaleString()}>
-          Last updated{" "}
-          {new Date(deployment.updatedAt).toLocaleDateString("en-US", { dateStyle: "long" })}
-        </Typography.Text>
-      </div>
+      <Flex gap="middle">
+        <div className="h-24 w-32 rounded-lg bg-gray-100">
+          <img src={deployment.meta.image || "/full-web-icon.svg"} />
+        </div>
+        <Flex gap="small" vertical>
+          {deployment.type === "Alias" ? (
+            <Typography.Title level={5}>Alias to {deployment.aliasedTo}</Typography.Title>
+          ) : (
+            <>
+              {deployment.meta.title ? (
+                <Typography.Text style={{ fontSize: token.fontSizeHeading5 }}>
+                  <strong>{deployment.meta.title}</strong> ({allowBreakingOnDots(deployment.url)})
+                </Typography.Text>
+              ) : (
+                <Typography.Text strong style={{ fontSize: token.fontSizeHeading5 }}>
+                  {allowBreakingOnDots(deployment.url)}
+                </Typography.Text>
+              )}
+              {!!deployment.meta.description && (
+                <Typography.Text>{deployment.meta.description}</Typography.Text>
+              )}
+              {!!deployment.externalSource && <ExternalSourceLink {...deployment} />}
+            </>
+          )}
+          {/* <Typography.Text type="secondary">
+            Last updated{" "}
+            {new Date(deployment.updatedAt).toLocaleDateString("en-US", { dateStyle: "long" })}
+          </Typography.Text> */}
+          <Tag style={{ alignSelf: "flex-start", marginTop: "4px" }}>{type}</Tag>
+        </Flex>
+      </Flex>
     </Card>
   );
 }

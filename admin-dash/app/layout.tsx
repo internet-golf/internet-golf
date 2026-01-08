@@ -1,13 +1,10 @@
 import { Link, Outlet, useMatch } from "react-router";
-import { Drawer, Flex, Space, theme, Typography } from "antd";
+import { Drawer, Flex, theme, Typography } from "antd";
 import {
-  DeploymentUnitOutlined,
-  AppstoreAddOutlined,
-  BarsOutlined,
   MenuOutlined,
-  ClusterOutlined,
   CloudUploadOutlined,
   CloudServerOutlined,
+  CloudTwoTone,
 } from "@ant-design/icons";
 import ColorScheme from "./components/ColorScheme";
 import { useRef, useState, type ReactNode } from "react";
@@ -25,8 +22,10 @@ function HeaderLink({
 }) {
   const isCurrent = useMatch(to);
   return (
-    <Space align="baseline" size="small">
-      {iconPlacement === "left" && <div className="w-4">{icon}</div>}
+    <Flex align="center" gap="small">
+      {iconPlacement === "left" && (
+        <div className="w-4 h-4 mt-1 flex justify-center items-center">{icon}</div>
+      )}
       <Link to={to}>
         <Typography.Title
           level={5}
@@ -39,8 +38,10 @@ function HeaderLink({
           {children}
         </Typography.Title>
       </Link>
-      {iconPlacement === "right" && <div className="w-4">{icon}</div>}
-    </Space>
+      {iconPlacement === "right" && (
+        <div className="w-4 h-4 mt-1 flex justify-center items-center">{icon}</div>
+      )}
+    </Flex>
   );
 }
 
@@ -58,7 +59,7 @@ function StatusLink() {
 function HeaderLinks({ vertical }: { vertical?: boolean }) {
   return (
     <Flex align={vertical ? "start" : "center"} vertical={vertical} gap="small">
-      <HeaderLink to="/deployments" icon={<CloudServerOutlined />}>
+      <HeaderLink to="/deployments" icon={<CloudTwoTone />}>
         Deployments
       </HeaderLink>
       <HeaderLink to="/domains" icon={null}>
@@ -90,7 +91,7 @@ export default function LayoutComponent() {
     <>
       <ColorScheme.Dark>
         <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-6xl [&>div]:max-w-full [&>div]:md:max-w-[95%]">
-          <div className="mb-3 mt-4 md:my-4">
+          <div className="mb-3 mt-4 md:mt-7 md:mb-5">
             <Flex align="center" gap="middle">
               <button
                 className="block md:hidden mt-2 mr-1"
@@ -100,7 +101,7 @@ export default function LayoutComponent() {
               </button>
               <Link to="/">
                 <Typography.Title level={1} style={{ margin: 0 }}>
-                  Internet Golf
+                  Internet Golf Dashboard
                 </Typography.Title>
               </Link>
               <div className="hidden md:block ml-auto self-center p-2">

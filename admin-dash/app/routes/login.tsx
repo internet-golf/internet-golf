@@ -9,7 +9,7 @@ import { getGolfAuthToken, setGolfAuthToken } from "~/api-calls/session";
 import ColorScheme from "~/components/ColorScheme";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Login" }];
+  return [{ title: "Internet Golf Admin Dashboard", description: "Manage your server." }];
 }
 
 export function clientLoader() {
@@ -44,7 +44,7 @@ export default function Login() {
           Internet Golf Admin
         </Typography.Title>
         <Form onFinish={login}>
-          <div className="flex justify-center items-center gap-4 max-w-full">
+          <div className="flex flex-col gap-1 justify-center items-center max-w-full">
             <Form.Item
               name="token"
               rules={[

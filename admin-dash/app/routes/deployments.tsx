@@ -13,7 +13,7 @@ export async function clientLoader() {
 
 export default function Home({ loaderData: { deployments } }: Route.ComponentProps) {
   return (
-    <div className="grid gap-4 w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    <div className="grid gap-8 w-full grid-cols-1 md:grid-cols-2">
       {deployments?.map((d) => (
         <DeploymentCard key={d.url} deployment={d} />
       ))}
