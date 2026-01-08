@@ -13,7 +13,8 @@ function ColorSchemeApplicator({
   mode: "dark" | "light";
 }) {
   return (
-    // note that this inherits some global config from the ConfigProvider in root.tsx
+    // note that this inherits some global config from the BaseTheme (since
+    // that's used in root.tsx)
     <ConfigProvider
       theme={{
         algorithm: mode === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
