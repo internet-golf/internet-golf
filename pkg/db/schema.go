@@ -57,8 +57,18 @@ type DeploymentMetadata struct {
 	PreserveExternalPath bool
 
 	// this is `true` for internal deployments like the one for the admin API.
-	// TODO: rename to "internal" because it probably shouldn't be in the API either
+	// that will not be saved to database, since the server creates it with code
+	// based on configuration options when it starts up
 	DontPersist bool
+
+	// this is `true` for internal deployments like the one for the admin
+	// dashbaord, which should be persisted but would potentially be confusing
+	// if it showed up in the api (since it really shouldn't be configurable by
+	// the end user, since again, its config is defined in the code)
+	Internal bool
+
+	// not used for anything by the system, just exists for the user
+	Name string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

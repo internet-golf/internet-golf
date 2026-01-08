@@ -27,7 +27,9 @@ type DeploymentCreateInputBody struct {
 	ExternalSource *string `json:"externalSource,omitempty"`
 	// Place where the original repository lives.
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
-	// if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+	// Name for the deployment. This is just metadata; make it whatever you want.
+	Name string `json:"name"`
+	// If this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	// Tags used for metadata.
 	Tags []string `json:"tags,omitempty"`
@@ -41,8 +43,9 @@ type _DeploymentCreateInputBody DeploymentCreateInputBody
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeploymentCreateInputBody(url string) *DeploymentCreateInputBody {
+func NewDeploymentCreateInputBody(name string, url string) *DeploymentCreateInputBody {
 	this := DeploymentCreateInputBody{}
+	this.Name = name
 	this.Url = url
 	return &this
 }
@@ -149,6 +152,30 @@ func (o *DeploymentCreateInputBody) HasExternalSourceType() bool {
 // SetExternalSourceType gets a reference to the given string and assigns it to the ExternalSourceType field.
 func (o *DeploymentCreateInputBody) SetExternalSourceType(v string) {
 	o.ExternalSourceType = &v
+}
+
+// GetName returns the Name field value
+func (o *DeploymentCreateInputBody) GetName() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Name
+}
+
+// GetNameOk returns a tuple with the Name field value
+// and a boolean to check if the value has been set.
+func (o *DeploymentCreateInputBody) GetNameOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Name, true
+}
+
+// SetName sets field value
+func (o *DeploymentCreateInputBody) SetName(v string) {
+	o.Name = v
 }
 
 // GetPreserveExternalPath returns the PreserveExternalPath field value if set, zero value otherwise.
@@ -259,6 +286,7 @@ func (o DeploymentCreateInputBody) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.ExternalSourceType) {
 		toSerialize["externalSourceType"] = o.ExternalSourceType
 	}
+	toSerialize["name"] = o.Name
 	if !IsNil(o.PreserveExternalPath) {
 		toSerialize["preserveExternalPath"] = o.PreserveExternalPath
 	}
@@ -274,6 +302,7 @@ func (o *DeploymentCreateInputBody) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
+		"name",
 		"url",
 	}
 

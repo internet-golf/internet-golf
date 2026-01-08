@@ -245,6 +245,9 @@ components:
         aliasedTo:
           description: The URL that this deployment is an alias for.
           type: string
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include
             a branch name.
@@ -252,9 +255,17 @@ components:
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+          - GithubRepo
+          type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever
+            you want.
           type: string
         preserveExternalPath:
-          description: "if this is true and the deployment url has a path like \"\
+          description: "If this is true and the deployment url has a path like \"\
             /thing\", then the \"/thing\" in the path will be transparently passed\
             \ through to the underlying resource instead of being removed (which is\
             \ the default)"
@@ -276,13 +287,20 @@ components:
           - Alias
           - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain
             has to be set up first.
           example: mysite.mydomain.com
           type: string
       required:
+      - createdAt
+      - meta
+      - name
       - type
+      - updatedAt
       - url
       type: object
     CreateBearerTokenInputBody:
@@ -370,7 +388,8 @@ components:
       additionalProperties: false
       example:
         $schema: https://example.com/schemas/DeploymentCreateInputBody.json
-        externalSourceType: externalSourceType
+        externalSourceType: GithubRepo
+        name: name
         preserveExternalPath: true
         url: mysite.mydomain.com
         externalSource: user/repo or user/repo#branch-name
@@ -391,9 +410,15 @@ components:
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+          - GithubRepo
+          type: string
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever
+            you want.
           type: string
         preserveExternalPath:
-          description: "if this is true and the deployment url has a path like \"\
+          description: "If this is true and the deployment url has a path like \"\
             /thing\", then the \"/thing\" in the path will be transparently passed\
             \ through to the underlying resource instead of being removed (which is\
             \ the default)"
@@ -410,6 +435,7 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
+      - name
       - url
       type: object
     DeploymentModel:
@@ -418,6 +444,9 @@ components:
         aliasedTo:
           description: The URL that this deployment is an alias for.
           type: string
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include
             a branch name.
@@ -425,13 +454,21 @@ components:
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+          - GithubRepo
+          type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever
+            you want.
           type: string
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been
             set up.
           type: boolean
         preserveExternalPath:
-          description: "if this is true and the deployment url has a path like \"\
+          description: "If this is true and the deployment url has a path like \"\
             /thing\", then the \"/thing\" in the path will be transparently passed\
             \ through to the underlying resource instead of being removed (which is\
             \ the default)"
@@ -460,19 +497,28 @@ components:
           - Alias
           - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain
             has to be set up first.
           example: mysite.mydomain.com
           type: string
       required:
-      - noContentYet
+      - createdAt
+      - meta
+      - name
       - type
+      - updatedAt
       - url
       type: object
     EmptyDeployment:
       additionalProperties: false
       properties:
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include
             a branch name.
@@ -480,13 +526,21 @@ components:
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+          - GithubRepo
+          type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever
+            you want.
           type: string
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been
             set up.
           type: boolean
         preserveExternalPath:
-          description: "if this is true and the deployment url has a path like \"\
+          description: "If this is true and the deployment url has a path like \"\
             /thing\", then the \"/thing\" in the path will be transparently passed\
             \ through to the underlying resource instead of being removed (which is\
             \ the default)"
@@ -504,14 +558,20 @@ components:
           - Alias
           - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain
             has to be set up first.
           example: mysite.mydomain.com
           type: string
       required:
-      - noContentYet
+      - createdAt
+      - meta
+      - name
       - type
+      - updatedAt
       - url
       type: object
     ErrorDetail:
@@ -597,12 +657,36 @@ components:
       required:
       - ok
       type: object
+    SiteMeta:
+      additionalProperties: false
+      example:
+        image: image
+        description: description
+        title: title
+      properties:
+        description:
+          type: string
+        image:
+          type: string
+        title:
+          type: string
+      required:
+      - description
+      - image
+      - title
+      type: object
     StaticSiteDeployment:
       additionalProperties: false
       example:
+        createdAt: createdAt
         spaMode: true
         serverContentLocation: serverContentLocation
-        externalSourceType: externalSourceType
+        externalSourceType: GithubRepo
+        meta:
+          image: image
+          description: description
+          title: title
+        name: name
         preserveExternalPath: true
         type: StaticSite
         url: mysite.mydomain.com
@@ -610,7 +694,11 @@ components:
         tags:
         - tags
         - tags
+        updatedAt: updatedAt
       properties:
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include
             a branch name.
@@ -618,9 +706,17 @@ components:
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+          - GithubRepo
+          type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever
+            you want.
           type: string
         preserveExternalPath:
-          description: "if this is true and the deployment url has a path like \"\
+          description: "If this is true and the deployment url has a path like \"\
             /thing\", then the \"/thing\" in the path will be transparently passed\
             \ through to the underlying resource instead of being removed (which is\
             \ the default)"
@@ -645,13 +741,20 @@ components:
           - Alias
           - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain
             has to be set up first.
           example: mysite.mydomain.com
           type: string
       required:
+      - createdAt
+      - meta
+      - name
       - type
+      - updatedAt
       - url
       type: object
     SuccessOutputBody:
@@ -714,9 +817,15 @@ components:
     GetDeployments_200_response:
       example:
         deployments:
-        - spaMode: true
+        - createdAt: createdAt
+          spaMode: true
           serverContentLocation: serverContentLocation
-          externalSourceType: externalSourceType
+          externalSourceType: GithubRepo
+          meta:
+            image: image
+            description: description
+            title: title
+          name: name
           preserveExternalPath: true
           type: StaticSite
           url: mysite.mydomain.com
@@ -724,9 +833,16 @@ components:
           tags:
           - tags
           - tags
-        - spaMode: true
+          updatedAt: updatedAt
+        - createdAt: createdAt
+          spaMode: true
           serverContentLocation: serverContentLocation
-          externalSourceType: externalSourceType
+          externalSourceType: GithubRepo
+          meta:
+            image: image
+            description: description
+            title: title
+          name: name
           preserveExternalPath: true
           type: StaticSite
           url: mysite.mydomain.com
@@ -734,6 +850,7 @@ components:
           tags:
           - tags
           - tags
+          updatedAt: updatedAt
       properties:
         deployments:
           items:

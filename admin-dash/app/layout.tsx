@@ -1,11 +1,6 @@
 import { Link, Outlet, useMatch } from "react-router";
 import { Drawer, Flex, theme, Typography } from "antd";
-import {
-  MenuOutlined,
-  CloudUploadOutlined,
-  CloudServerOutlined,
-  CloudTwoTone,
-} from "@ant-design/icons";
+import { MenuOutlined, CloudUploadOutlined, CloudTwoTone } from "@ant-design/icons";
 import ColorScheme from "./components/ColorScheme";
 import { useRef, useState, type ReactNode } from "react";
 
@@ -97,12 +92,19 @@ export default function LayoutComponent() {
                 className="block md:hidden mt-2 mr-1"
                 onClick={() => setDrawerOpen((o) => !o)}
               >
-                <MenuOutlined style={{ fontSize: token.fontSizeHeading3 }} />
+                <MenuOutlined style={{ fontSize: token.fontSizeHeading4 }} />
               </button>
               <Link to="/">
-                <Typography.Title level={1} style={{ margin: 0 }}>
-                  Internet Golf Dashboard
-                </Typography.Title>
+                <div className="hidden md:block">
+                  <Typography.Title level={1} style={{ margin: 0 }}>
+                    Internet Golf Dashboard
+                  </Typography.Title>
+                </div>
+                <div className="md:hidden block">
+                  <Typography.Title level={3} style={{ margin: 0 }}>
+                    Internet Golf Dashboard
+                  </Typography.Title>
+                </div>
               </Link>
               <div className="hidden md:block ml-auto self-center p-2">
                 <StatusLink />
@@ -130,7 +132,7 @@ export default function LayoutComponent() {
         </Drawer>
       </div>
       <ColorScheme.Light>
-        <div className="w-6xl max-w-[95%] mx-auto py-4">
+        <div className="w-6xl max-w-[95%] mx-auto py-6">
           <Outlet />
         </div>
       </ColorScheme.Light>

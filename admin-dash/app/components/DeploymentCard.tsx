@@ -3,6 +3,7 @@ import {
   ExportOutlined,
   FolderOpenFilled,
   GithubOutlined,
+  LinkOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Flex, Tag, theme, Typography } from "antd";
@@ -10,44 +11,47 @@ import type { ReactNode } from "react";
 import type { GetDeploymentResponse } from "~/api-calls/generated/golfComponents";
 import { allowBreakingOnDots } from "~/utils/utils";
 
-function ExternalSourceLink({
+const TypeLabel = ({
+  type,
+  redirect,
+}: Pick<GetDeploymentResponse, "type"> & { redirect?: boolean }) => {
+  const typeConfig = {
+    Alias: { icon: <ReloadOutlined />, label: redirect ? "Redirect" : "Alias" },
+    Empty: {
+      icon: <span className="rounded-full border-2 border-dashed w-3 h-3 inline-block"> </span>,
+      label: "No Content Yet",
+    },
+    StaticSite: { icon: <FolderOpenFilled />, label: "Static Site" },
+  }[type];
+
+  if (!typeConfig) return null;
+
+  return (
+    <Flex align="center" gap="small">
+      {typeConfig.icon}
+      {typeConfig.label}
+    </Flex>
+  );
+};
+
+function ExternalSourceTag({
   externalSource,
   externalSourceType,
 }: Pick<GetDeploymentResponse, "externalSource" | "externalSourceType">) {
   if (externalSourceType === "GithubRepo") {
     return (
-      <Flex gap="small" align="center">
-        <GithubOutlined />
+      <Tag>
         <a target="_blank" href={`https://github.com/${externalSource}`}>
-          {externalSource}
+          <GithubOutlined /> <span style={{ textDecoration: "underline" }}>Github</span>
         </a>
-      </Flex>
+      </Tag>
     );
   }
   return null;
 }
 
-const TypeLabel = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
-  <Flex align="center" gap="small">
-    {icon}
-    {children}
-  </Flex>
-);
-
 export function DeploymentCard({ deployment }: { deployment: GetDeploymentResponse }) {
   const { token } = theme.useToken();
-
-  const type = {
-    Alias: <TypeLabel icon={<ReloadOutlined />}>Alias</TypeLabel>,
-    Empty: (
-      <TypeLabel
-        icon={<span className="rounded-full border-2 border-dashed w-3 h-3 inline-block"> </span>}
-      >
-        No Content Yet
-      </TypeLabel>
-    ),
-    StaticSite: <TypeLabel icon={<FolderOpenFilled />}>Static Site</TypeLabel>,
-  }[deployment.type];
 
   const actionButtons = [<Button icon={<EditOutlined />}>Edit</Button>];
 
@@ -61,6 +65,8 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
     );
   }
 
+  const name = deployment.name || deployment.meta.title;
+
   return (
     <Card
       styles={{
@@ -71,35 +77,48 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
       }}
       actions={actionButtons}
     >
-      <Flex gap="middle">
-        <div className="h-24 w-32 rounded-lg bg-gray-100">
+      <Flex gap="large">
+        <div className="h-24 w-32 rounded-lg overflow-clip bg-gray-100">
           <img src={deployment.meta.image || "/full-web-icon.svg"} />
         </div>
-        <Flex gap="small" vertical>
+        <Flex gap="middle" vertical justify="flex-start">
           {deployment.type === "Alias" ? (
-            <Typography.Title level={5}>Alias to {deployment.aliasedTo}</Typography.Title>
+            <Typography.Title level={5}>
+              {deployment.redirect ? "Redirect" : "Alias"} to {deployment.aliasedTo}
+            </Typography.Title>
           ) : (
+            // using token.fontSizeHeading5 to get a standard font size instead
+            // of using Typography.Title, to avoid getting the standard margins
+            // for an h5
             <>
-              {deployment.meta.title ? (
-                <Typography.Text style={{ fontSize: token.fontSizeHeading5 }}>
-                  <strong>{deployment.meta.title}</strong> ({allowBreakingOnDots(deployment.url)})
-                </Typography.Text>
+              {name ? (
+                <>
+                  <Typography.Text strong style={{ fontSize: token.fontSizeHeading5 }}>
+                    {name}
+                  </Typography.Text>
+                  {/* <Typography.Text>
+                    <a href={`//${deployment.url}`} target="_blank" rel="nofollow noreferrer">
+                      <LinkOutlined /> {allowBreakingOnDots(deployment.url)}
+                    </a>
+                  </Typography.Text> */}
+                </>
               ) : (
                 <Typography.Text strong style={{ fontSize: token.fontSizeHeading5 }}>
                   {allowBreakingOnDots(deployment.url)}
                 </Typography.Text>
               )}
-              {!!deployment.meta.description && (
-                <Typography.Text>{deployment.meta.description}</Typography.Text>
-              )}
-              {!!deployment.externalSource && <ExternalSourceLink {...deployment} />}
             </>
           )}
-          {/* <Typography.Text type="secondary">
-            Last updated{" "}
-            {new Date(deployment.updatedAt).toLocaleDateString("en-US", { dateStyle: "long" })}
-          </Typography.Text> */}
-          <Tag style={{ alignSelf: "flex-start", marginTop: "4px" }}>{type}</Tag>
+          {!!deployment.meta.description && (
+            <Typography.Text>{deployment.meta.description}</Typography.Text>
+          )}
+          {/* TODO: i do not know why this marginTop is needed to make things look spaced evenly */}
+          <Flex gap="small" align="center" style={{ marginTop: 6 }}>
+            {deployment.externalSource && <ExternalSourceTag {...deployment} />}
+            <Tag style={{ alignSelf: "flex-start" }}>
+              <TypeLabel {...deployment} />
+            </Tag>
+          </Flex>
         </Flex>
       </Flex>
     </Card>

@@ -106,6 +106,7 @@ Class | Method | HTTP request | Description
  - [GetDeployments200Response](docs/GetDeployments200Response.md)
  - [GetDeploymentsOutputBody](docs/GetDeploymentsOutputBody.md)
  - [HealthCheckOutputBody](docs/HealthCheckOutputBody.md)
+ - [SiteMeta](docs/SiteMeta.md)
  - [StaticSiteDeployment](docs/StaticSiteDeployment.md)
  - [SuccessOutputBody](docs/SuccessOutputBody.md)
 

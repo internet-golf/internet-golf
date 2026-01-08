@@ -145,8 +145,9 @@ func (bus *DeploymentBus) PutStaticFilesForDeployment(
 
 func (bus *DeploymentBus) PutAdminDash(url db.Url) error {
 	if err := bus.SetupDeployment(db.DeploymentMetadata{
-		Url:  url,
-		Tags: []string{"system"},
+		Url:      url,
+		Tags:     []string{"system"},
+		Internal: true,
 	}); err != nil {
 		return err
 	}

@@ -39,6 +39,9 @@ components:
         meta:
           $ref: "#/components/schemas/SiteMeta"
           description: Metadata scraped from the deployment contents.
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever you want.
+          type: string
         preserveExternalPath:
           description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
@@ -66,11 +69,12 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
+        - name
         - url
-        - meta
         - type
         - createdAt
         - updatedAt
+        - meta
       type: object
     CreateBearerTokenInputBody:
       additionalProperties: false
@@ -156,9 +160,9 @@ components:
           enum:
             - GithubRepo
           type: string
-        meta:
-          $ref: "#/components/schemas/SiteMeta"
-          description: Metadata scraped from the deployment contents.
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever you want.
+          type: string
         preserveExternalPath:
           description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
@@ -173,8 +177,8 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
+        - name
         - url
-        - meta
       type: object
     DeploymentModel:
       additionalProperties: false
@@ -197,6 +201,9 @@ components:
         meta:
           $ref: "#/components/schemas/SiteMeta"
           description: Metadata scraped from the deployment contents.
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever you want.
+          type: string
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been set up.
           type: boolean
@@ -233,12 +240,12 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
+        - name
         - url
-        - meta
         - type
         - createdAt
         - updatedAt
-        - noContentYet
+        - meta
       type: object
     EmptyDeployment:
       additionalProperties: false
@@ -258,6 +265,9 @@ components:
         meta:
           $ref: "#/components/schemas/SiteMeta"
           description: Metadata scraped from the deployment contents.
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever you want.
+          type: string
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been set up.
           type: boolean
@@ -285,12 +295,12 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
+        - name
         - url
-        - meta
         - type
         - createdAt
         - updatedAt
-        - noContentYet
+        - meta
       type: object
     ErrorDetail:
       additionalProperties: false
@@ -401,6 +411,9 @@ components:
         meta:
           $ref: "#/components/schemas/SiteMeta"
           description: Metadata scraped from the deployment contents.
+        name:
+          description: Name for the deployment. This is just metadata; make it whatever you want.
+          type: string
         preserveExternalPath:
           description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
@@ -431,11 +444,12 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
+        - name
         - url
-        - meta
         - type
         - createdAt
         - updatedAt
+        - meta
       type: object
     SuccessOutputBody:
       additionalProperties: false

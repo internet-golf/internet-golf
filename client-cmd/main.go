@@ -133,6 +133,7 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 func createDeploymentCommand() *cobra.Command {
 
 	var github string
+	var name string
 	// TODO: preserve external path option
 
 	createDeployment := cobra.Command{
@@ -160,6 +161,7 @@ func createDeploymentCommand() *cobra.Command {
 					ExternalSourceType: &externalSourceType,
 					ExternalSource:     &externalSource,
 					Tags:               []string{},
+					Name:               name,
 				}).
 				Execute()
 
@@ -182,6 +184,9 @@ func createDeploymentCommand() *cobra.Command {
 
 	createDeployment.Flags().StringVar(
 		&github, "github", "", "Specify a Github Repo: repoOwner/repoName",
+	)
+	createDeployment.Flags().StringVar(
+		&name, "name", "", "Give your deployment a name. This is optional metadata; you can make it whatever you want.",
 	)
 
 	return &createDeployment

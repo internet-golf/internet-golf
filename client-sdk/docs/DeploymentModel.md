@@ -5,22 +5,26 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **AliasedTo** | Pointer to **string** | The URL that this deployment is an alias for. | [optional] 
+**CreatedAt** | **string** | When the deployment was created (string in ISO-8601 format.) | 
 **ExternalSource** | Pointer to **string** | Original repository for this deployment&#39;s source. Can include a branch name. | [optional] 
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
-**NoContentYet** | **bool** | Set to true to indicate that this deployment has not yet been set up. | 
-**PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
+**Meta** | [**SiteMeta**](SiteMeta.md) |  | 
+**Name** | **string** | Name for the deployment. This is just metadata; make it whatever you want. | 
+**NoContentYet** | Pointer to **bool** | Set to true to indicate that this deployment has not yet been set up. | [optional] 
+**PreserveExternalPath** | Pointer to **bool** | If this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
 **Redirect** | Pointer to **bool** | If this is true, visitors to this deployment&#39;s URL will be completely redirected to the URL that this alias is for. | [optional] 
 **ServerContentLocation** | Pointer to **string** | The path to this deployment&#39;s files on the server. | [optional] 
 **SpaMode** | Pointer to **bool** | Whether this deployment is set up to support a Single Page App by using /index.html as a fallback for all requests. | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
 **Type** | **string** | Type of deployment contents. | 
+**UpdatedAt** | **string** | When the deployment was last updated (string in ISO-8601 format.) | 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 
 ## Methods
 
 ### NewDeploymentModel
 
-`func NewDeploymentModel(noContentYet bool, type_ string, url string, ) *DeploymentModel`
+`func NewDeploymentModel(createdAt string, meta SiteMeta, name string, type_ string, updatedAt string, url string, ) *DeploymentModel`
 
 NewDeploymentModel instantiates a new DeploymentModel object
 This constructor will assign default values to properties that have it defined,
@@ -59,6 +63,26 @@ SetAliasedTo sets AliasedTo field to given value.
 `func (o *DeploymentModel) HasAliasedTo() bool`
 
 HasAliasedTo returns a boolean if a field has been set.
+
+### GetCreatedAt
+
+`func (o *DeploymentModel) GetCreatedAt() string`
+
+GetCreatedAt returns the CreatedAt field if non-nil, zero value otherwise.
+
+### GetCreatedAtOk
+
+`func (o *DeploymentModel) GetCreatedAtOk() (*string, bool)`
+
+GetCreatedAtOk returns a tuple with the CreatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCreatedAt
+
+`func (o *DeploymentModel) SetCreatedAt(v string)`
+
+SetCreatedAt sets CreatedAt field to given value.
+
 
 ### GetExternalSource
 
@@ -110,6 +134,46 @@ SetExternalSourceType sets ExternalSourceType field to given value.
 
 HasExternalSourceType returns a boolean if a field has been set.
 
+### GetMeta
+
+`func (o *DeploymentModel) GetMeta() SiteMeta`
+
+GetMeta returns the Meta field if non-nil, zero value otherwise.
+
+### GetMetaOk
+
+`func (o *DeploymentModel) GetMetaOk() (*SiteMeta, bool)`
+
+GetMetaOk returns a tuple with the Meta field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMeta
+
+`func (o *DeploymentModel) SetMeta(v SiteMeta)`
+
+SetMeta sets Meta field to given value.
+
+
+### GetName
+
+`func (o *DeploymentModel) GetName() string`
+
+GetName returns the Name field if non-nil, zero value otherwise.
+
+### GetNameOk
+
+`func (o *DeploymentModel) GetNameOk() (*string, bool)`
+
+GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetName
+
+`func (o *DeploymentModel) SetName(v string)`
+
+SetName sets Name field to given value.
+
+
 ### GetNoContentYet
 
 `func (o *DeploymentModel) GetNoContentYet() bool`
@@ -129,6 +193,11 @@ and a boolean to check if the value has been set.
 
 SetNoContentYet sets NoContentYet field to given value.
 
+### HasNoContentYet
+
+`func (o *DeploymentModel) HasNoContentYet() bool`
+
+HasNoContentYet returns a boolean if a field has been set.
 
 ### GetPreserveExternalPath
 
@@ -283,6 +352,26 @@ and a boolean to check if the value has been set.
 `func (o *DeploymentModel) SetType(v string)`
 
 SetType sets Type field to given value.
+
+
+### GetUpdatedAt
+
+`func (o *DeploymentModel) GetUpdatedAt() string`
+
+GetUpdatedAt returns the UpdatedAt field if non-nil, zero value otherwise.
+
+### GetUpdatedAtOk
+
+`func (o *DeploymentModel) GetUpdatedAtOk() (*string, bool)`
+
+GetUpdatedAtOk returns a tuple with the UpdatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUpdatedAt
+
+`func (o *DeploymentModel) SetUpdatedAt(v string)`
+
+SetUpdatedAt sets UpdatedAt field to given value.
 
 
 ### GetUrl

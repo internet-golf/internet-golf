@@ -7,7 +7,8 @@ Name | Type | Description | Notes
 **Schema** | Pointer to **string** | A URL to the JSON Schema for this object. | [optional] [readonly] 
 **ExternalSource** | Pointer to **string** | Original repository for this deployment&#39;s source. Can include a branch name. | [optional] 
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
-**PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
+**Name** | **string** | Name for the deployment. This is just metadata; make it whatever you want. | 
+**PreserveExternalPath** | Pointer to **bool** | If this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 
@@ -15,7 +16,7 @@ Name | Type | Description | Notes
 
 ### NewDeploymentCreateInputBody
 
-`func NewDeploymentCreateInputBody(url string, ) *DeploymentCreateInputBody`
+`func NewDeploymentCreateInputBody(name string, url string, ) *DeploymentCreateInputBody`
 
 NewDeploymentCreateInputBody instantiates a new DeploymentCreateInputBody object
 This constructor will assign default values to properties that have it defined,
@@ -104,6 +105,26 @@ SetExternalSourceType sets ExternalSourceType field to given value.
 `func (o *DeploymentCreateInputBody) HasExternalSourceType() bool`
 
 HasExternalSourceType returns a boolean if a field has been set.
+
+### GetName
+
+`func (o *DeploymentCreateInputBody) GetName() string`
+
+GetName returns the Name field if non-nil, zero value otherwise.
+
+### GetNameOk
+
+`func (o *DeploymentCreateInputBody) GetNameOk() (*string, bool)`
+
+GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetName
+
+`func (o *DeploymentCreateInputBody) SetName(v string)`
+
+SetName sets Name field to given value.
+
 
 ### GetPreserveExternalPath
 
