@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/internet-golf/internet-golf/pkg/db"
 	"github.com/internet-golf/internet-golf/pkg/public"
 	"github.com/internet-golf/internet-golf/pkg/resources"
+	"github.com/internet-golf/internet-golf/pkg/utils"
 )
 
 func urlFromString(url string) db.Url {
@@ -175,15 +177,31 @@ func (bus *DeploymentBus) PutAliasDeployment(from db.Url, to db.Url, redirect bo
 func (bus *DeploymentBus) updateDeploymentContentByIndex(
 	index int, content db.DeploymentContent,
 ) error {
-	bus.deployments[index].DeploymentContent = content
-	bus.deployments[index].DeploymentContent.HasContent = true
-	bus.deployments[index].DeploymentMetadata.UpdatedAt = time.Now()
+	deployment := &bus.deployments[index]
+	deployment.DeploymentContent = content
+	deployment.DeploymentContent.HasContent = true
+	deployment.DeploymentMetadata.UpdatedAt = time.Now()
 
 	deploymentErr := bus.server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
 		// rollback to previous persisted state?
 		return deploymentErr
 	}
+
+	go func() {
+		if len(deployment.Url.Domain) == 0 {
+			return
+		}
+		// wait for deployment to finish deploying, just in case
+		time.Sleep(3 * time.Second)
+		meta, err := utils.GetMetaInfo("http://" + deployment.Url.String())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error fetching meta info: %v\n", err.Error())
+			return
+		}
+		deployment.MetaInfo = *meta
+		bus.persistDeployments()
+	}()
 
 	return bus.persistDeployments()
 }

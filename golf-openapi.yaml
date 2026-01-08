@@ -36,8 +36,11 @@ components:
           enum:
             - GithubRepo
           type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+          description: Metadata scraped from the deployment contents.
         preserveExternalPath:
-          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
         redirect:
           description: If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
@@ -64,6 +67,7 @@ components:
           type: string
       required:
         - url
+        - meta
         - type
         - createdAt
         - updatedAt
@@ -152,8 +156,11 @@ components:
           enum:
             - GithubRepo
           type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+          description: Metadata scraped from the deployment contents.
         preserveExternalPath:
-          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
         tags:
           description: Tags used for metadata.
@@ -167,6 +174,7 @@ components:
           type: string
       required:
         - url
+        - meta
       type: object
     DeploymentModel:
       additionalProperties: false
@@ -186,11 +194,14 @@ components:
           enum:
             - GithubRepo
           type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+          description: Metadata scraped from the deployment contents.
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been set up.
           type: boolean
         preserveExternalPath:
-          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
         redirect:
           description: If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
@@ -223,6 +234,7 @@ components:
           type: string
       required:
         - url
+        - meta
         - type
         - createdAt
         - updatedAt
@@ -243,11 +255,14 @@ components:
           enum:
             - GithubRepo
           type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+          description: Metadata scraped from the deployment contents.
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been set up.
           type: boolean
         preserveExternalPath:
-          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
         tags:
           description: Tags used for metadata.
@@ -271,6 +286,7 @@ components:
           type: string
       required:
         - url
+        - meta
         - type
         - createdAt
         - updatedAt
@@ -353,6 +369,20 @@ components:
       required:
         - ok
       type: object
+    SiteMeta:
+      additionalProperties: false
+      properties:
+        description:
+          type: string
+        image:
+          type: string
+        title:
+          type: string
+      required:
+        - title
+        - description
+        - image
+      type: object
     StaticSiteDeployment:
       additionalProperties: false
       properties:
@@ -368,8 +398,11 @@ components:
           enum:
             - GithubRepo
           type: string
+        meta:
+          $ref: "#/components/schemas/SiteMeta"
+          description: Metadata scraped from the deployment contents.
         preserveExternalPath:
-          description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+          description: If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
           type: boolean
         serverContentLocation:
           description: The path to this deployment's files on the server.
@@ -399,6 +432,7 @@ components:
           type: string
       required:
         - url
+        - meta
         - type
         - createdAt
         - updatedAt

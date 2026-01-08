@@ -3,6 +3,7 @@ module github.com/internet-golf/internet-golf
 go 1.25
 
 require (
+	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/caddyserver/caddy/v2 v2.10.2
 	github.com/danielgtaylor/huma/v2 v2.32.0
@@ -14,7 +15,7 @@ require (
 	github.com/moby/term v0.5.2
 	github.com/spf13/cobra v1.9.1
 	github.com/txn2/txeh v1.5.5
-	golang.org/x/crypto v0.42.0
+	golang.org/x/crypto v0.44.0
 	gopkg.in/validator.v2 v2.0.1
 )
 
@@ -36,6 +37,7 @@ require (
 	github.com/STARRY-S/zip v0.2.1 // indirect
 	github.com/alecthomas/chroma/v2 v2.20.0 // indirect
 	github.com/andybalholm/brotli v1.1.2-0.20250424173009-453214e765f3 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/aryann/difflib v0.0.0-20210328193216-ff5ff6dc229b // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
@@ -181,15 +183,15 @@ require (
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20250305170421-49bf5b80c810 // indirect
 	golang.org/x/exp v0.0.0-20250808145144-a408d31f581a // indirect
-	golang.org/x/mod v0.27.0 // indirect
-	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/term v0.35.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/term v0.37.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	golang.org/x/tools v0.36.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/api v0.240.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250825161204-c5933d9347a5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250825161204-c5933d9347a5 // indirect

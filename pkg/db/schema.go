@@ -1,6 +1,10 @@
 package db
 
-import "time"
+import (
+	"time"
+
+	"github.com/internet-golf/internet-golf/pkg/utils"
+)
 
 type ServedThingType string
 
@@ -58,6 +62,8 @@ type DeploymentMetadata struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+
+	utils.MetaInfo
 }
 
 type DeploymentContent struct {

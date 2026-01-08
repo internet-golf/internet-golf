@@ -46,6 +46,12 @@ type DeploymentCreateInput struct {
 
 // output types ============================
 
+type SiteMeta struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Image       string `json:"image"`
+}
+
 type DeploymentBase struct {
 	Url string `json:"url" doc:"URL that this deployment will appear at. The DNS for the domain has to be set up first." example:"mysite.mydomain.com"`
 
@@ -55,7 +61,9 @@ type DeploymentBase struct {
 
 	Tags []string `json:"tags" required:"false" doc:"Tags used for metadata."`
 
-	PreserveExternalPath bool `json:"preserveExternalPath" required:"false" doc:"if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)"`
+	PreserveExternalPath bool `json:"preserveExternalPath" required:"false" doc:"If this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)"`
+
+	Meta SiteMeta `json:"meta" doc:"Metadata scraped from the deployment contents."`
 }
 
 // this could go in DeploymentBase if DeploymentCreateInput didn't cheat and use
@@ -85,7 +93,7 @@ type AliasBase struct {
 // this mostly exists to make absolutely sure that the different deployment base
 // types can be distinguished between by e.g. OpenAPI validation
 type EmptyBase struct {
-	NoContentYet bool `json:"noContentYet" doc:"Set to true to indicate that this deployment has not yet been set up."`
+	NoContentYet *bool `json:"noContentYet" doc:"Set to true to indicate that this deployment has not yet been set up."`
 }
 
 // this is the type that is returned for a deployment from the api. it combines
@@ -125,6 +133,12 @@ func deploymentToApiModel(deployment db.Deployment) (DeploymentModel, error) {
 		PreserveExternalPath: deployment.PreserveExternalPath,
 	}
 
+	output.DeploymentBase.Meta = SiteMeta{
+		Title:       deployment.MetaInfo.Title,
+		Image:       deployment.MetaInfo.Image,
+		Description: deployment.MetaInfo.Description,
+	}
+
 	if deployment.ServedThingType == db.StaticFiles {
 		output.Type = "StaticSite"
 		output.StaticSiteBase.ServerContentLocation = &deployment.ServedThing
@@ -136,7 +150,8 @@ func deploymentToApiModel(deployment db.Deployment) (DeploymentModel, error) {
 		output.AliasBase.Redirect = &deployment.Redirect
 	} else if len(deployment.ServedThingType) == 0 {
 		output.Type = "Empty"
-		output.EmptyBase.NoContentYet = true
+		noContentYet := true
+		output.EmptyBase.NoContentYet = &noContentYet
 	} else {
 		return DeploymentModel{}, fmt.Errorf("Deployment type %v not supported by the API", deployment.ServedThingType)
 	}
