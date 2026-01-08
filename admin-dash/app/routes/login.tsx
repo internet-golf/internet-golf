@@ -32,7 +32,6 @@ export default function Login() {
       console.error("no token");
       return;
     }
-    console.log(token);
     setGolfAuthToken(token);
     navigate("/deployments");
   };
