@@ -1,4 +1,3 @@
-import { Flex } from "antd";
 import type { Route } from "./+types/deployments";
 import { getDeployments } from "~/api-calls/generated/golfComponents";
 import { DeploymentCard } from "~/components/DeploymentCard";
@@ -14,10 +13,10 @@ export async function clientLoader() {
 
 export default function Home({ loaderData: { deployments } }: Route.ComponentProps) {
   return (
-    <Flex wrap gap="large">
+    <div className="grid gap-4 w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       {deployments?.map((d) => (
         <DeploymentCard key={d.url} deployment={d} />
       ))}
-    </Flex>
+    </div>
   );
 }

@@ -1,5 +1,12 @@
-import { EditOutlined, ExportOutlined, GithubOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  ExportOutlined,
+  FolderOpenFilled,
+  GithubOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { Button, Card, Flex, Typography } from "antd";
+import type { ReactNode } from "react";
 import type { GetDeploymentResponse } from "~/api-calls/generated/golfComponents";
 
 function ExternalSourceLink({
@@ -19,10 +26,25 @@ function ExternalSourceLink({
   return null;
 }
 
+const TypeLabel = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
+  <Flex align="center" gap="small">
+    {icon}
+    {children}
+  </Flex>
+);
+
 export function DeploymentCard({ deployment }: { deployment: GetDeploymentResponse }) {
-  const type = { Alias: "Alias", Empty: "No Content Yet", StaticSite: "Static Site" }[
-    deployment.type
-  ];
+  const type = {
+    Alias: <TypeLabel icon={<ReloadOutlined />}>Alias</TypeLabel>,
+    Empty: (
+      <TypeLabel
+        icon={<span className="rounded-full border-2 border-dashed w-3 h-3 inline-block"> </span>}
+      >
+        No Content Yet
+      </TypeLabel>
+    ),
+    StaticSite: <TypeLabel icon={<FolderOpenFilled />}>Static Site</TypeLabel>,
+  }[deployment.type];
 
   const actionButtons = [<Button icon={<EditOutlined />}>Edit</Button>];
 
@@ -47,8 +69,8 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
         </Flex>
       }
       styles={{
-        root: { width: 300, display: "flex", flexDirection: "column" },
-        title: { paddingTop: 8, paddingBottom: 8 },
+        root: { width: "100%", display: "flex", flexDirection: "column" },
+        title: { paddingTop: 12, paddingBottom: 12 },
         body: { paddingTop: 12, paddingBottom: 12, minHeight: 0, flexGrow: "1" },
       }}
       actions={actionButtons}
