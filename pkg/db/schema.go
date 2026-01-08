@@ -1,5 +1,7 @@
 package db
 
+import "time"
+
 type ServedThingType string
 
 const (
@@ -53,6 +55,9 @@ type DeploymentMetadata struct {
 	// this is `true` for internal deployments like the one for the admin API.
 	// TODO: rename to "internal" because it probably shouldn't be in the API either
 	DontPersist bool
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type DeploymentContent struct {

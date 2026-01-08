@@ -24,12 +24,17 @@ components:
         aliasedTo:
           description: The URL that this deployment is an alias for.
           type: string
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
           example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+            - GithubRepo
           type: string
         preserveExternalPath:
           description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
@@ -50,6 +55,9 @@ components:
             - Alias
             - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
           example: mysite.mydomain.com
@@ -57,6 +65,8 @@ components:
       required:
         - url
         - type
+        - createdAt
+        - updatedAt
       type: object
     CreateBearerTokenInputBody:
       additionalProperties: false
@@ -139,6 +149,8 @@ components:
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+            - GithubRepo
           type: string
         preserveExternalPath:
           description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
@@ -162,12 +174,17 @@ components:
         aliasedTo:
           description: The URL that this deployment is an alias for.
           type: string
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
           example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+            - GithubRepo
           type: string
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been set up.
@@ -197,6 +214,9 @@ components:
             - Alias
             - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
           example: mysite.mydomain.com
@@ -204,17 +224,24 @@ components:
       required:
         - url
         - type
+        - createdAt
+        - updatedAt
         - noContentYet
       type: object
     EmptyDeployment:
       additionalProperties: false
       properties:
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
           example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+            - GithubRepo
           type: string
         noContentYet:
           description: Set to true to indicate that this deployment has not yet been set up.
@@ -235,6 +262,9 @@ components:
             - Alias
             - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
           example: mysite.mydomain.com
@@ -242,6 +272,8 @@ components:
       required:
         - url
         - type
+        - createdAt
+        - updatedAt
         - noContentYet
       type: object
     ErrorDetail:
@@ -324,12 +356,17 @@ components:
     StaticSiteDeployment:
       additionalProperties: false
       properties:
+        createdAt:
+          description: When the deployment was created (string in ISO-8601 format.)
+          type: string
         externalSource:
           description: Original repository for this deployment's source. Can include a branch name.
           example: user/repo or user/repo#branch-name
           type: string
         externalSourceType:
           description: Place where the original repository lives.
+          enum:
+            - GithubRepo
           type: string
         preserveExternalPath:
           description: if this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
@@ -353,6 +390,9 @@ components:
             - Alias
             - Empty
           type: string
+        updatedAt:
+          description: When the deployment was last updated (string in ISO-8601 format.)
+          type: string
         url:
           description: URL that this deployment will appear at. The DNS for the domain has to be set up first.
           example: mysite.mydomain.com
@@ -360,6 +400,8 @@ components:
       required:
         - url
         - type
+        - createdAt
+        - updatedAt
       type: object
     SuccessOutputBody:
       additionalProperties: false

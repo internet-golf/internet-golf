@@ -6,6 +6,7 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/internet-golf/internet-golf/pkg/db"
 	"github.com/internet-golf/internet-golf/pkg/public"
@@ -71,8 +72,10 @@ func (bus *DeploymentBus) SetupDeployment(metadata db.DeploymentMetadata) error 
 	})
 
 	if existingIndex == -1 {
+		metadata.CreatedAt = time.Now()
 		bus.deployments = append(bus.deployments, db.Deployment{DeploymentMetadata: metadata})
 	} else {
+		metadata.UpdatedAt = time.Now()
 		bus.deployments[existingIndex].DeploymentMetadata = metadata
 	}
 
@@ -174,6 +177,7 @@ func (bus *DeploymentBus) updateDeploymentContentByIndex(
 ) error {
 	bus.deployments[index].DeploymentContent = content
 	bus.deployments[index].DeploymentContent.HasContent = true
+	bus.deployments[index].DeploymentMetadata.UpdatedAt = time.Now()
 
 	deploymentErr := bus.server.DeployAll(bus.deployments)
 	if deploymentErr != nil {

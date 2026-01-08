@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"slices"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/internet-golf/internet-golf/pkg/db"
@@ -50,7 +51,7 @@ type DeploymentBase struct {
 
 	// assuming that there won't be multiple external sources...
 	ExternalSource     string `json:"externalSource,omitempty" required:"false" doc:"Original repository for this deployment's source. Can include a branch name." example:"user/repo or user/repo#branch-name"`
-	ExternalSourceType string `json:"externalSourceType,omitempty" required:"false" doc:"Place where the original repository lives."`
+	ExternalSourceType string `json:"externalSourceType,omitempty" enum:"GithubRepo" required:"false" doc:"Place where the original repository lives."`
 
 	Tags []string `json:"tags" required:"false" doc:"Tags used for metadata."`
 
@@ -60,7 +61,9 @@ type DeploymentBase struct {
 // this could go in DeploymentBase if DeploymentCreateInput didn't cheat and use
 // it for input
 type DeploymentType struct {
-	Type string `json:"type" enum:"StaticSite,Alias,Empty" doc:"Type of deployment contents."`
+	Type      string `json:"type" enum:"StaticSite,Alias,Empty" doc:"Type of deployment contents."`
+	CreatedAt string `json:"createdAt" doc:"When the deployment was created (string in ISO-8601 format.)"`
+	UpdatedAt string `json:"updatedAt" doc:"When the deployment was last updated (string in ISO-8601 format.)"`
 }
 
 type StaticSiteBase struct {
@@ -110,6 +113,10 @@ type GetDeploymentsOutput struct {
 
 func deploymentToApiModel(deployment db.Deployment) (DeploymentModel, error) {
 	var output DeploymentModel
+
+	output.CreatedAt = deployment.CreatedAt.UTC().Format(time.RFC3339)
+	output.UpdatedAt = deployment.UpdatedAt.UTC().Format(time.RFC3339)
+
 	output.DeploymentBase = DeploymentBase{
 		Url:                  deployment.Url.String(),
 		ExternalSource:       deployment.ExternalSource,
@@ -117,6 +124,7 @@ func deploymentToApiModel(deployment db.Deployment) (DeploymentModel, error) {
 		Tags:                 deployment.Tags,
 		PreserveExternalPath: deployment.PreserveExternalPath,
 	}
+
 	if deployment.ServedThingType == db.StaticFiles {
 		output.Type = "StaticSite"
 		output.StaticSiteBase.ServerContentLocation = &deployment.ServedThing
