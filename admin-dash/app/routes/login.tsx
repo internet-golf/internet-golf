@@ -13,10 +13,12 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export function clientLoader() {
-  // if the user already has a token stored, send them onward. if the token is
-  // invalid, then golfFetcher will receive a 401 Unauthorized response and send
-  // them right back here; however, by attempting to forward them to the next
-  // page by default prioritizes the common/successful case
+  // if the user already has a token stored, send them onward. if the token has
+  // been invalidated since it was entered, then golfFetcher will receive a 401
+  // Unauthorized response the next time it tries to make a request and then
+  // will send them right back here, so this might not "work"; however,
+  // attempting to forward them to the next page by default prioritizes the
+  // common, successful case
   if (getGolfAuthToken()) {
     return redirect("/deployments");
   }
@@ -32,6 +34,9 @@ export default function Login() {
       console.error("no token");
       return;
     }
+    // TODO: some kind of call to like a "/validate-auth" endpoint should be
+    // made here before accepting and storing the token and forwarding the user;
+    // it would speed up the process of finding out the token is wrong
     setGolfAuthToken(token);
     navigate("/deployments");
   };
