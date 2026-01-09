@@ -38,8 +38,7 @@ function ExternalSourceTag({
   externalSource,
   externalSourceType,
 }: Pick<GetDeploymentResponse, "externalSource" | "externalSourceType">) {
-  const { token } = theme.useToken();
-  if (externalSourceType === "GithubRepo") {
+  if (externalSourceType === "Github") {
     return (
       <Tag>
         <a target="_blank" href={`https://github.com/${externalSource}`}>

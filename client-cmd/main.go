@@ -142,14 +142,17 @@ func createDeploymentCommand() *cobra.Command {
 		Short:   "Creates a deployment",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var externalSourceType string
-			var externalSource string
+			var externalSourceType *string
+			var externalSource *string
 
 			if len(github) > 0 {
 				// TODO: would be nice to use the ExternalSourceType enum-ish
 				// thing somehow, instead of this string literal
-				externalSourceType = "GithubRepo"
-				externalSource = github
+				githubSource := "Github"
+				// these have to be pointers so that they can be nil (in which
+				// case they'll be left out of the json request body)
+				externalSourceType = &githubSource
+				externalSource = &github
 			}
 
 			client := createClient(args[0])
@@ -158,8 +161,8 @@ func createDeploymentCommand() *cobra.Command {
 				DefaultAPI.CreateDeployment(context.TODO()).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Url:                args[0],
-					ExternalSourceType: &externalSourceType,
-					ExternalSource:     &externalSource,
+					ExternalSourceType: externalSourceType,
+					ExternalSource:     externalSource,
 					Tags:               []string{},
 					Name:               name,
 				}).

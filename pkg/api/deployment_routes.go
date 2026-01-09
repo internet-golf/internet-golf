@@ -53,7 +53,7 @@ type DeploymentBase struct {
 
 	// assuming that there won't be multiple external sources...
 	ExternalSource     string `json:"externalSource,omitempty" required:"false" doc:"Original repository for this deployment's source. Can include a branch name." example:"user/repo or user/repo#branch-name"`
-	ExternalSourceType string `json:"externalSourceType,omitempty" enum:"GithubRepo" required:"false" doc:"Place where the original repository lives."`
+	ExternalSourceType string `json:"externalSourceType,omitempty" required:"false" enum:"Github" doc:"Place where the original repository lives."`
 
 	Tags []string `json:"tags" required:"false" doc:"Tags used for metadata."`
 

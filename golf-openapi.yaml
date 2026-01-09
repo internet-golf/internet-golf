@@ -34,7 +34,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-            - GithubRepo
+            - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"
@@ -158,7 +158,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-            - GithubRepo
+            - Github
           type: string
         name:
           description: Name for the deployment. This is just metadata; make it whatever you want.
@@ -196,7 +196,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-            - GithubRepo
+            - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"
@@ -260,7 +260,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-            - GithubRepo
+            - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"
@@ -406,7 +406,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-            - GithubRepo
+            - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"

@@ -34,7 +34,7 @@ export type AliasDeployment = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: "GithubRepo";
+  externalSourceType?: "Github";
   meta: SiteMeta;
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
@@ -147,7 +147,7 @@ export type DeploymentCreateInputBody = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: "GithubRepo";
+  externalSourceType?: "Github";
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
    */
@@ -186,7 +186,7 @@ export type DeploymentModel = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: "GithubRepo";
+  externalSourceType?: "Github";
   meta: SiteMeta;
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
@@ -246,7 +246,7 @@ export type EmptyDeployment = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: "GithubRepo";
+  externalSourceType?: "Github";
   meta: SiteMeta;
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
@@ -378,7 +378,7 @@ export type StaticSiteDeployment = {
   /**
    * Place where the original repository lives.
    */
-  externalSourceType?: "GithubRepo";
+  externalSourceType?: "Github";
   meta: SiteMeta;
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
