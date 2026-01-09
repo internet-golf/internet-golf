@@ -38,6 +38,7 @@ function ExternalSourceTag({
   externalSource,
   externalSourceType,
 }: Pick<GetDeploymentResponse, "externalSource" | "externalSourceType">) {
+  const { token } = theme.useToken();
   if (externalSourceType === "GithubRepo") {
     return (
       <Tag>
@@ -78,7 +79,7 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
       actions={actionButtons}
     >
       <Flex gap="large">
-        <div className="h-24 w-32 rounded-lg overflow-clip bg-gray-100">
+        <div className="h-24 w-32 overflow-clip bg-gray-100">
           <img src={deployment.meta.image || "/full-web-icon.svg"} />
         </div>
         <Flex gap="middle" vertical justify="flex-start">
@@ -114,10 +115,10 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
           )}
           {/* TODO: i do not know why this marginTop is needed to make things look spaced evenly */}
           <Flex gap="small" align="center" style={{ marginTop: 6 }}>
-            {deployment.externalSource && <ExternalSourceTag {...deployment} />}
             <Tag style={{ alignSelf: "flex-start" }}>
               <TypeLabel {...deployment} />
             </Tag>
+            {deployment.externalSource && <ExternalSourceTag {...deployment} />}
           </Flex>
         </Flex>
       </Flex>

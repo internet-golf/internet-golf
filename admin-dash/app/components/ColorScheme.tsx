@@ -28,7 +28,7 @@ function ColorSchemeApplicator({
         style: { borderColor: mode === "dark" ? "var(--ant-color-text)" : undefined },
       }}
     >
-      <div className={mode === "dark" ? "bg-gray-950" : "bg-white"}>{children}</div>
+      <div className={mode === "dark" ? "bg-black" : "bg-white"}>{children}</div>
     </ConfigProvider>
   );
 }

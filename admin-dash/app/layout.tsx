@@ -40,11 +40,12 @@ function HeaderLink({
   );
 }
 
-function StatusLink() {
+function StatusLink({ iconPlacement = "right" }: { iconPlacement?: "left" | "right" }) {
   return (
     <HeaderLink
       to="/status"
       icon={<div className="w-2 h-2 mx-[3px] mb-px bg-(--ant-color-success) rounded-full"> </div>}
+      iconPlacement={iconPlacement}
     >
       Server Status
     </HeaderLink>
@@ -72,7 +73,7 @@ function HeaderLinks({ vertical }: { vertical?: boolean }) {
           Deploy New Site
         </HeaderLink>
       </div>
-      {vertical ? <StatusLink /> : null}
+      {vertical ? <StatusLink iconPlacement="left" /> : null}
     </Flex>
   );
 }
@@ -85,8 +86,8 @@ export default function LayoutComponent() {
   return (
     <>
       <ColorScheme.Dark>
-        <div className="flex flex-col [&>div]:py-2 [&>div]:px-4 [&>div]:mx-auto [&>div]:w-6xl [&>div]:max-w-full [&>div]:md:max-w-[95%]">
-          <div className="mb-3 mt-4 md:mt-7 md:mb-5">
+        <div className="flex flex-col">
+          <div className="px-4 md:px-0 mb-3 mt-4 md:mt-3 md:mb-1 py-2 mx-auto w-6xl max-w-full md:max-w-[95%]">
             <Flex align="center" gap="middle">
               <button
                 className="block md:hidden mt-2 mr-1"
@@ -101,7 +102,7 @@ export default function LayoutComponent() {
                   </Typography.Title>
                 </div>
                 <div className="md:hidden block">
-                  <Typography.Title level={3} style={{ margin: 0 }}>
+                  <Typography.Title level={2} style={{ margin: 0 }}>
                     Internet Golf Dashboard
                   </Typography.Title>
                 </div>
@@ -111,8 +112,10 @@ export default function LayoutComponent() {
               </div>
             </Flex>
           </div>
-          <div className="hidden md:block bg-actual-gray rounded-lg mb-3">
-            <HeaderLinks />
+          <div className="hidden md:block py-2 mb-1 bg-[#1c1c1c]">
+            <div className="mx-auto w-6xl max-w-full md:max-w-[95%]">
+              <HeaderLinks />
+            </div>
           </div>
         </div>
       </ColorScheme.Dark>

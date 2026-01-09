@@ -20,8 +20,18 @@ export default function BaseTheme({ children }: { children: ReactNode }) {
           paddingLG: 16,
           // this is a little bit brighter than the default
           colorSuccess: "#69ce38",
+
+          // make borders a little bit squarer and darker
+          colorBorder: "#bbb",
+          colorBorderSecondary: "#bbb",
+          borderRadius: 0,
+          lineWidth: 1,
         },
         components: {
+          Button: {
+            // grant buttons an exemption from square borders
+            borderRadius: 8,
+          },
           Modal: {
             // i am not that enthusiastic about the swoosh animation for this thing
             motionDurationFast: "0",
