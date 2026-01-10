@@ -12,6 +12,7 @@ package golfsdk
 
 import (
 	"encoding/json"
+	"bytes"
 	"fmt"
 )
 
@@ -22,13 +23,18 @@ var _ MappedNullable = &DeploymentModel{}
 type DeploymentModel struct {
 	// The URL that this deployment is an alias for.
 	AliasedTo *string `json:"aliasedTo,omitempty"`
+	// When the deployment was created (string in ISO-8601 format.)
+	CreatedAt string `json:"createdAt"`
 	// Original repository for this deployment's source. Can include a branch name.
 	ExternalSource *string `json:"externalSource,omitempty"`
 	// Place where the original repository lives.
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
+	Meta SiteMeta `json:"meta"`
+	// Name for the deployment. This is just metadata; make it whatever you want.
+	Name string `json:"name"`
 	// Set to true to indicate that this deployment has not yet been set up.
-	NoContentYet bool `json:"noContentYet"`
-	// if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+	NoContentYet *bool `json:"noContentYet,omitempty"`
+	// If this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	// If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
 	Redirect *bool `json:"redirect,omitempty"`
@@ -40,9 +46,10 @@ type DeploymentModel struct {
 	Tags []string `json:"tags,omitempty"`
 	// Type of deployment contents.
 	Type string `json:"type"`
+	// When the deployment was last updated (string in ISO-8601 format.)
+	UpdatedAt string `json:"updatedAt"`
 	// URL that this deployment will appear at. The DNS for the domain has to be set up first.
 	Url string `json:"url"`
-	AdditionalProperties map[string]interface{}
 }
 
 type _DeploymentModel DeploymentModel
@@ -51,10 +58,13 @@ type _DeploymentModel DeploymentModel
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeploymentModel(noContentYet bool, type_ string, url string) *DeploymentModel {
+func NewDeploymentModel(createdAt string, meta SiteMeta, name string, type_ string, updatedAt string, url string) *DeploymentModel {
 	this := DeploymentModel{}
-	this.NoContentYet = noContentYet
+	this.CreatedAt = createdAt
+	this.Meta = meta
+	this.Name = name
 	this.Type = type_
+	this.UpdatedAt = updatedAt
 	this.Url = url
 	return &this
 }
@@ -97,6 +107,30 @@ func (o *DeploymentModel) HasAliasedTo() bool {
 // SetAliasedTo gets a reference to the given string and assigns it to the AliasedTo field.
 func (o *DeploymentModel) SetAliasedTo(v string) {
 	o.AliasedTo = &v
+}
+
+// GetCreatedAt returns the CreatedAt field value
+func (o *DeploymentModel) GetCreatedAt() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.CreatedAt
+}
+
+// GetCreatedAtOk returns a tuple with the CreatedAt field value
+// and a boolean to check if the value has been set.
+func (o *DeploymentModel) GetCreatedAtOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.CreatedAt, true
+}
+
+// SetCreatedAt sets field value
+func (o *DeploymentModel) SetCreatedAt(v string) {
+	o.CreatedAt = v
 }
 
 // GetExternalSource returns the ExternalSource field value if set, zero value otherwise.
@@ -163,28 +197,84 @@ func (o *DeploymentModel) SetExternalSourceType(v string) {
 	o.ExternalSourceType = &v
 }
 
-// GetNoContentYet returns the NoContentYet field value
-func (o *DeploymentModel) GetNoContentYet() bool {
+// GetMeta returns the Meta field value
+func (o *DeploymentModel) GetMeta() SiteMeta {
 	if o == nil {
-		var ret bool
+		var ret SiteMeta
 		return ret
 	}
 
-	return o.NoContentYet
+	return o.Meta
 }
 
-// GetNoContentYetOk returns a tuple with the NoContentYet field value
+// GetMetaOk returns a tuple with the Meta field value
 // and a boolean to check if the value has been set.
-func (o *DeploymentModel) GetNoContentYetOk() (*bool, bool) {
+func (o *DeploymentModel) GetMetaOk() (*SiteMeta, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.NoContentYet, true
+	return &o.Meta, true
 }
 
-// SetNoContentYet sets field value
+// SetMeta sets field value
+func (o *DeploymentModel) SetMeta(v SiteMeta) {
+	o.Meta = v
+}
+
+// GetName returns the Name field value
+func (o *DeploymentModel) GetName() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Name
+}
+
+// GetNameOk returns a tuple with the Name field value
+// and a boolean to check if the value has been set.
+func (o *DeploymentModel) GetNameOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Name, true
+}
+
+// SetName sets field value
+func (o *DeploymentModel) SetName(v string) {
+	o.Name = v
+}
+
+// GetNoContentYet returns the NoContentYet field value if set, zero value otherwise.
+func (o *DeploymentModel) GetNoContentYet() bool {
+	if o == nil || IsNil(o.NoContentYet) {
+		var ret bool
+		return ret
+	}
+	return *o.NoContentYet
+}
+
+// GetNoContentYetOk returns a tuple with the NoContentYet field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *DeploymentModel) GetNoContentYetOk() (*bool, bool) {
+	if o == nil || IsNil(o.NoContentYet) {
+		return nil, false
+	}
+	return o.NoContentYet, true
+}
+
+// HasNoContentYet returns a boolean if a field has been set.
+func (o *DeploymentModel) HasNoContentYet() bool {
+	if o != nil && !IsNil(o.NoContentYet) {
+		return true
+	}
+
+	return false
+}
+
+// SetNoContentYet gets a reference to the given bool and assigns it to the NoContentYet field.
 func (o *DeploymentModel) SetNoContentYet(v bool) {
-	o.NoContentYet = v
+	o.NoContentYet = &v
 }
 
 // GetPreserveExternalPath returns the PreserveExternalPath field value if set, zero value otherwise.
@@ -372,6 +462,30 @@ func (o *DeploymentModel) SetType(v string) {
 	o.Type = v
 }
 
+// GetUpdatedAt returns the UpdatedAt field value
+func (o *DeploymentModel) GetUpdatedAt() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.UpdatedAt
+}
+
+// GetUpdatedAtOk returns a tuple with the UpdatedAt field value
+// and a boolean to check if the value has been set.
+func (o *DeploymentModel) GetUpdatedAtOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.UpdatedAt, true
+}
+
+// SetUpdatedAt sets field value
+func (o *DeploymentModel) SetUpdatedAt(v string) {
+	o.UpdatedAt = v
+}
+
 // GetUrl returns the Url field value
 func (o *DeploymentModel) GetUrl() string {
 	if o == nil {
@@ -409,13 +523,18 @@ func (o DeploymentModel) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.AliasedTo) {
 		toSerialize["aliasedTo"] = o.AliasedTo
 	}
+	toSerialize["createdAt"] = o.CreatedAt
 	if !IsNil(o.ExternalSource) {
 		toSerialize["externalSource"] = o.ExternalSource
 	}
 	if !IsNil(o.ExternalSourceType) {
 		toSerialize["externalSourceType"] = o.ExternalSourceType
 	}
-	toSerialize["noContentYet"] = o.NoContentYet
+	toSerialize["meta"] = o.Meta
+	toSerialize["name"] = o.Name
+	if !IsNil(o.NoContentYet) {
+		toSerialize["noContentYet"] = o.NoContentYet
+	}
 	if !IsNil(o.PreserveExternalPath) {
 		toSerialize["preserveExternalPath"] = o.PreserveExternalPath
 	}
@@ -432,12 +551,8 @@ func (o DeploymentModel) ToMap() (map[string]interface{}, error) {
 		toSerialize["tags"] = o.Tags
 	}
 	toSerialize["type"] = o.Type
+	toSerialize["updatedAt"] = o.UpdatedAt
 	toSerialize["url"] = o.Url
-
-	for key, value := range o.AdditionalProperties {
-		toSerialize[key] = value
-	}
-
 	return toSerialize, nil
 }
 
@@ -446,8 +561,11 @@ func (o *DeploymentModel) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"noContentYet",
+		"createdAt",
+		"meta",
+		"name",
 		"type",
+		"updatedAt",
 		"url",
 	}
 
@@ -467,30 +585,15 @@ func (o *DeploymentModel) UnmarshalJSON(data []byte) (err error) {
 
 	varDeploymentModel := _DeploymentModel{}
 
-	err = json.Unmarshal(data, &varDeploymentModel)
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&varDeploymentModel)
 
 	if err != nil {
 		return err
 	}
 
 	*o = DeploymentModel(varDeploymentModel)
-
-	additionalProperties := make(map[string]interface{})
-
-	if err = json.Unmarshal(data, &additionalProperties); err == nil {
-		delete(additionalProperties, "aliasedTo")
-		delete(additionalProperties, "externalSource")
-		delete(additionalProperties, "externalSourceType")
-		delete(additionalProperties, "noContentYet")
-		delete(additionalProperties, "preserveExternalPath")
-		delete(additionalProperties, "redirect")
-		delete(additionalProperties, "serverContentLocation")
-		delete(additionalProperties, "spaMode")
-		delete(additionalProperties, "tags")
-		delete(additionalProperties, "type")
-		delete(additionalProperties, "url")
-		o.AdditionalProperties = additionalProperties
-	}
 
 	return err
 }

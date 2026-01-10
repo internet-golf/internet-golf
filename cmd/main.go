@@ -58,6 +58,7 @@ func main() {
 				database.DeploymentMetadata{
 					Url:         adminApiUrl,
 					DontPersist: true,
+					Internal:    true,
 				})
 			deploymentBus.PutDeploymentContentByUrl(
 				adminApiUrl,

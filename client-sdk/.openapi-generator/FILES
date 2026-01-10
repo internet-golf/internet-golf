@@ -21,6 +21,7 @@ docs/GetDeployment200Response.md
 docs/GetDeployments200Response.md
 docs/GetDeploymentsOutputBody.md
 docs/HealthCheckOutputBody.md
+docs/SiteMeta.md
 docs/StaticSiteDeployment.md
 docs/SuccessOutputBody.md
 git_push.sh
@@ -39,6 +40,7 @@ model_get_deployment_200_response.go
 model_get_deployments_200_response.go
 model_get_deployments_output_body.go
 model_health_check_output_body.go
+model_site_meta.go
 model_static_site_deployment.go
 model_success_output_body.go
 response.go

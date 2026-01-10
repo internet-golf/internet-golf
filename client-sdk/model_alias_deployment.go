@@ -23,11 +23,16 @@ var _ MappedNullable = &AliasDeployment{}
 type AliasDeployment struct {
 	// The URL that this deployment is an alias for.
 	AliasedTo *string `json:"aliasedTo,omitempty"`
+	// When the deployment was created (string in ISO-8601 format.)
+	CreatedAt string `json:"createdAt"`
 	// Original repository for this deployment's source. Can include a branch name.
 	ExternalSource *string `json:"externalSource,omitempty"`
 	// Place where the original repository lives.
 	ExternalSourceType *string `json:"externalSourceType,omitempty"`
-	// if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
+	Meta SiteMeta `json:"meta"`
+	// Name for the deployment. This is just metadata; make it whatever you want.
+	Name string `json:"name"`
+	// If this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
 	PreserveExternalPath *bool `json:"preserveExternalPath,omitempty"`
 	// If this is true, visitors to this deployment's URL will be completely redirected to the URL that this alias is for.
 	Redirect *bool `json:"redirect,omitempty"`
@@ -35,6 +40,8 @@ type AliasDeployment struct {
 	Tags []string `json:"tags,omitempty"`
 	// Type of deployment contents.
 	Type string `json:"type"`
+	// When the deployment was last updated (string in ISO-8601 format.)
+	UpdatedAt string `json:"updatedAt"`
 	// URL that this deployment will appear at. The DNS for the domain has to be set up first.
 	Url string `json:"url"`
 }
@@ -45,9 +52,13 @@ type _AliasDeployment AliasDeployment
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAliasDeployment(type_ string, url string) *AliasDeployment {
+func NewAliasDeployment(createdAt string, meta SiteMeta, name string, type_ string, updatedAt string, url string) *AliasDeployment {
 	this := AliasDeployment{}
+	this.CreatedAt = createdAt
+	this.Meta = meta
+	this.Name = name
 	this.Type = type_
+	this.UpdatedAt = updatedAt
 	this.Url = url
 	return &this
 }
@@ -90,6 +101,30 @@ func (o *AliasDeployment) HasAliasedTo() bool {
 // SetAliasedTo gets a reference to the given string and assigns it to the AliasedTo field.
 func (o *AliasDeployment) SetAliasedTo(v string) {
 	o.AliasedTo = &v
+}
+
+// GetCreatedAt returns the CreatedAt field value
+func (o *AliasDeployment) GetCreatedAt() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.CreatedAt
+}
+
+// GetCreatedAtOk returns a tuple with the CreatedAt field value
+// and a boolean to check if the value has been set.
+func (o *AliasDeployment) GetCreatedAtOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.CreatedAt, true
+}
+
+// SetCreatedAt sets field value
+func (o *AliasDeployment) SetCreatedAt(v string) {
+	o.CreatedAt = v
 }
 
 // GetExternalSource returns the ExternalSource field value if set, zero value otherwise.
@@ -154,6 +189,54 @@ func (o *AliasDeployment) HasExternalSourceType() bool {
 // SetExternalSourceType gets a reference to the given string and assigns it to the ExternalSourceType field.
 func (o *AliasDeployment) SetExternalSourceType(v string) {
 	o.ExternalSourceType = &v
+}
+
+// GetMeta returns the Meta field value
+func (o *AliasDeployment) GetMeta() SiteMeta {
+	if o == nil {
+		var ret SiteMeta
+		return ret
+	}
+
+	return o.Meta
+}
+
+// GetMetaOk returns a tuple with the Meta field value
+// and a boolean to check if the value has been set.
+func (o *AliasDeployment) GetMetaOk() (*SiteMeta, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Meta, true
+}
+
+// SetMeta sets field value
+func (o *AliasDeployment) SetMeta(v SiteMeta) {
+	o.Meta = v
+}
+
+// GetName returns the Name field value
+func (o *AliasDeployment) GetName() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Name
+}
+
+// GetNameOk returns a tuple with the Name field value
+// and a boolean to check if the value has been set.
+func (o *AliasDeployment) GetNameOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Name, true
+}
+
+// SetName sets field value
+func (o *AliasDeployment) SetName(v string) {
+	o.Name = v
 }
 
 // GetPreserveExternalPath returns the PreserveExternalPath field value if set, zero value otherwise.
@@ -277,6 +360,30 @@ func (o *AliasDeployment) SetType(v string) {
 	o.Type = v
 }
 
+// GetUpdatedAt returns the UpdatedAt field value
+func (o *AliasDeployment) GetUpdatedAt() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.UpdatedAt
+}
+
+// GetUpdatedAtOk returns a tuple with the UpdatedAt field value
+// and a boolean to check if the value has been set.
+func (o *AliasDeployment) GetUpdatedAtOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.UpdatedAt, true
+}
+
+// SetUpdatedAt sets field value
+func (o *AliasDeployment) SetUpdatedAt(v string) {
+	o.UpdatedAt = v
+}
+
 // GetUrl returns the Url field value
 func (o *AliasDeployment) GetUrl() string {
 	if o == nil {
@@ -314,12 +421,15 @@ func (o AliasDeployment) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.AliasedTo) {
 		toSerialize["aliasedTo"] = o.AliasedTo
 	}
+	toSerialize["createdAt"] = o.CreatedAt
 	if !IsNil(o.ExternalSource) {
 		toSerialize["externalSource"] = o.ExternalSource
 	}
 	if !IsNil(o.ExternalSourceType) {
 		toSerialize["externalSourceType"] = o.ExternalSourceType
 	}
+	toSerialize["meta"] = o.Meta
+	toSerialize["name"] = o.Name
 	if !IsNil(o.PreserveExternalPath) {
 		toSerialize["preserveExternalPath"] = o.PreserveExternalPath
 	}
@@ -330,6 +440,7 @@ func (o AliasDeployment) ToMap() (map[string]interface{}, error) {
 		toSerialize["tags"] = o.Tags
 	}
 	toSerialize["type"] = o.Type
+	toSerialize["updatedAt"] = o.UpdatedAt
 	toSerialize["url"] = o.Url
 	return toSerialize, nil
 }
@@ -339,7 +450,11 @@ func (o *AliasDeployment) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
+		"createdAt",
+		"meta",
+		"name",
 		"type",
+		"updatedAt",
 		"url",
 	}
 

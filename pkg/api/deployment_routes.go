@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"slices"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/internet-golf/internet-golf/pkg/db"
@@ -46,21 +47,32 @@ type DeploymentCreateInput struct {
 // output types ============================
 
 type DeploymentBase struct {
+	Name string `json:"name" required:"true" doc:"Name for the deployment. This is just metadata; make it whatever you want."`
+
 	Url string `json:"url" doc:"URL that this deployment will appear at. The DNS for the domain has to be set up first." example:"mysite.mydomain.com"`
 
 	// assuming that there won't be multiple external sources...
 	ExternalSource     string `json:"externalSource,omitempty" required:"false" doc:"Original repository for this deployment's source. Can include a branch name." example:"user/repo or user/repo#branch-name"`
-	ExternalSourceType string `json:"externalSourceType,omitempty" required:"false" doc:"Place where the original repository lives."`
+	ExternalSourceType string `json:"externalSourceType,omitempty" required:"false" enum:"Github" doc:"Place where the original repository lives."`
 
 	Tags []string `json:"tags" required:"false" doc:"Tags used for metadata."`
 
-	PreserveExternalPath bool `json:"preserveExternalPath" required:"false" doc:"if this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)"`
+	PreserveExternalPath bool `json:"preserveExternalPath" required:"false" doc:"If this is true and the deployment url has a path like \"/thing\", then the \"/thing\" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)"`
+}
+
+type SiteMeta struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Image       string `json:"image"`
 }
 
 // this could go in DeploymentBase if DeploymentCreateInput didn't cheat and use
 // it for input
-type DeploymentType struct {
-	Type string `json:"type" enum:"StaticSite,Alias,Empty" doc:"Type of deployment contents."`
+type DeploymentOutputBase struct {
+	Type      string   `json:"type" enum:"StaticSite,Alias,Empty" doc:"Type of deployment contents."`
+	CreatedAt string   `json:"createdAt" doc:"When the deployment was created (string in ISO-8601 format.)"`
+	UpdatedAt string   `json:"updatedAt" doc:"When the deployment was last updated (string in ISO-8601 format.)"`
+	Meta      SiteMeta `json:"meta" doc:"Metadata scraped from the deployment contents."`
 }
 
 type StaticSiteBase struct {
@@ -82,7 +94,7 @@ type AliasBase struct {
 // this mostly exists to make absolutely sure that the different deployment base
 // types can be distinguished between by e.g. OpenAPI validation
 type EmptyBase struct {
-	NoContentYet bool `json:"noContentYet" doc:"Set to true to indicate that this deployment has not yet been set up."`
+	NoContentYet *bool `json:"noContentYet,omitempty" doc:"Set to true to indicate that this deployment has not yet been set up."`
 }
 
 // this is the type that is returned for a deployment from the api. it combines
@@ -91,7 +103,7 @@ type EmptyBase struct {
 // the API code and inserted into the OpenAPI specification; see below
 type DeploymentModel struct {
 	DeploymentBase
-	DeploymentType
+	DeploymentOutputBase
 	AliasBase
 	StaticSiteBase
 	EmptyBase
@@ -110,13 +122,25 @@ type GetDeploymentsOutput struct {
 
 func deploymentToApiModel(deployment db.Deployment) (DeploymentModel, error) {
 	var output DeploymentModel
+
+	output.CreatedAt = deployment.CreatedAt.UTC().Format(time.RFC3339)
+	output.UpdatedAt = deployment.UpdatedAt.UTC().Format(time.RFC3339)
+
 	output.DeploymentBase = DeploymentBase{
 		Url:                  deployment.Url.String(),
 		ExternalSource:       deployment.ExternalSource,
 		ExternalSourceType:   string(deployment.ExternalSourceType),
 		Tags:                 deployment.Tags,
 		PreserveExternalPath: deployment.PreserveExternalPath,
+		Name:                 deployment.Name,
 	}
+
+	output.DeploymentOutputBase.Meta = SiteMeta{
+		Title:       deployment.MetaInfo.Title,
+		Image:       deployment.MetaInfo.Image,
+		Description: deployment.MetaInfo.Description,
+	}
+
 	if deployment.ServedThingType == db.StaticFiles {
 		output.Type = "StaticSite"
 		output.StaticSiteBase.ServerContentLocation = &deployment.ServedThing
@@ -128,7 +152,8 @@ func deploymentToApiModel(deployment db.Deployment) (DeploymentModel, error) {
 		output.AliasBase.Redirect = &deployment.Redirect
 	} else if len(deployment.ServedThingType) == 0 {
 		output.Type = "Empty"
-		output.EmptyBase.NoContentYet = true
+		noContentYet := true
+		output.EmptyBase.NoContentYet = &noContentYet
 	} else {
 		return DeploymentModel{}, fmt.Errorf("Deployment type %v not supported by the API", deployment.ServedThingType)
 	}
@@ -160,13 +185,14 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 		if tags == nil {
 			tags = []string{}
 		}
+
 		putDeploymentErr := a.web.SetupDeployment(db.DeploymentMetadata{
 			Url:                  urlFromString(input.Body.Url),
 			ExternalSource:       input.Body.ExternalSource,
 			ExternalSourceType:   db.ExternalSourceType(input.Body.ExternalSourceType),
 			Tags:                 tags,
 			PreserveExternalPath: input.Body.PreserveExternalPath,
-			DontPersist:          false,
+			Name:                 input.Body.Name,
 		})
 		if putDeploymentErr != nil {
 			return nil, putDeploymentErr
@@ -188,24 +214,24 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 
 	type StaticSiteDeployment struct {
 		DeploymentBase
-		DeploymentType
+		DeploymentOutputBase
 		StaticSiteBase
 	}
 	type AliasDeployment struct {
 		DeploymentBase
-		DeploymentType
+		DeploymentOutputBase
 		AliasBase
 	}
 	type EmptyDeployment struct {
 		DeploymentBase
-		DeploymentType
+		DeploymentOutputBase
 		EmptyBase
 	}
 	deploymentSchema := &huma.Schema{
 		OneOf: []*huma.Schema{
-			registry.Schema(reflect.TypeOf(StaticSiteDeployment{}), true, ""),
-			registry.Schema(reflect.TypeOf(AliasDeployment{}), true, ""),
-			registry.Schema(reflect.TypeOf(EmptyDeployment{}), true, ""),
+			registry.Schema(reflect.TypeFor[StaticSiteDeployment](), true, ""),
+			registry.Schema(reflect.TypeFor[AliasDeployment](), true, ""),
+			registry.Schema(reflect.TypeFor[EmptyDeployment](), true, ""),
 		},
 		Discriminator: &huma.Discriminator{
 			PropertyName: "type", Mapping: map[string]string{
@@ -248,7 +274,7 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 		deployments := append([]db.Deployment{}, a.web.deployments...)
 		// delete the deployments that the current user shouldn't be able to see
 		deployments = slices.DeleteFunc(deployments, func(d db.Deployment) bool {
-			return !permissions.CanViewDeployment(&d)
+			return !permissions.CanViewDeployment(&d) || d.Internal
 		})
 
 		var output GetDeploymentsOutput
@@ -290,18 +316,9 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 		url := urlFromString(input.Url)
 
 		deployment, err := a.web.GetDeploymentByUrl(&url)
-		if err != nil || deployment.DontPersist {
+		if err != nil || !permissions.CanViewDeployment(&deployment) || deployment.Internal {
 			return nil, huma.Error404NotFound(
 				fmt.Sprintf("Could not find deployment with URL \"%s\"", url),
-			)
-		}
-
-		if !permissions.CanViewDeployment(&deployment) {
-			return nil, huma.Error403Forbidden(
-				fmt.Sprintf(
-					"You are not authorized to view the deployment \"%s\"",
-					url,
-				),
 			)
 		}
 

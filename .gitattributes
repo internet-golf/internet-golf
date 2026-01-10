@@ -3,3 +3,6 @@ client-sdk/**/* linguist-generated=true
 
 pkg/resources/dash-dist/* linguist-generated=true
 pkg/resources/dash-dist/**/* linguist-generated=true
+
+admin-dash/app/api-calls/generated/golfComponents.ts linguist-generated=true
+admin-dash/app/api-calls/generated/golfSchemas.ts linguist-generated=true

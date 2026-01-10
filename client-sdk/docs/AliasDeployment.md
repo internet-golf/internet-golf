@@ -5,19 +5,23 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **AliasedTo** | Pointer to **string** | The URL that this deployment is an alias for. | [optional] 
+**CreatedAt** | **string** | When the deployment was created (string in ISO-8601 format.) | 
 **ExternalSource** | Pointer to **string** | Original repository for this deployment&#39;s source. Can include a branch name. | [optional] 
 **ExternalSourceType** | Pointer to **string** | Place where the original repository lives. | [optional] 
-**PreserveExternalPath** | Pointer to **bool** | if this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
+**Meta** | [**SiteMeta**](SiteMeta.md) |  | 
+**Name** | **string** | Name for the deployment. This is just metadata; make it whatever you want. | 
+**PreserveExternalPath** | Pointer to **bool** | If this is true and the deployment url has a path like \&quot;/thing\&quot;, then the \&quot;/thing\&quot; in the path will be transparently passed through to the underlying resource instead of being removed (which is the default) | [optional] 
 **Redirect** | Pointer to **bool** | If this is true, visitors to this deployment&#39;s URL will be completely redirected to the URL that this alias is for. | [optional] 
 **Tags** | Pointer to **[]string** | Tags used for metadata. | [optional] 
 **Type** | **string** | Type of deployment contents. | 
+**UpdatedAt** | **string** | When the deployment was last updated (string in ISO-8601 format.) | 
 **Url** | **string** | URL that this deployment will appear at. The DNS for the domain has to be set up first. | 
 
 ## Methods
 
 ### NewAliasDeployment
 
-`func NewAliasDeployment(type_ string, url string, ) *AliasDeployment`
+`func NewAliasDeployment(createdAt string, meta SiteMeta, name string, type_ string, updatedAt string, url string, ) *AliasDeployment`
 
 NewAliasDeployment instantiates a new AliasDeployment object
 This constructor will assign default values to properties that have it defined,
@@ -56,6 +60,26 @@ SetAliasedTo sets AliasedTo field to given value.
 `func (o *AliasDeployment) HasAliasedTo() bool`
 
 HasAliasedTo returns a boolean if a field has been set.
+
+### GetCreatedAt
+
+`func (o *AliasDeployment) GetCreatedAt() string`
+
+GetCreatedAt returns the CreatedAt field if non-nil, zero value otherwise.
+
+### GetCreatedAtOk
+
+`func (o *AliasDeployment) GetCreatedAtOk() (*string, bool)`
+
+GetCreatedAtOk returns a tuple with the CreatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCreatedAt
+
+`func (o *AliasDeployment) SetCreatedAt(v string)`
+
+SetCreatedAt sets CreatedAt field to given value.
+
 
 ### GetExternalSource
 
@@ -106,6 +130,46 @@ SetExternalSourceType sets ExternalSourceType field to given value.
 `func (o *AliasDeployment) HasExternalSourceType() bool`
 
 HasExternalSourceType returns a boolean if a field has been set.
+
+### GetMeta
+
+`func (o *AliasDeployment) GetMeta() SiteMeta`
+
+GetMeta returns the Meta field if non-nil, zero value otherwise.
+
+### GetMetaOk
+
+`func (o *AliasDeployment) GetMetaOk() (*SiteMeta, bool)`
+
+GetMetaOk returns a tuple with the Meta field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMeta
+
+`func (o *AliasDeployment) SetMeta(v SiteMeta)`
+
+SetMeta sets Meta field to given value.
+
+
+### GetName
+
+`func (o *AliasDeployment) GetName() string`
+
+GetName returns the Name field if non-nil, zero value otherwise.
+
+### GetNameOk
+
+`func (o *AliasDeployment) GetNameOk() (*string, bool)`
+
+GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetName
+
+`func (o *AliasDeployment) SetName(v string)`
+
+SetName sets Name field to given value.
+
 
 ### GetPreserveExternalPath
 
@@ -210,6 +274,26 @@ and a boolean to check if the value has been set.
 `func (o *AliasDeployment) SetType(v string)`
 
 SetType sets Type field to given value.
+
+
+### GetUpdatedAt
+
+`func (o *AliasDeployment) GetUpdatedAt() string`
+
+GetUpdatedAt returns the UpdatedAt field if non-nil, zero value otherwise.
+
+### GetUpdatedAtOk
+
+`func (o *AliasDeployment) GetUpdatedAtOk() (*string, bool)`
+
+GetUpdatedAtOk returns a tuple with the UpdatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUpdatedAt
+
+`func (o *AliasDeployment) SetUpdatedAt(v string)`
+
+SetUpdatedAt sets UpdatedAt field to given value.
 
 
 ### GetUrl
