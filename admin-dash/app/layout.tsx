@@ -1,6 +1,6 @@
 import { Link, Outlet, useMatch } from "react-router";
 import { Drawer, Flex, theme, Typography } from "antd";
-import { MenuOutlined, CloudUploadOutlined, CloudTwoTone } from "@ant-design/icons";
+import { MenuOutlined, CloudUploadOutlined } from "@ant-design/icons";
 import ColorScheme from "./components/ColorScheme";
 import { useRef, useState, type ReactNode } from "react";
 
@@ -18,7 +18,7 @@ function HeaderLink({
   const isCurrent = useMatch(to);
   return (
     <Flex align="center" gap="small">
-      {iconPlacement === "left" && (
+      {!!icon && iconPlacement === "left" && (
         <div className="w-4 h-4 mt-1 flex justify-center items-center">{icon}</div>
       )}
       <Link to={to}>
@@ -33,7 +33,7 @@ function HeaderLink({
           {children}
         </Typography.Title>
       </Link>
-      {iconPlacement === "right" && (
+      {!!icon && iconPlacement === "right" && (
         <div className="w-4 h-4 mt-1 flex justify-center items-center">{icon}</div>
       )}
     </Flex>
@@ -41,10 +41,11 @@ function HeaderLink({
 }
 
 function StatusLink({ iconPlacement = "right" }: { iconPlacement?: "left" | "right" }) {
+  return null;
   return (
     <HeaderLink
       to="/status"
-      icon={<div className="w-2 h-2 mx-[3px] mb-px bg-(--ant-color-success) rounded-full"> </div>}
+      icon={<div className="w-2 h-2 mx-[3px] mb-px bg-green-500 rounded-full"> </div>}
       iconPlacement={iconPlacement}
     >
       Server Status
@@ -54,8 +55,12 @@ function StatusLink({ iconPlacement = "right" }: { iconPlacement?: "left" | "rig
 
 function HeaderLinks({ vertical }: { vertical?: boolean }) {
   return (
-    <Flex align={vertical ? "start" : "center"} vertical={vertical} gap="small">
-      <HeaderLink to="/deployments" icon={<CloudTwoTone />}>
+    <Flex
+      align={vertical ? "start" : "center"}
+      vertical={vertical}
+      gap={vertical ? "small" : "large"}
+    >
+      <HeaderLink to="/deployments" icon={null}>
         Deployments
       </HeaderLink>
       <HeaderLink to="/domains" icon={null}>
@@ -87,7 +92,7 @@ export default function LayoutComponent() {
     <>
       <ColorScheme.Dark>
         <div className="flex flex-col">
-          <div className="px-4 md:px-0 mb-3 mt-4 md:mt-3 md:mb-1 py-2 mx-auto w-6xl max-w-full md:max-w-[95%]">
+          <div className="px-4 md:px-0 mb-3 mt-4 md:mt-5 md:mb-3 py-2 mx-auto w-6xl max-w-full md:max-w-[95%]">
             <Flex align="center" gap="middle">
               <button
                 className="block md:hidden mt-2 mr-1"

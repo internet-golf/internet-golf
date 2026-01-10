@@ -18,8 +18,6 @@ export default function BaseTheme({ children }: { children: ReactNode }) {
           paddingMD: 9,
           padding: 10,
           paddingLG: 16,
-          // this is a little bit brighter than the default
-          colorSuccess: "#69ce38",
 
           // make borders a little bit squarer and darker
           colorBorder: "#bbb",
@@ -28,9 +26,15 @@ export default function BaseTheme({ children }: { children: ReactNode }) {
           lineWidth: 1,
         },
         components: {
+          // grant buttons and inputs an exemption from square borders
           Button: {
-            // grant buttons an exemption from square borders
-            borderRadius: 8,
+            borderRadius: 6,
+          },
+          Input: {
+            borderRadius: 6,
+          },
+          InputNumber: {
+            borderRadius: 6,
           },
           Modal: {
             // i am not that enthusiastic about the swoosh animation for this thing
