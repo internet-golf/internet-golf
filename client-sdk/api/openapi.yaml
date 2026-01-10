@@ -256,7 +256,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-          - GithubRepo
+          - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"
@@ -388,7 +388,7 @@ components:
       additionalProperties: false
       example:
         $schema: https://example.com/schemas/DeploymentCreateInputBody.json
-        externalSourceType: GithubRepo
+        externalSourceType: Github
         name: name
         preserveExternalPath: true
         url: mysite.mydomain.com
@@ -411,7 +411,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-          - GithubRepo
+          - Github
           type: string
         name:
           description: Name for the deployment. This is just metadata; make it whatever
@@ -455,7 +455,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-          - GithubRepo
+          - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"
@@ -527,7 +527,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-          - GithubRepo
+          - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"
@@ -681,7 +681,7 @@ components:
         createdAt: createdAt
         spaMode: true
         serverContentLocation: serverContentLocation
-        externalSourceType: GithubRepo
+        externalSourceType: Github
         meta:
           image: image
           description: description
@@ -707,7 +707,7 @@ components:
         externalSourceType:
           description: Place where the original repository lives.
           enum:
-          - GithubRepo
+          - Github
           type: string
         meta:
           $ref: "#/components/schemas/SiteMeta"
@@ -820,7 +820,7 @@ components:
         - createdAt: createdAt
           spaMode: true
           serverContentLocation: serverContentLocation
-          externalSourceType: GithubRepo
+          externalSourceType: Github
           meta:
             image: image
             description: description
@@ -837,7 +837,7 @@ components:
         - createdAt: createdAt
           spaMode: true
           serverContentLocation: serverContentLocation
-          externalSourceType: GithubRepo
+          externalSourceType: Github
           meta:
             image: image
             description: description
