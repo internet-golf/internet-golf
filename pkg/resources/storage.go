@@ -172,7 +172,11 @@ func extractTarGz(gzipStream io.ReadSeeker, baseOutDir string, trimLeadingDirs b
 			if !filepath.IsLocal(header.Name) {
 				return fmt.Errorf("ExtractTarGz: File rejected: %s is not a local file path", header.Name)
 			}
-			outFile, err := os.Create(path.Join(baseOutDir, itemName))
+			outPath := path.Join(baseOutDir, itemName)
+			if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+				return fmt.Errorf("ExtractTarGz: MkdirAll() failed: %s", err.Error())
+			}
+			outFile, err := os.Create(outPath)
 			if err != nil {
 				return fmt.Errorf("ExtractTarGz: Create() failed: %s", err.Error())
 			}
