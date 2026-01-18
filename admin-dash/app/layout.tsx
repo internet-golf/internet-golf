@@ -1,6 +1,6 @@
 import { Link, Outlet, useMatch } from "react-router";
 import { Drawer, Flex, theme, Typography } from "antd";
-import { MenuOutlined, CloudUploadOutlined } from "@ant-design/icons";
+import { MenuOutlined, CloudUploadOutlined, SwitcherOutlined } from "@ant-design/icons";
 import ColorScheme from "./components/ColorScheme";
 import { useRef, useState, type ReactNode } from "react";
 
@@ -18,7 +18,7 @@ function HeaderLink({
   const isCurrent = useMatch(to);
   return (
     <Flex align="center" gap="small">
-      {!!icon && iconPlacement === "left" && (
+      {iconPlacement === "left" && (
         <div className="w-4 h-4 mt-1 flex justify-center items-center">{icon}</div>
       )}
       <Link to={to}>
@@ -33,7 +33,7 @@ function HeaderLink({
           {children}
         </Typography.Title>
       </Link>
-      {!!icon && iconPlacement === "right" && (
+      {iconPlacement === "right" && (
         <div className="w-4 h-4 mt-1 flex justify-center items-center">{icon}</div>
       )}
     </Flex>
@@ -60,7 +60,7 @@ function HeaderLinks({ vertical }: { vertical?: boolean }) {
       vertical={vertical}
       gap={vertical ? "small" : "large"}
     >
-      <HeaderLink to="/deployments" icon={null}>
+      <HeaderLink to="/deployments" icon={<SwitcherOutlined />}>
         Deployments
       </HeaderLink>
       <HeaderLink to="/domains" icon={null}>
@@ -124,7 +124,7 @@ export default function LayoutComponent() {
           </div>
         </div>
       </ColorScheme.Dark>
-      <div ref={drawerContainer} className="absolute left-0 w-full h-full">
+      <div ref={drawerContainer} className="absolute left-0 w-full h-full block md:hidden">
         <Drawer
           styles={{ root: { position: "absolute" }, body: { padding: "12px 16px" } }}
           placement="left"
