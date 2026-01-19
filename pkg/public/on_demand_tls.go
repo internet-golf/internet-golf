@@ -2,13 +2,11 @@ package public
 
 import (
 	"fmt"
-	"io"
-	"net"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/internet-golf/internet-golf/pkg/utils"
+	"golang.org/x/net/publicsuffix"
 )
 
 var onDemandTlsEndpointPath = "/approve-tls"
@@ -35,68 +33,18 @@ func createTlsApprovalServer() (*http.Server, string, error) {
 			return
 		}
 
-		addr := net.ParseIP(domain)
-		if addr != nil {
-			resp(400, fmt.Sprintf("cannot use ip %s as domain", domain))
+		apex, apexErr := publicsuffix.EffectiveTLDPlusOne(domain)
+		if apexErr != nil || domain != apex {
+			resp(400, fmt.Sprintf("domain %q is not an apex domain", domain))
 			return
 		}
 
-		myIpResp, err := http.Get("https://ipv4.icanhazip.com/")
-		if err != nil {
-			resp(
-				500,
-				fmt.Sprintf(
-					"Could not access icanhazip to get own IP address: %s",
-					err.Error(),
-				),
-			)
-			return
-		}
-		myIpBody, err := io.ReadAll(myIpResp.Body)
-		myIp := strings.Trim(string(myIpBody), " \n\r")
-		if err != nil || len(myIp) == 0 {
-			var errorMessage string
-			if err != nil {
-				errorMessage = " " + err.Error()
-			}
-			resp(
-				500,
-				fmt.Sprintf(
-					"Could not read own IP address from icanhazip response.%s",
-					errorMessage,
-				),
-			)
-			return
-		}
-		myParsedIp := net.ParseIP(myIp)
-
-		domainIpAddresses, err := net.LookupIP(domain)
-		if err != nil || len(domainIpAddresses) == 0 {
-			resp(400, fmt.Sprintf("Could not lookup IP address for domain \"%s\"", domain))
-			return
-		}
-
-		match := false
-		for _, ip := range domainIpAddresses {
-			if ip.Equal(myParsedIp) {
-				match = true
-				break
-			}
-		}
-
-		if !match {
-			resp(400, fmt.Sprintf(
-				"Could not find server's IP address (%s) in addresses of \"%s\" (%+v)",
-				myParsedIp, domain, domainIpAddresses,
-			))
-			return
-		} else {
-			resp(200, "OK")
-		}
+		resp(200, "OK")
 	})
 
 	strPort := strconv.Itoa(port)
 	server := http.Server{Addr: "localhost:" + strPort, Handler: router}
+	fmt.Printf("on-demand tls server at localhost:%s\n", strPort)
 	return &server, strPort, nil
 }
 

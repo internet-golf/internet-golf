@@ -256,15 +256,15 @@ func (c *CaddyServer) DeployAll(deployments []db.Deployment) error {
 
 	// TODO: wait, how is the tlsApprovalServer set up every time that DeployAll
 	// is called? shouldn't this be in NewPublicWebServer?
-	if !c.config.LocalOnly {
-		tlsConfig, err := getOnDemandTls()
-		if err != nil {
-			panic(err)
-		}
-		c.onDemandTls = tlsConfig
-		caddyConfig.AppsRaw["tls"] = utils.JsonOrPanic(tlsConfig.caddyTlsConfig)
-		go c.onDemandTls.tlsApprovalServer.ListenAndServe()
+	// if !c.config.LocalOnly {
+	tlsConfig, err := getOnDemandTls()
+	if err != nil {
+		panic(err)
 	}
+	c.onDemandTls = tlsConfig
+	caddyConfig.AppsRaw["tls"] = utils.JsonOrPanic(tlsConfig.caddyTlsConfig)
+	go c.onDemandTls.tlsApprovalServer.ListenAndServe()
+	// }
 
 	err = caddy.Run(&caddyConfig)
 	if err != nil {
