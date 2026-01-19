@@ -167,7 +167,10 @@ export function StaticSiteForm() {
                     e.stopPropagation();
                   }}
                 >
-                  <Flex justify="space-between" style={{ backgroundColor: "white", padding: 8 }}>
+                  <Flex
+                    justify="space-between"
+                    style={{ backgroundColor: "white", padding: "8px 8px 0 8px" }}
+                  >
                     <Typography.Text strong>Selected Files</Typography.Text>
                     <Button
                       size="small"
