@@ -15,6 +15,7 @@ import (
 	golfsdk "github.com/internet-golf/internet-golf/client-sdk"
 	"github.com/mholt/archives"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/publicsuffix"
 )
 
 var rootCmd = &cobra.Command{
@@ -124,13 +125,17 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 			// if no auth setting is specified, assume localhost
 			resolvedApiUrl = "http://localhost:8888"
 		} else if len(hostnameFromTargetDeployment) > 0 {
+			apex, apexErr := publicsuffix.EffectiveTLDPlusOne(hostnameFromTargetDeployment)
+			if apexErr != nil {
+				exit1("Invalid domain: " + hostnameFromTargetDeployment)
+			}
 			protocol := "https"
-			ips, err := net.LookupIP(hostnameFromTargetDeployment)
+			ips, err := net.LookupIP(apex)
 			if err == nil && ips[0].String() == "127.0.0.1" {
-				fmt.Fprintf(os.Stderr, "WARNING: connecting to local host %s Without HTTPS", hostnameFromTargetDeployment)
+				fmt.Fprintf(os.Stderr, "WARNING: connecting to local host %s Without HTTPS", apex)
 				protocol = "http"
 			}
-			resolvedApiUrl = protocol + "://" + hostnameFromTargetDeployment + "/_golf"
+			resolvedApiUrl = protocol + "://" + apex + "/_golf"
 		} else {
 			exit1("could not resolve API URL")
 		}
