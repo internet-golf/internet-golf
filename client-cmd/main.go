@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 
@@ -23,30 +24,92 @@ var rootCmd = &cobra.Command{
 
 var apiUrl string
 var auth string
+var ctx context.Context
+
+// all values for the basic deployment creation flags will be written to this
+var createDeploymentGlobalFlags createDeploymentFlags
+
+type createDeploymentFlags struct {
+	github string
+	name   string
+}
+
+func addCreateDeploymentFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVar(
+		&createDeploymentGlobalFlags.github, "github", "", "Associate a Github repo with this deployment. Format: repoOwner/repoName[#branch]",
+	)
+	cmd.Flags().StringVar(
+		&createDeploymentGlobalFlags.name, "name", "", "Give your deployment a name. This is optional metadata; you can make it whatever you want.",
+	)
+}
+
+func createDeploymentInputBody(url string, flags *createDeploymentFlags) golfsdk.DeploymentCreateInputBody {
+	var externalSourceType *string
+	var externalSource *string
+
+	if flags != nil && len(flags.github) > 0 {
+		// TODO: would be nice to use the ExternalSourceType enum-ish
+		// thing somehow, instead of this string literal
+		githubSource := "Github"
+		// these have to be pointers so that they can be nil (in which
+		// case they'll be left out of the json request body)
+		externalSourceType = &githubSource
+		externalSource = &flags.github
+	}
+
+	name := ""
+	if flags != nil {
+		name = flags.name
+	}
+
+	return golfsdk.DeploymentCreateInputBody{
+		Url:                url,
+		ExternalSourceType: externalSourceType,
+		ExternalSource:     externalSource,
+		Tags:               []string{},
+		Name:               name,
+	}
+}
 
 func exit1(message string) {
 	fmt.Fprintln(os.Stderr, message)
 	os.Exit(1)
 }
 
-// TODO: standard response handling function that does roughly this instead of
-// ever panicking
+type successBody interface {
+	GetSuccess() bool
+	GetMessage() string
+}
 
-// if body == nil || respError != nil {
-// // failure:
-// if respError != nil {
-// 	fmt.Println(respError.Error())
-// }
-// responseBody, responseBodyErr := io.ReadAll(resp.Body)
-// if responseBodyErr != nil || len(responseBody) == 0 {
-// 	fmt.Println("ERROR: Could not get response body")
-// } else {
-// 	fmt.Println(string(responseBody))
-// }
-// } else {
-// // success:
-// fmt.Println(body.Message)
-// }
+func handleResponse(body successBody, resp *http.Response, respError error) {
+	if respError != nil || body == nil || !body.GetSuccess() {
+		if resp != nil && resp.Body != nil {
+			responseBody, err := io.ReadAll(resp.Body)
+			if err == nil && len(responseBody) > 0 {
+				var errorModel golfsdk.ErrorModel
+				if json.Unmarshal(responseBody, &errorModel) == nil && errorModel.HasTitle() {
+					fmt.Fprintln(os.Stderr, "Error:", errorModel.GetTitle())
+					if errorModel.HasDetail() {
+						fmt.Fprintln(os.Stderr, errorModel.GetDetail())
+					}
+					for _, detail := range errorModel.GetErrors() {
+						if detail.HasMessage() {
+							fmt.Fprintln(os.Stderr, " -", detail.GetMessage())
+						}
+					}
+					os.Exit(1)
+				}
+				fmt.Fprintln(os.Stderr, string(responseBody))
+				os.Exit(1)
+			}
+		}
+		if respError != nil {
+			exit1(respError.Error())
+		}
+		exit1("Request failed")
+	}
+	fmt.Println(body.GetMessage())
+}
 
 func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 	// determine the base URL of the API server:
@@ -117,7 +180,7 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 	// half-second pause between tries) in case the server is just starting up
 	retries := 20
 	for i := range retries {
-		body, _, err := client.DefaultAPI.HealthCheck(context.Background()).Execute()
+		body, _, err := client.DefaultAPI.HealthCheck(ctx).Execute()
 
 		if err == nil && body.Ok {
 			break
@@ -131,9 +194,6 @@ func createClient(hostnameFromTargetDeployment string) *golfsdk.APIClient {
 }
 
 func createDeploymentCommand() *cobra.Command {
-
-	var github string
-	var name string
 	// TODO: preserve external path option
 
 	createDeployment := cobra.Command{
@@ -142,55 +202,17 @@ func createDeploymentCommand() *cobra.Command {
 		Short:   "Creates a deployment",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var externalSourceType *string
-			var externalSource *string
-
-			if len(github) > 0 {
-				// TODO: would be nice to use the ExternalSourceType enum-ish
-				// thing somehow, instead of this string literal
-				githubSource := "Github"
-				// these have to be pointers so that they can be nil (in which
-				// case they'll be left out of the json request body)
-				externalSourceType = &githubSource
-				externalSource = &github
-			}
-
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.CreateDeployment(context.TODO()).
-				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
-					Url:                args[0],
-					ExternalSourceType: externalSourceType,
-					ExternalSource:     externalSource,
-					Tags:               []string{},
-					Name:               name,
-				}).
+				DefaultAPI.CreateDeployment(ctx).
+				DeploymentCreateInputBody(createDeploymentInputBody(args[0], &createDeploymentGlobalFlags)).
 				Execute()
-
-			if body == nil || respError != nil {
-				responseBody, responseBodyErr := io.ReadAll(resp.Body)
-				if responseBodyErr != nil || len(responseBody) == 0 {
-					if respError != nil {
-						fmt.Println(respError.Error())
-					} else {
-						fmt.Println("ERROR: Could not get response body")
-					}
-					return
-				}
-				fmt.Println(string(responseBody))
-				return
-			}
-			fmt.Println(body.Message)
+			handleResponse(body, resp, respError)
 		},
 	}
 
-	createDeployment.Flags().StringVar(
-		&github, "github", "", "Specify a Github Repo: repoOwner/repoName",
-	)
-	createDeployment.Flags().StringVar(
-		&name, "name", "", "Give your deployment a name. This is optional metadata; you can make it whatever you want.",
-	)
+	addCreateDeploymentFlags(&createDeployment)
 
 	return &createDeployment
 }
@@ -205,24 +227,10 @@ func deployAdminDash() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.DeployAdminDash(context.TODO()).
+				DefaultAPI.DeployAdminDash(ctx).
 				DeployAdminDashBody(golfsdk.DeployAdminDashBody{Url: args[0]}).
 				Execute()
-
-			if body == nil || respError != nil {
-				responseBody, responseBodyErr := io.ReadAll(resp.Body)
-				if responseBodyErr != nil || len(responseBody) == 0 {
-					if respError != nil {
-						fmt.Println(respError.Error())
-					} else {
-						fmt.Println("ERROR: Could not get response body")
-					}
-					return
-				}
-				fmt.Println(string(responseBody))
-				return
-			}
-			fmt.Println(body.Message)
+			handleResponse(body, resp, respError)
 		},
 	}
 
@@ -241,45 +249,18 @@ func deployAliasCommand() *cobra.Command {
 			client := createClient(args[0])
 
 			body, resp, respError := client.
-				DefaultAPI.CreateDeployment(context.TODO()).
+				DefaultAPI.CreateDeployment(ctx).
 				DeploymentCreateInputBody(golfsdk.DeploymentCreateInputBody{
 					Url: args[0],
 				}).Execute()
-
-			if body == nil || respError != nil {
-				responseBody, responseBodyErr := io.ReadAll(resp.Body)
-				if responseBodyErr != nil || len(responseBody) == 0 {
-					if respError != nil {
-						fmt.Println(respError.Error())
-					} else {
-						fmt.Println("ERROR: Could not get response body")
-					}
-					return
-				}
-				fmt.Println(string(responseBody))
-				return
-			}
+			handleResponse(body, resp, respError)
 
 			body, resp, respError = client.
-				DefaultAPI.CreateAlias(context.TODO()).
+				DefaultAPI.CreateAlias(ctx).
 				DeployAliasBody(golfsdk.DeployAliasBody{
 					Url: args[0], AliasedTo: &args[1], Redirect: &redirect,
 				}).Execute()
-
-			if body == nil || respError != nil {
-				responseBody, responseBodyErr := io.ReadAll(resp.Body)
-				if responseBodyErr != nil || len(responseBody) == 0 {
-					if respError != nil {
-						fmt.Println(respError.Error())
-					} else {
-						fmt.Println("ERROR: Could not get response body")
-					}
-					return
-				}
-				fmt.Println(string(responseBody))
-				return
-			}
-			fmt.Println(body.Message)
+			handleResponse(body, resp, respError)
 		},
 	}
 
@@ -300,7 +281,6 @@ func deployContentCommand() *cobra.Command {
 		Short:   "Deploys content",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.TODO()
 			fileTree, err := archives.FilesFromDisk(ctx, nil, map[string]string{
 				files: "",
 			})
@@ -326,24 +306,18 @@ func deployContentCommand() *cobra.Command {
 
 			client := createClient(args[0])
 
+			createBody, createResp, createRespError := client.
+				DefaultAPI.CreateDeployment(ctx).
+				DeploymentCreateInputBody(createDeploymentInputBody(args[0], &createDeploymentGlobalFlags)).
+				Execute()
+			handleResponse(createBody, createResp, createRespError)
+
 			body, resp, respError := client.
-				DefaultAPI.DeployFiles(context.TODO()).
+				DefaultAPI.DeployFiles(ctx).
 				Url(args[0]).
 				Contents(tempFile).
 				Execute()
-
-			// TODO: handle responses uniformly across commands
-			if respError != nil {
-				panic(respError.Error())
-			}
-			if resp.StatusCode != 200 {
-				body, _ := io.ReadAll(resp.Body)
-				panic("[error from server]: " + string(body))
-			}
-			if body == nil || !body.Success {
-				panic("Did not get success status back from server. Request was to " + resp.Request.URL.String())
-			}
-			fmt.Println(body.Message)
+			handleResponse(body, resp, respError)
 		},
 	}
 
@@ -351,6 +325,8 @@ func deployContentCommand() *cobra.Command {
 		&files, "files", "",
 		"Supply a path to a directory with the content you wish to deploy.",
 	)
+
+	addCreateDeploymentFlags(&deployContent)
 
 	return &deployContent
 }
@@ -366,20 +342,14 @@ func registerExternalUserCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			client := createClient("")
-			body, _, respError := client.DefaultAPI.
-				PutUserRegister(context.TODO()).
+			body, resp, respError := client.DefaultAPI.
+				PutUserRegister(ctx).
 				AddExternalUserInputBody(golfsdk.AddExternalUserInputBody{
 					ExternalUserHandle: &handle,
 					ExternalUserId:     &id,
 					ExternalUserSource: source,
 				}).Execute()
-			if respError != nil {
-				panic(respError.Error())
-			}
-			fmt.Println(body.Message)
-			if body == nil || !body.Success {
-				panic("Did not get success status back from server")
-			}
+			handleResponse(body, resp, respError)
 		},
 	}
 
@@ -397,14 +367,14 @@ func createBearerTokenCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			client := createClient("")
-			body, _, err := client.DefaultAPI.
-				PostTokenGenerate(context.TODO()).
+			body, resp, err := client.DefaultAPI.
+				PostTokenGenerate(ctx).
 				CreateBearerTokenInputBody(
 					// TODO: granular permissions
 					golfsdk.CreateBearerTokenInputBody{FullPermissions: true},
 				).Execute()
-			if err != nil || len(body.Token) == 0 {
-				panic(err)
+			if err != nil || body == nil || len(body.Token) == 0 {
+				handleResponse(nil, resp, err)
 			}
 			fmt.Println("Generated token:")
 			fmt.Println(body.Token)
@@ -415,6 +385,10 @@ func createBearerTokenCommand() *cobra.Command {
 }
 
 func main() {
+	var cancel context.CancelFunc
+	ctx, cancel = signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
 	// group the real commands away from the help commands - i think it looks
 	// better that way
 	golfGroup := cobra.Group{
