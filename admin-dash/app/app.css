@@ -6,8 +6,12 @@
 }
 
 @layer base {
-  /* hack to get the icon color working correctly in dark mode, using class name
-  set by <ColorSchemeApplicator />, in @layer base so that this is easy to override */
+  /*
+    using the class names set by <ColorSchemeApplicator /> to add default styles
+    for icons. (for some reason, you can't add default styles for icons directly
+    in the javascript, there.) putting this in the "base" layer so it's easy to
+    override.
+  */
   .dark-mode-icon svg {
     color: var(--ant-color-text);
     opacity: 0.9;
@@ -15,5 +19,15 @@
 
   .light-mode-icon svg {
     opacity: 0.8;
+  }
+
+  /*
+    weirdly, the popover container is right up against the edges of the screen
+    on mobile, and the width doesn't come from a design token or anything, so
+    i'm just fixing it here in css
+  */
+  .ant-popover-container {
+    max-width: 95%;
+    margin: 0 auto;
   }
 }

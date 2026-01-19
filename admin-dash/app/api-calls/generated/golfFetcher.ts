@@ -34,6 +34,38 @@ export type GolfFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   signal?: AbortSignal;
 } & GolfFetcherExtraProps;
 
+const isBlob = (value: unknown): value is Blob => {
+  if (typeof Blob !== "undefined" && value instanceof Blob) return true;
+  return false;
+};
+
+const shouldUseFormData = (value: unknown): value is Record<string, unknown> => {
+  if (!value || typeof value !== "object") return false;
+  if (value instanceof FormData) return true;
+  // If any value is Blob/File, treat it as multipart.
+  return Object.values(value as Record<string, unknown>).some((v) => isBlob(v));
+};
+
+const objectToFormData = (value: Record<string, unknown>): FormData => {
+  const formData = new FormData();
+  for (const [key, v] of Object.entries(value)) {
+    if (v === undefined || v === null) continue;
+    if (isBlob(v)) {
+      // If it's a File, keep its name; otherwise provide a stable filename.
+      const fileName = (v as unknown as File).name || "upload";
+      formData.append(key, v, fileName);
+      continue;
+    }
+    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+      formData.append(key, String(v));
+      continue;
+    }
+    // Fallback: serialize nested objects/arrays.
+    formData.append(key, JSON.stringify(v));
+  }
+  return formData;
+};
+
 export async function golfFetch<
   TData,
   TError,
@@ -72,20 +104,34 @@ export async function golfFetch<
       ...headers,
     };
 
+    const resolvedBody = (() => {
+      if (!body) return undefined;
+      if (body instanceof FormData) return body;
+      if (shouldUseFormData(body)) return objectToFormData(body as Record<string, unknown>);
+      return body;
+    })();
+
     /**
      * As the fetch API is being used, when multipart/form-data is specified
      * the Content-Type header must be deleted so that the browser can set
      * the correct boundary.
      * https://developer.mozilla.org/en-US/docs/Web/API/FormData/Using_FormData_Objects#sending_files_using_a_formdata_object
      */
-    if (requestHeaders["Content-Type"]?.toLowerCase().includes("multipart/form-data")) {
+    // If we are sending FormData, the browser must set the Content-Type with boundary.
+    if (resolvedBody instanceof FormData) {
+      delete requestHeaders["Content-Type"];
+    } else if (requestHeaders["Content-Type"]?.toLowerCase().includes("multipart/form-data")) {
       delete requestHeaders["Content-Type"];
     }
 
     const response = await window.fetch(`${baseUrl}${resolveUrl(url, queryParams, pathParams)}`, {
       signal,
       method: method.toUpperCase(),
-      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : undefined,
+      body: resolvedBody
+        ? resolvedBody instanceof FormData
+          ? resolvedBody
+          : JSON.stringify(resolvedBody)
+        : undefined,
       headers: requestHeaders,
     });
     if (!response.ok) {

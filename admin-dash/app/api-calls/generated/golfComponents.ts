@@ -135,6 +135,32 @@ export const createDeployment = (
     {}
   >({ url: "/deploy/new", method: "put", ...variables, signal });
 
+export type DeleteDeploymentPathParams = {
+  url: string;
+};
+
+export type DeleteDeploymentError = Fetcher.ErrorWrapper<undefined>;
+
+export type DeleteDeploymentVariables = {
+  pathParams: DeleteDeploymentPathParams;
+};
+
+/**
+ * Delete a deployment.
+ */
+export const deleteDeployment = (
+  variables: DeleteDeploymentVariables,
+  signal?: AbortSignal,
+) =>
+  golfFetch<
+    Schemas.SuccessOutputBody,
+    DeleteDeploymentError,
+    undefined,
+    {},
+    {},
+    DeleteDeploymentPathParams
+  >({ url: "/deployment/{url}", method: "delete", ...variables, signal });
+
 export type GetDeploymentPathParams = {
   url: string;
 };

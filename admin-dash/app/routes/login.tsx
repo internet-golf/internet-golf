@@ -8,6 +8,12 @@ import { getGolfAuthToken, setGolfAuthToken } from "~/api-calls/session";
 
 import ColorScheme from "~/components/ColorScheme";
 
+interface LoginFormValues {
+  token: string;
+}
+
+const FormItem = Form.Item<LoginFormValues>;
+
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Internet Golf Admin Dashboard", description: "Manage your server." }];
 }
@@ -29,7 +35,7 @@ export default function Login() {
 
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
-  const login = async ({ token }: { token: string }) => {
+  const login = async ({ token }: LoginFormValues) => {
     if (!token) {
       console.error("no token");
       return;
@@ -49,7 +55,7 @@ export default function Login() {
         </Typography.Title>
         <Form onFinish={login}>
           <div className="flex flex-col gap-1 justify-center items-center max-w-full">
-            <Form.Item
+            <FormItem
               name="token"
               rules={[
                 {
@@ -63,12 +69,12 @@ export default function Login() {
                 style={{ width: "350px" }}
                 placeholder="Enter authentication token..."
               />
-            </Form.Item>
-            <Form.Item>
+            </FormItem>
+            <FormItem>
               <Button type="primary" htmlType="submit">
                 Login
               </Button>
-            </Form.Item>
+            </FormItem>
           </div>
         </Form>
         <div className="fixed right-4 md:right-6 bottom-4 md:bottom-6 flex gap-2">

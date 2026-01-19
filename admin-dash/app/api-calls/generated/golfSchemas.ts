@@ -39,7 +39,7 @@ export type AliasDeployment = {
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
    */
-  name: string;
+  name?: string;
   /**
    * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
@@ -151,7 +151,7 @@ export type DeploymentCreateInputBody = {
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
    */
-  name: string;
+  name?: string;
   /**
    * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
@@ -191,11 +191,11 @@ export type DeploymentModel = {
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
    */
-  name: string;
+  name?: string;
   /**
    * Set to true to indicate that this deployment has not yet been set up.
    */
-  noContentYet: boolean | null;
+  noContentYet?: boolean;
   /**
    * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
@@ -251,11 +251,11 @@ export type EmptyDeployment = {
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
    */
-  name: string;
+  name?: string;
   /**
    * Set to true to indicate that this deployment has not yet been set up.
    */
-  noContentYet: boolean | null;
+  noContentYet?: boolean;
   /**
    * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */
@@ -383,7 +383,7 @@ export type StaticSiteDeployment = {
   /**
    * Name for the deployment. This is just metadata; make it whatever you want.
    */
-  name: string;
+  name?: string;
   /**
    * If this is true and the deployment url has a path like "/thing", then the "/thing" in the path will be transparently passed through to the underlying resource instead of being removed (which is the default)
    */

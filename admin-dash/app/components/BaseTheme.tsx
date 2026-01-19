@@ -1,6 +1,11 @@
 import { ConfigProvider } from "antd";
 import type { ReactNode } from "react";
 
+const roundedBorderRadiusValues = {
+  borderRadiusSM: 4,
+  borderRadius: 6,
+};
+
 /**
  * Style defaults, applied in root.tsx.
  */
@@ -19,7 +24,7 @@ export default function BaseTheme({ children }: { children: ReactNode }) {
           padding: 10,
           paddingLG: 16,
 
-          // make borders a little bit squarer and darker
+          // make borders a squarer and darker
           colorBorder: "#bbb",
           colorBorderSecondary: "#bbb",
           borderRadius: 0,
@@ -27,15 +32,11 @@ export default function BaseTheme({ children }: { children: ReactNode }) {
         },
         components: {
           // grant buttons and inputs an exemption from square borders
-          Button: {
-            borderRadius: 6,
-          },
-          Input: {
-            borderRadius: 6,
-          },
-          InputNumber: {
-            borderRadius: 6,
-          },
+          Button: roundedBorderRadiusValues,
+          Input: roundedBorderRadiusValues,
+          InputNumber: roundedBorderRadiusValues,
+          Segmented: roundedBorderRadiusValues,
+          Select: roundedBorderRadiusValues,
           Modal: {
             // i am not that enthusiastic about the swoosh animation for this thing
             motionDurationFast: "0",
