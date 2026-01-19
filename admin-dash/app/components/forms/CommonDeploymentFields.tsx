@@ -23,7 +23,28 @@ const FormItem = Form.Item<BaseDeploymentValues>;
 export function CommonDeploymentFields() {
   return (
     <>
-      <FormItem label="URL" name="url" rules={[{ required: true, message: "Please enter a URL" }]}>
+      <FormItem
+        label="URL"
+        name="url"
+        required
+        rules={[
+          {
+            validator: (_, value: string) => {
+              if (!value?.length) {
+                return Promise.reject("Please enter a URL");
+              }
+              // very simple sanity-check validation to make sure that the url
+              // contains a '.' but does not start or end with a '.'; you could
+              // do deep, thorough validation of the url, but it's probably not
+              // worth it
+              if (!value.includes(".") || value[0] === "." || value[value.length - 1] === ".") {
+                return Promise.reject("Enter a valid URL");
+              }
+              return Promise.resolve();
+            },
+          },
+        ]}
+      >
         <Input placeholder="mysite.mydomain.com" />
       </FormItem>
 

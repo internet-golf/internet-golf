@@ -125,7 +125,14 @@ export function StaticSiteForm() {
 
         <Typography.Title level={5}>Deployment Content</Typography.Title>
 
-        <FormItem name="files" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
+        <FormItem
+          label="Website Content"
+          required
+          rules={[{ required: true, message: "Please choose a folder to upload" }]}
+          name="files"
+          valuePropName="fileList"
+          getValueFromEvent={(e) => e?.fileList}
+        >
           <Upload.Dragger
             multiple
             directory

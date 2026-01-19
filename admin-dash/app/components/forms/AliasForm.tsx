@@ -133,7 +133,12 @@ export function AliasForm() {
         </FormItem>
 
         {aliasMode === "alias" ? (
-          <FormItem required label="To (existing deployment)" name="aliasedToDeployment">
+          <FormItem
+            required
+            rules={[{ required: true, message: "Please specify the deployment to alias to" }]}
+            label="To (existing deployment)"
+            name="aliasedToDeployment"
+          >
             <Select
               placeholder="Select a deployment"
               loading={deploymentsLoading}
@@ -146,7 +151,12 @@ export function AliasForm() {
             />
           </FormItem>
         ) : (
-          <FormItem required label="To (URL)" name="aliasedToUrl">
+          <FormItem
+            required
+            rules={[{ required: true, message: "Please specify the URL to redirect to" }]}
+            label="To (URL)"
+            name="aliasedToUrl"
+          >
             <Input placeholder="https://" />
           </FormItem>
         )}
