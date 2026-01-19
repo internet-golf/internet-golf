@@ -69,7 +69,6 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
-        - name
         - url
         - type
         - createdAt
@@ -177,7 +176,6 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
-        - name
         - url
       type: object
     DeploymentModel:
@@ -240,7 +238,6 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
-        - name
         - url
         - type
         - createdAt
@@ -295,7 +292,6 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
-        - name
         - url
         - type
         - createdAt
@@ -444,7 +440,6 @@ components:
           example: mysite.mydomain.com
           type: string
       required:
-        - name
         - url
         - type
         - createdAt
@@ -611,6 +606,28 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
   /deployment/{url}:
+    delete:
+      description: Delete a deployment.
+      operationId: DeleteDeployment
+      parameters:
+        - in: path
+          name: url
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
     get:
       description: Retrieve an active deployment.
       operationId: GetDeployment

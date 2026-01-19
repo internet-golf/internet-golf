@@ -47,7 +47,7 @@ type DeploymentCreateInput struct {
 // output types ============================
 
 type DeploymentBase struct {
-	Name string `json:"name" required:"true" doc:"Name for the deployment. This is just metadata; make it whatever you want."`
+	Name string `json:"name" required:"false" doc:"Name for the deployment. This is just metadata; make it whatever you want."`
 
 	Url string `json:"url" doc:"URL that this deployment will appear at. The DNS for the domain has to be set up first." example:"mysite.mydomain.com"`
 
@@ -425,6 +425,43 @@ func (a *AdminApi) addDeploymentRoutes(api huma.API) {
 		var output SuccessOutput
 		output.Body.Success = true
 		output.Body.Message = "admin dashboard deployed"
+		return &output, nil
+	})
+
+	huma.Register(api, huma.Operation{
+		OperationID: "DeleteDeployment",
+		Description: "Delete a deployment.",
+		Method:      http.MethodDelete,
+		Path:        "/deployment/{url}",
+	}, func(ctx context.Context, input *struct {
+		Url string `path:"url"`
+	}) (*SuccessOutput, error) {
+		permissions, permissionsOk := ctx.Value("permissions").(Permissions)
+		if !permissionsOk {
+			return nil, huma.Error500InternalServerError("Auth check failed somehow")
+		}
+
+		url := urlFromString(input.Url)
+		deployment, findDeploymentError := a.web.GetDeploymentByUrl(&url)
+		if findDeploymentError != nil {
+			return nil, huma.Error404NotFound(
+				fmt.Sprintf("Could not find deployment with URL \"%s\"", url),
+			)
+		}
+
+		if !permissions.CanModifyDeployment(&deployment) {
+			return nil, huma.Error403Forbidden(
+				fmt.Sprintf("Insufficient permissions to delete deployment \"%s\"", url),
+			)
+		}
+
+		if err := a.web.DeleteDeployment(url); err != nil {
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
+
+		var output SuccessOutput
+		output.Body.Success = true
+		output.Body.Message = fmt.Sprintf("Deleted deployment with URL %s", url)
 		return &output, nil
 	})
 }

@@ -209,7 +209,7 @@ func (bus *DeploymentBus) updateDeploymentContentByIndex(
 
 // deletes the deployment from the given name, pushes the deployment set
 // (without the deleted one) to the public web server, and then saves the new
-// deployment set
+// deployment set. also deletes any aliases that point to the deleted deployment.
 func (bus *DeploymentBus) DeleteDeployment(url db.Url) error {
 	index := bus.getDeploymentIndexByUrl(&url)
 	if index == -1 {
@@ -217,6 +217,11 @@ func (bus *DeploymentBus) DeleteDeployment(url db.Url) error {
 	}
 
 	bus.deployments = slices.Delete(bus.deployments, index, index+1)
+
+	// delete any aliases that point to the deleted deployment
+	bus.deployments = slices.DeleteFunc(bus.deployments, func(d db.Deployment) bool {
+		return d.ServedThingType == db.Alias && d.AliasedTo.Equals(&url)
+	})
 
 	deploymentErr := bus.server.DeployAll(bus.deployments)
 	if deploymentErr != nil {
