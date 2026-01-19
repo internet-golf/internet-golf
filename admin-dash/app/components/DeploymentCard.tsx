@@ -1,13 +1,12 @@
 import {
-  EditOutlined,
-  ExportOutlined,
+  DeleteOutlined,
   FolderOpenFilled,
   GithubOutlined,
   LinkOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Flex, Tag, theme, Typography } from "antd";
-import type { ReactNode } from "react";
+import { Button, Card, Flex, Popconfirm, Tag, theme, Typography } from "antd";
+import { useState } from "react";
 import type { GetDeploymentResponse } from "~/api-calls/generated/golfComponents";
 import { allowBreakingOnDots } from "~/utils/utils";
 
@@ -50,10 +49,23 @@ function ExternalSourceTag({
   return null;
 }
 
-export function DeploymentCard({ deployment }: { deployment: GetDeploymentResponse }) {
+export function DeploymentCard({
+  deployment,
+  onDelete,
+}: {
+  deployment: GetDeploymentResponse;
+  onDelete: () => Promise<void>;
+}) {
   const { token } = theme.useToken();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const name = deployment.name || deployment.meta.title;
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    await onDelete();
+    setIsDeleting(false);
+  };
 
   return (
     <Card
@@ -62,9 +74,21 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
         body: { padding: 16, minHeight: 0, flexGrow: "1" },
       }}
     >
-      <Button icon={<EditOutlined />} style={{ float: "right", marginLeft: 12 }}>
-        Edit
-      </Button>
+      <Popconfirm
+        title="Delete deployment"
+        description={`Are you sure you want to delete ${deployment.url}?`}
+        onConfirm={handleDelete}
+        okText="Delete"
+        okButtonProps={{ danger: true }}
+        cancelText="Cancel"
+      >
+        <Button
+          icon={<DeleteOutlined />}
+          variant="outlined"
+          loading={isDeleting}
+          style={{ float: "right", marginLeft: 12 }}
+        />
+      </Popconfirm>
       <Flex gap="large">
         <div className="h-24 w-32 bg-gray-100">
           <img
@@ -74,32 +98,22 @@ export function DeploymentCard({ deployment }: { deployment: GetDeploymentRespon
         </div>
         <Flex gap="small" vertical justify="flex-start">
           {deployment.type === "Alias" ? (
-            <Typography.Title level={5}>
-              {deployment.redirect ? "Redirect" : "Alias"} to {deployment.aliasedTo}
-            </Typography.Title>
-          ) : (
             // using token.fontSizeHeading5 to get a standard font size instead
             // of using Typography.Title, to avoid getting the standard margins
             // for an h5
-            <>
-              {name ? (
-                <>
-                  <Typography.Text strong style={{ fontSize: token.fontSizeHeading5 }}>
-                    {name}
-                  </Typography.Text>
-                  <Typography.Text>
-                    <a href={`//${deployment.url}`} target="_blank" rel="nofollow noreferrer">
-                      <LinkOutlined /> {allowBreakingOnDots(deployment.url)}
-                    </a>
-                  </Typography.Text>
-                </>
-              ) : (
-                <Typography.Text strong style={{ fontSize: token.fontSizeHeading5 }}>
-                  {allowBreakingOnDots(deployment.url)}
-                </Typography.Text>
-              )}
-            </>
+            <Typography.Text strong style={{ fontSize: token.fontSizeHeading5 }}>
+              {deployment.redirect ? "Redirect" : "Alias"} to {deployment.aliasedTo}
+            </Typography.Text>
+          ) : (
+            <Typography.Text strong style={{ fontSize: token.fontSizeHeading5 }}>
+              {name || allowBreakingOnDots(deployment.url)}
+            </Typography.Text>
           )}
+          <Typography.Text>
+            <a href={`//${deployment.url}`} target="_blank" rel="nofollow noreferrer">
+              <LinkOutlined /> {allowBreakingOnDots(deployment.url)}
+            </a>
+          </Typography.Text>
           {/* TODO: i do not know why this marginTop is needed to make things look spaced evenly */}
           <Flex gap="small" align="center" style={{ marginTop: 6 }}>
             <Tag style={{ alignSelf: "flex-start" }}>

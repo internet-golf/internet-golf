@@ -63,12 +63,12 @@ function HeaderLinks({ vertical }: { vertical?: boolean }) {
       <HeaderLink to="/deployments" icon={<SwitcherOutlined />}>
         Deployments
       </HeaderLink>
-      <HeaderLink to="/domains" icon={null}>
+      {/* <HeaderLink to="/domains" icon={null}>
         Domains
       </HeaderLink>
       <HeaderLink to="/permissions" icon={null}>
         Permissions
-      </HeaderLink>
+      </HeaderLink> */}
       <div className={vertical ? "" : "ml-auto"}>
         <HeaderLink
           to="/new"
